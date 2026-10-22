@@ -61,6 +61,13 @@
     opacity: 0.85; transition: opacity 0.2s, color 0.2s;
   }
   .nav-links a:hover { opacity: 1; color: var(--emas-muda); }
+  .nav-links a.nav-portal {
+    border: 1px solid var(--emas);
+    border-radius: 20px;
+    padding: 4px 14px;
+    color: var(--emas-muda);
+  }
+  .nav-links a.nav-portal:hover { background: rgba(201,168,76,0.15); }
 
   /* ===== HERO ===== */
   .hero {
@@ -559,6 +566,7 @@
     <li><a href="#potensi">Potensi</a></li>
     <li><a href="#peta">Lokasi</a></li>
     <li><a href="#kontak">Kontak</a></li>
+    <li><a href="admin.html" class="nav-portal">Portal 🔐</a></li>
   </ul>
   <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
 </nav>
