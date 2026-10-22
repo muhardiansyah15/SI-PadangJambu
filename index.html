@@ -411,6 +411,35 @@
   .struktur-name { font-size: 0.8rem; color: var(--abu); margin-top: 4px; font-style: italic; }
   .struktur-card.utama .struktur-name { color: rgba(248,243,232,0.65); }
 
+  /* ===== BAGAN POHON STRUKTUR (dipakai saat data dari portal ada) ===== */
+  .struktur-grid.as-pohon { display: block; }
+  .pohon-wrap { overflow-x: auto; padding-bottom: 0.5rem; }
+  .pohon, .pohon ul { display: flex; justify-content: center; list-style: none; margin: 0; padding: 0; }
+  .pohon ul { padding-top: 26px; position: relative; }
+  .pohon li { position: relative; padding: 26px 8px 0; display: flex; flex-direction: column; align-items: center; }
+  .pohon > li { padding-top: 0; }
+  /* garis penghubung antar tingkat */
+  .pohon li::before, .pohon li::after {
+    content: ''; position: absolute; top: 0; right: 50%;
+    border-top: 2px solid var(--emas); width: 50%; height: 26px;
+  }
+  .pohon li::after { right: auto; left: 50%; border-left: 2px solid var(--emas); }
+  .pohon > li::before, .pohon > li::after { display: none; }
+  .pohon li:only-child::before, .pohon li:only-child::after { display: none; }
+  .pohon ul li:only-child { padding-top: 26px; }
+  .pohon ul li:only-child::after { display: block; border-left: 2px solid var(--emas); border-top: 0; }
+  .pohon li:first-child::before, .pohon li:last-child::after { border-top: 0; }
+  .pohon li:last-child::before { border-right: 2px solid var(--emas); border-radius: 0 8px 0 0; }
+  .pohon li:first-child::after { border-radius: 8px 0 0 0; }
+  .pohon ul::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    border-left: 2px solid var(--emas); width: 0; height: 26px;
+  }
+  /* kartu di dalam bagan dibuat lebih ringkas */
+  .pohon .struktur-card { min-width: 150px; max-width: 190px; padding: 1rem 0.8rem; }
+  .pohon .struktur-avatar { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 0.6rem; }
+  .pohon .struktur-role { font-size: 0.85rem; }
+
   /* ===== STATISTIK ===== */
   .statistik-section { background: var(--hijau-tua); color: var(--krem); }
   .statistik-section .section-title { color: var(--krem); }
@@ -1192,26 +1221,25 @@
   }
 
   // ===== STRUKTUR PEMERINTAHAN =====
-  // Diisi admin lewat portal (sheet STRUKTUR), dirender ke grid kartu yang
-  // sudah ada di section Profil. Kartu statis = fallback selama belum ada data.
-  // Urutan: BFS dari puncak hierarki; puncak memakai kartu "utama".
+  // Diisi admin lewat portal (sheet STRUKTUR), digambar sebagai bagan pohon
+  // dengan garis penghubung. Grid kartu statis = fallback selama belum ada data.
   function renderStruktur(list) {
     const adaInduk = id => list.some(x => x.id === id);
-    const antre = list
-      .filter(s => !s.induk || !adaInduk(s.induk))
-      .map(p => ({ ...p, utama: true }));
-    const urut = [];
-    while (antre.length) {
-      const kini = antre.shift();
-      urut.push(kini);
-      list.filter(s => s.induk === kini.id).forEach(a => antre.push({ ...a, utama: false }));
-    }
-    document.querySelector('.struktur-grid').innerHTML = urut.map(s => `
-      <div class="struktur-card${s.utama ? ' utama' : ''}">
+    const anakDari = id => list.filter(s => s.induk === id);
+    const kartu = (s, utama) => `
+      <div class="struktur-card${utama ? ' utama' : ''}">
         <div class="struktur-avatar">👤</div>
         <div class="struktur-role">${esc(s.jabatan)}</div>
         <div class="struktur-name">${esc(s.nama)}</div>
-      </div>`).join('');
+      </div>`;
+    const simpul = (s, utama) => {
+      const anak = anakDari(s.id);
+      return `<li>${kartu(s, utama)}${anak.length ? `<ul>${anak.map(a => simpul(a, false)).join('')}</ul>` : ''}</li>`;
+    };
+    const puncak = list.filter(s => !s.induk || !adaInduk(s.induk));
+    const grid = document.querySelector('.struktur-grid');
+    grid.classList.add('as-pohon');
+    grid.innerHTML = `<div class="pohon-wrap"><ul class="pohon">${puncak.map(p => simpul(p, true)).join('')}</ul></div>`;
   }
 
   if (ASPIRASI_URL) {
