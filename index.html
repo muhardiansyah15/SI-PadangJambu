@@ -1160,15 +1160,21 @@
   function renderPengumuman(list) {
     const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const label = { penting: 'Penting', kegiatan: 'Kegiatan', layanan: 'Layanan' };
+    const fmtTgl = tgl => new Date(tgl + 'T00:00:00')
+      .toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     document.querySelector('.peng-list').innerHTML = list.map(pg => {
       const d = pg.waktu ? new Date(pg.waktu) : null;
+      const meta = [];
+      if (pg.tgl) meta.push(`<span>🗓 ${esc(fmtTgl(pg.tgl))}</span>`);
+      if (pg.jam) meta.push(`<span>🕘 ${esc(pg.jam.replace(':', '.'))} WIB</span>`);
+      if (pg.tempat) meta.push(`<span>📍 ${esc(pg.tempat)}</span>`);
       return `<article class="peng-item" data-kat="${pg.kategori}">
         <div class="peng-date"><b>${d ? d.getDate() : ''}</b><span>${d ? bulan[d.getMonth()] : ''}</span></div>
         <div class="peng-body">
           <span class="peng-tag ${pg.kategori}">${label[pg.kategori] || pg.kategori}</span>
           <h3>${esc(pg.judul)}</h3>
           <p>${esc(pg.isi)}</p>
-          ${pg.ket ? `<div class="peng-meta"><span>${esc(pg.ket)}</span></div>` : ''}
+          ${meta.length ? `<div class="peng-meta">${meta.join('')}</div>` : ''}
         </div>
       </article>`;
     }).join('');

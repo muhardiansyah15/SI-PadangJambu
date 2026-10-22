@@ -44,7 +44,7 @@ function lembarPengumuman_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_PENGUMUMAN) || ss.insertSheet(SHEET_PENGUMUMAN);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Waktu", "Judul", "Kategori", "Isi", "Keterangan"]);
+    sh.appendRow(["ID", "Waktu Terbit", "Judul", "Kategori", "Isi", "Tanggal Acara", "Jam", "Tempat"]);
   }
   return sh;
 }
@@ -239,7 +239,9 @@ function doGet(e) {
         judul: String(rowsP[j][2]),
         kategori: String(rowsP[j][3] || "kegiatan"),
         isi: String(rowsP[j][4] || ""),
-        ket: String(rowsP[j][5] || "")
+        tgl: String(rowsP[j][5] || ""),
+        jam: String(rowsP[j][6] || ""),
+        tempat: String(rowsP[j][7] || "")
       });
     }
     return json_({ ok: true, data: peng });
@@ -286,13 +288,16 @@ function doPost(e) {
       var judul = String(p.judul || "").trim().slice(0, 120);
       var kategori = KATEGORI_SAH.indexOf(p.kategori) >= 0 ? p.kategori : "kegiatan";
       var isi = String(p.isi || "").trim().slice(0, 1000);
-      var ket = String(p.ket || "").trim().slice(0, 120);
+      // tgl "YYYY-MM-DD", jam "HH:MM" — disimpan sebagai teks apa adanya
+      var tgl = /^\d{4}-\d{2}-\d{2}$/.test(p.tgl) ? p.tgl : "";
+      var jam = /^\d{2}:\d{2}$/.test(p.jam) ? p.jam : "";
+      var tempat = String(p.tempat || "").trim().slice(0, 100);
       if (!judul || !isi) return json_({ ok: false, pesan: "Judul dan isi wajib diisi." });
       var lockP = LockService.getScriptLock();
       lockP.waitLock(5000);
       try {
         lembarPengumuman_().appendRow([Utilities.getUuid(), new Date(),
-          teks_(judul), kategori, teks_(isi), teks_(ket)]);
+          teks_(judul), kategori, teks_(isi), "'" + tgl, "'" + jam, teks_(tempat)]);
       } finally {
         lockP.releaseLock();
       }

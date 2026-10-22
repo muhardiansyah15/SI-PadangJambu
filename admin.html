@@ -104,6 +104,8 @@
     font: inherit; font-size: 0.75rem; padding: 0.25rem 0.7rem; cursor: pointer;
   }
   .btn-hapus:hover { background: var(--merah-accent); color: var(--putih); }
+  .form-baris { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  @media (max-width: 480px) { .form-baris { grid-template-columns: 1fr; } }
 
   footer {
     margin-top: 2.5rem; padding-top: 1.5rem;
@@ -179,9 +181,19 @@
         <label class="form-label" for="pIsi">Isi pengumuman</label>
         <textarea id="pIsi" class="form-input" maxlength="1000" required></textarea>
       </div>
+      <div class="form-baris">
+        <div class="form-group">
+          <label class="form-label" for="pTanggal">Tanggal acara (opsional)</label>
+          <input type="date" id="pTanggal" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pJam">Jam (opsional)</label>
+          <input type="time" id="pJam" class="form-input">
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label" for="pKet">Keterangan (opsional — jam/tempat/batas waktu)</label>
-        <input type="text" id="pKet" class="form-input" maxlength="120" placeholder="mis. 🕘 09.00 WIB · 📍 Balai Korong">
+        <label class="form-label" for="pTempat">Tempat (opsional)</label>
+        <input type="text" id="pTempat" class="form-input" maxlength="100" placeholder="mis. Balai Korong">
       </div>
       <button class="btn" id="btnPeng" type="submit">Terbitkan ke Website 📢</button>
       <div class="status" id="sPeng"></div>
@@ -295,6 +307,18 @@
 
   const labelKat = { penting: 'Penting', kegiatan: 'Kegiatan', layanan: 'Layanan' };
 
+  const fmtTgl = tgl => tgl
+    ? new Date(tgl + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+
+  function metaAcara(pg) {
+    const bagian = [];
+    if (pg.tgl) bagian.push('🗓 ' + esc(fmtTgl(pg.tgl)));
+    if (pg.jam) bagian.push('🕘 ' + esc(pg.jam.replace(':', '.')) + ' WIB');
+    if (pg.tempat) bagian.push('📍 ' + esc(pg.tempat));
+    return bagian.join(' · ');
+  }
+
   async function kirimPengumuman(ev) {
     ev.preventDefault();
     const btn = document.getElementById('btnPeng');
@@ -308,7 +332,9 @@
           judul: document.getElementById('pJudul').value,
           kategori: document.getElementById('pKategori').value,
           isi: document.getElementById('pIsi').value,
-          ket: document.getElementById('pKet').value
+          tgl: document.getElementById('pTanggal').value,
+          jam: document.getElementById('pJam').value,
+          tempat: document.getElementById('pTempat').value
         })
       });
       const j = await res.json();
@@ -316,7 +342,9 @@
       if (!j.ok) { status('sPeng', j.pesan || 'Gagal menerbitkan.', false); return; }
       document.getElementById('pJudul').value = '';
       document.getElementById('pIsi').value = '';
-      document.getElementById('pKet').value = '';
+      document.getElementById('pTanggal').value = '';
+      document.getElementById('pJam').value = '';
+      document.getElementById('pTempat').value = '';
       status('sPeng', 'Pengumuman tayang di website. ✅', true);
       muatPengumuman();
     } catch (err) {
@@ -344,7 +372,7 @@
             <span>${esc(fmtWaktu(pg.waktu))}</span>
           </div>
           <div class="aspirasi-pesan">${esc(pg.isi)}</div>
-          ${pg.ket ? `<div class="aspirasi-kontak">${esc(pg.ket)}</div>` : ''}
+          ${metaAcara(pg) ? `<div class="aspirasi-kontak">${metaAcara(pg)}</div>` : ''}
           <div style="margin-top:0.6rem;text-align:right;">
             <button class="btn-hapus" onclick="hapusPengumuman('${esc(pg.id)}')">Hapus</button>
           </div>
