@@ -1190,6 +1190,17 @@
     const aktif = document.querySelector('.chip.active');
     const k = aktif ? aktif.dataset.filter : 'semua';
     document.querySelectorAll('.peng-item').forEach(i => i.classList.toggle('hide', k !== 'semua' && i.dataset.kat !== k));
+
+    // marquee di bawah navbar: judul + detail acara; daftar digandakan
+    // dua kali agar animasi berjalannya mulus tanpa celah
+    const baris = list.map(pg => {
+      let t = pg.judul;
+      if (pg.tgl) t += ' — ' + fmtTgl(pg.tgl);
+      if (pg.jam) t += ' pukul ' + pg.jam.replace(':', '.') + ' WIB';
+      if (pg.tempat) t += ' di ' + pg.tempat;
+      return `<span>${esc(t)}</span>`;
+    });
+    document.querySelector('.marquee').innerHTML = baris.concat(baris).join('');
   }
 
   if (ASPIRASI_URL) {
