@@ -8,7 +8,9 @@ Situs statis satu halaman (`index.html`) tanpa build step dan tanpa server — b
 
 ```
 index.html                     Seluruh situs: HTML + CSS + JS dalam satu file
-tools/apps-script-aspirasi.gs  Backend Google Apps Script untuk form "Kontak & Aspirasi"
+admin.html                     Portal admin (login + daftar aspirasi masuk)
+assets/logo.svg                Logo & favicon
+tools/apps-script-aspirasi.gs  Backend Apps Script: form aspirasi + login admin
 ```
 
 ## Mengubah isi situs
@@ -26,9 +28,21 @@ Form kontak mengirim pesan ke spreadsheet privat lewat Apps Script:
 1. Buat spreadsheet baru (privat) di Google Sheets.
 2. Extensions → Apps Script, ganti isi `Code.gs` dengan `tools/apps-script-aspirasi.gs`.
 3. Deploy → New deployment → **Web app** — Execute as: *Me*, Who has access: *Anyone*.
-4. Salin URL `/exec`, tempel ke konstanta `ASPIRASI_URL` di `index.html`.
+4. Salin URL `/exec`, tempel ke konstanta `ASPIRASI_URL` di `index.html` **dan** `admin.html`.
 
 Selama `ASPIRASI_URL` kosong, form otomatis memakai fallback `mailto:`.
+
+## Portal Admin (`admin.html`)
+
+Halaman login untuk pengelola; setelah masuk, menampilkan daftar aspirasi yang masuk
+tanpa perlu membuka spreadsheet.
+
+- Akun disimpan di sheet **ADMIN** pada spreadsheet yang sama: kolom
+  `Username | Password | Nama` (satu baris per pengelola).
+- **Pakai password karangan** — jangan password asli akun lain; password tersimpan
+  sebagai teks biasa di spreadsheet (yang tetap privat).
+- Login menghasilkan token (berlaku 7 hari, tersimpan di browser); salah password
+  5× mengunci username 10 menit.
 
 ## Rencana
 

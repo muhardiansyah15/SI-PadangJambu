@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Portal Admin — Korong Padang Jambu</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hijau-tua: #1a3a2a;
+    --hijau: #2d6a4f;
+    --hijau-muda: #52b788;
+    --emas: #c9a84c;
+    --emas-muda: #e8c97a;
+    --krem: #f8f3e8;
+    --putih: #fefdfb;
+    --abu: #6b7280;
+    --merah-accent: #9b2335;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: linear-gradient(160deg, var(--hijau-tua), var(--hijau));
+    color: var(--hijau-tua);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  .brand {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 1.5rem; color: var(--krem); text-align: left;
+  }
+  .brand img { width: 52px; height: 52px; }
+  .brand h1 { font-family: 'Playfair Display', serif; font-size: 1.3rem; line-height: 1.2; }
+  .brand h1 span { display: block; font-family: 'Source Sans 3', sans-serif; font-weight: 300; font-size: 0.78rem; color: var(--emas-muda); letter-spacing: 1.5px; text-transform: uppercase; }
+
+  .kartu {
+    background: var(--putih);
+    border-radius: 14px;
+    border-top: 4px solid var(--emas);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    padding: 1.8rem;
+  }
+  .kartu h2 { font-family: 'Playfair Display', serif; font-size: 1.25rem; margin-bottom: 1rem; }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-label { display: block; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 0.35rem; color: var(--hijau); }
+  .form-input {
+    width: 100%; padding: 0.7rem 0.9rem;
+    border: 1.5px solid #d8d2c4; border-radius: 8px;
+    font: inherit; background: var(--krem); color: var(--hijau-tua);
+  }
+  .form-input:focus { outline: none; border-color: var(--emas); }
+  .btn {
+    width: 100%; padding: 0.75rem;
+    background: var(--hijau); color: var(--krem);
+    border: none; border-radius: 8px;
+    font: inherit; font-weight: 600; letter-spacing: 0.5px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn:hover { background: var(--hijau-tua); }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+  .btn-kecil { width: auto; padding: 0.45rem 1rem; font-size: 0.85rem; }
+  .btn-polos { background: transparent; color: var(--hijau); border: 1.5px solid var(--hijau); }
+  .btn-polos:hover { background: var(--krem); }
+
+  .status { margin-top: 0.8rem; font-size: 0.85rem; display: none; }
+  .status.gagal { display: block; color: var(--merah-accent); }
+  .status.ok { display: block; color: var(--hijau); }
+
+  .bar-atas { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .bar-atas .salam { font-size: 0.9rem; color: var(--abu); }
+  .bar-atas .aksi { display: flex; gap: 0.5rem; }
+
+  .aspirasi-item {
+    border: 1px solid #e7e1d3; border-left: 4px solid var(--emas);
+    border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.8rem;
+    background: var(--krem);
+  }
+  .aspirasi-meta { display: flex; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--abu); margin-bottom: 0.4rem; }
+  .aspirasi-meta b { color: var(--hijau-tua); font-size: 0.92rem; }
+  .aspirasi-pesan { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
+  .aspirasi-kontak { font-size: 0.8rem; color: var(--hijau); margin-top: 0.4rem; }
+  .kosong { text-align: center; color: var(--abu); padding: 2rem 0; font-size: 0.9rem; }
+
+  .catatan { margin-top: 1.2rem; font-size: 0.78rem; color: rgba(248,243,232,0.7); text-align: center; }
+  .catatan a { color: var(--emas-muda); }
+  .tersembunyi { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <img src="assets/logo.svg" alt="">
+    <h1>Portal Admin<span>Korong Padang Jambu</span></h1>
+  </div>
+
+  <!-- ===== KARTU LOGIN ===== -->
+  <div class="kartu" id="kartuLogin">
+    <h2>Masuk</h2>
+    <form onsubmit="masuk(event)">
+      <div class="form-group">
+        <label class="form-label" for="lUser">Username</label>
+        <input type="text" id="lUser" class="form-input" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="lPass">Password</label>
+        <input type="password" id="lPass" class="form-input" autocomplete="current-password" required>
+      </div>
+      <button class="btn" id="btnMasuk" type="submit">Masuk</button>
+      <div class="status" id="sLogin"></div>
+    </form>
+  </div>
+
+  <!-- ===== KARTU ASPIRASI (setelah login) ===== -->
+  <div class="kartu tersembunyi" id="kartuAspirasi">
+    <div class="bar-atas">
+      <div>
+        <h2>Aspirasi Masuk</h2>
+        <div class="salam" id="salam"></div>
+      </div>
+      <div class="aksi">
+        <button class="btn btn-kecil btn-polos" onclick="muatAspirasi()">Muat Ulang ↻</button>
+        <button class="btn btn-kecil" onclick="keluar()">Keluar</button>
+      </div>
+    </div>
+    <div id="daftar"><div class="kosong">Memuat…</div></div>
+  </div>
+
+  <div class="catatan">Halaman khusus pengelola · <a href="index.html">← kembali ke website</a></div>
+</div>
+
+<script>
+  // URL /exec yang SAMA dengan ASPIRASI_URL di index.html.
+  const ASPIRASI_URL = '';
+
+  const KUNCI_TOKEN = 'pj_admin';
+  let sesi = null;
+  try { sesi = JSON.parse(localStorage.getItem(KUNCI_TOKEN)); } catch (e) {}
+
+  function status(id, teks, berhasil) {
+    const el = document.getElementById(id);
+    el.textContent = teks;
+    el.className = 'status ' + (berhasil ? 'ok' : 'gagal');
+  }
+
+  function tampilkan(login) {
+    document.getElementById('kartuLogin').classList.toggle('tersembunyi', !!login);
+    document.getElementById('kartuAspirasi').classList.toggle('tersembunyi', !login);
+    if (login) document.getElementById('salam').textContent = 'Masuk sebagai ' + login.nama;
+  }
+
+  async function masuk(ev) {
+    ev.preventDefault();
+    if (!ASPIRASI_URL) { status('sLogin', 'ASPIRASI_URL belum diisi di admin.html.', false); return; }
+    const btn = document.getElementById('btnMasuk');
+    btn.disabled = true; btn.textContent = 'Memeriksa…';
+    try {
+      const res = await fetch(ASPIRASI_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          aksi: 'login',
+          user: document.getElementById('lUser').value,
+          pass: document.getElementById('lPass').value
+        })
+      });
+      const j = await res.json();
+      if (!j.ok) { status('sLogin', j.pesan || 'Gagal masuk.', false); return; }
+      sesi = { token: j.token, nama: j.nama };
+      try { localStorage.setItem(KUNCI_TOKEN, JSON.stringify(sesi)); } catch (e) {}
+      document.getElementById('lPass').value = '';
+      tampilkan(sesi);
+      muatAspirasi();
+    } catch (err) {
+      status('sLogin', 'Gagal terhubung. Periksa koneksi internet.', false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Masuk';
+    }
+  }
+
+  function keluar() {
+    sesi = null;
+    try { localStorage.removeItem(KUNCI_TOKEN); } catch (e) {}
+    tampilkan(null);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  const fmtWaktu = iso => iso
+    ? new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+    : '';
+
+  async function muatAspirasi() {
+    const wadah = document.getElementById('daftar');
+    wadah.innerHTML = '<div class="kosong">Memuat…</div>';
+    try {
+      const res = await fetch(ASPIRASI_URL + '?daftar=aspirasi&token=' + encodeURIComponent(sesi.token));
+      const j = await res.json();
+      if (j.butuhLogin) { keluar(); status('sLogin', 'Sesi berakhir. Silakan masuk lagi.', false); return; }
+      if (!j.ok) throw new Error();
+      if (!j.data.length) {
+        wadah.innerHTML = '<div class="kosong">Belum ada aspirasi yang masuk.</div>';
+        return;
+      }
+      wadah.innerHTML = j.data.map(a => `
+        <div class="aspirasi-item">
+          <div class="aspirasi-meta"><b>${esc(a.nama)}</b><span>${esc(fmtWaktu(a.waktu))}</span></div>
+          <div class="aspirasi-pesan">${esc(a.pesan)}</div>
+          ${a.kontak && a.kontak !== '-' ? `<div class="aspirasi-kontak">📱 ${esc(a.kontak)}</div>` : ''}
+        </div>`).join('');
+    } catch (err) {
+      wadah.innerHTML = '<div class="kosong">Gagal memuat. Coba muat ulang.</div>';
+    }
+  }
+
+  // sesi tersimpan? langsung masuk & muat
+  if (sesi && sesi.token) { tampilkan(sesi); muatAspirasi(); }
+</script>
+</body>
+</html>
