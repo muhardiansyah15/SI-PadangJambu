@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Logo Korong Padang Jambu: jambu di atas ladang, lingkaran emas -->
+  <defs>
+    <clipPath id="bulat">
+      <circle cx="60" cy="60" r="51"/>
+    </clipPath>
+  </defs>
+
+  <!-- latar lingkaran krem + cincin emas -->
+  <circle cx="60" cy="60" r="51" fill="#f8f3e8"/>
+
+  <g clip-path="url(#bulat)">
+    <!-- ladang: dua gelombang hijau -->
+    <path d="M 2,102 Q 62,58 122,108 L 122,122 L 2,122 Z" fill="#2d6a4f"/>
+    <path d="M -8,112 Q 38,66 92,116 L 92,122 L -8,122 Z" fill="#52b788" stroke="#1a3a2a" stroke-width="3"/>
+
+    <!-- tangkai -->
+    <path d="M 60,30 C 59,34 59,38 60,43" fill="none" stroke="#1a3a2a" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- daun kiri & kanan, pangkalnya menempel di tangkai -->
+    <path d="M 60,33 C 53,24 42,22 37,26 C 40,35 53,39 60,33 Z" fill="#2d6a4f"/>
+    <path d="M 60,31 C 63,20 74,15 80,19 C 79,29 67,36 60,31 Z" fill="#52b788"/>
+
+    <!-- buah jambu air (bentuk lonceng) -->
+    <path d="M 60,41 C 52,47 43,58 43,69 C 43,80 51,86 60,86 C 69,86 77,80 77,69 C 77,58 68,47 60,41 Z" fill="#9b2335"/>
+    <!-- facet terang di sisi kiri buah -->
+    <path d="M 60,41 C 52,47 43,58 43,69 C 43,78 48,84 55,85 C 51,78 50,62 60,41 Z" fill="#c03a4d"/>
+  </g>
+
+  <circle cx="60" cy="60" r="51" fill="none" stroke="#c9a84c" stroke-width="6"/>
+</svg>
