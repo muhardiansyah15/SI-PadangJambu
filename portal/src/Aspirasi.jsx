@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, fmtWaktu } from './api.js'
 
-export default function Aspirasi({ sesi, onSesiBerakhir, onKeluar }) {
+export default function Aspirasi({ sesi, onSesiBerakhir }) {
   const [data, setData] = useState(null) // null = memuat, [] = kosong
   const [gagal, setGagal] = useState(false)
 
@@ -25,14 +25,8 @@ export default function Aspirasi({ sesi, onSesiBerakhir, onKeluar }) {
   return (
     <div className="kartu">
       <div className="bar-atas">
-        <div>
-          <h2>Aspirasi Masuk</h2>
-          <div className="salam">Masuk sebagai {sesi.nama}</div>
-        </div>
-        <div className="aksi">
-          <button className="btn btn-kecil btn-polos" onClick={muat}>Muat Ulang ↻</button>
-          <button className="btn btn-kecil" onClick={onKeluar}>Keluar</button>
-        </div>
+        <h2>Aspirasi Masuk</h2>
+        <button className="btn btn-kecil btn-polos" onClick={muat}>Muat Ulang ↻</button>
       </div>
 
       {data === null && <div className="kosong">Memuat…</div>}

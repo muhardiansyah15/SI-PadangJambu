@@ -19,6 +19,7 @@ var SHEET_NAME = "ASPIRASI";
 var SHEET_USER = "ADMIN";
 var SHEET_PENDUDUK = "PENDUDUK";
 var SHEET_PENGUMUMAN = "PENGUMUMAN";
+var SHEET_STRUKTUR = "STRUKTUR";
 var TOKEN_HARI = 7; // token login berlaku 7 hari
 var KATEGORI_SAH = ["penting", "kegiatan", "layanan"];
 
@@ -45,6 +46,15 @@ function lembarPengumuman_() {
   var sh = ss.getSheetByName(SHEET_PENGUMUMAN) || ss.insertSheet(SHEET_PENGUMUMAN);
   if (sh.getLastRow() === 0) {
     sh.appendRow(["ID", "Waktu Terbit", "Judul", "Kategori", "Isi", "Tanggal Acara", "Jam", "Tempat"]);
+  }
+  return sh;
+}
+
+function lembarStruktur_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_STRUKTUR) || ss.insertSheet(SHEET_STRUKTUR);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan"]);
   }
   return sh;
 }
@@ -221,6 +231,7 @@ function bersihkanTokenKadaluarsa_() {
  * GET ?daftar=statistik: agregat kependudukan (publik — hanya angka,
  *   tidak pernah data per orang).
  * GET ?daftar=pengumuman: daftar pengumuman (publik, maks. 50 terbaru).
+ * GET ?daftar=struktur: struktur pemerintahan korong (publik).
  * GET ?daftar=aspirasi&token=…: daftar aspirasi (hanya admin login,
  *   maks. 500 terbaru).
  */
@@ -246,6 +257,20 @@ function doGet(e) {
     }
     return json_({ ok: true, data: peng });
   }
+  if (e && e.parameter && e.parameter.daftar === "struktur") {
+    var rowsS = lembarStruktur_().getDataRange().getValues();
+    var struktur = [];
+    for (var s = 1; s < rowsS.length && struktur.length < 100; s++) {
+      if (!rowsS[s][1]) continue;
+      struktur.push({
+        id: String(rowsS[s][0]),
+        nama: String(rowsS[s][1]),
+        jabatan: String(rowsS[s][2] || ""),
+        induk: String(rowsS[s][3] || "")
+      });
+    }
+    return json_({ ok: true, data: struktur });
+  }
   if (e && e.parameter && e.parameter.daftar === "aspirasi") {
     var admin = adminDariToken_(e.parameter.token);
     if (!admin) return json_({ ok: false, butuhLogin: true });
@@ -270,6 +295,10 @@ function doGet(e) {
  * POST {aksi:"pengumuman", token, judul, kategori, isi, ket}: tambah
  *   pengumuman (wajib login).
  * POST {aksi:"pengumuman-hapus", token, id}: hapus pengumuman (wajib login).
+ * POST {aksi:"struktur", token, nama, jabatan, induk}: tambah pengurus
+ *   (wajib login; induk = ID atasan, kosong = puncak).
+ * POST {aksi:"struktur-hapus", token, id}: hapus pengurus (wajib login;
+ *   ditolak bila masih punya bawahan).
  * POST {nama, kontak, pesan}: simpan aspirasi warga (publik).
  * Rem sederhana: maks. 1 kiriman per 30 detik untuk seluruh situs
  * (cukup untuk korong kecil, menahan spam beruntun dari skrip).
@@ -313,6 +342,55 @@ function doPost(e) {
         for (var i = rows.length - 1; i >= 1; i--) {
           if (String(rows[i][0]) === id) {
             sh.deleteRow(i + 1);
+            ok = true;
+            break;
+          }
+        }
+      }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "struktur") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var namaS = String(p.nama || "").trim().slice(0, 80);
+      var jabatan = String(p.jabatan || "").trim().slice(0, 80);
+      var induk = String(p.induk || "").trim().slice(0, 64);
+      if (!namaS || !jabatan) return json_({ ok: false, pesan: "Nama dan jabatan wajib diisi." });
+      var shS = lembarStruktur_();
+      var rowsS = shS.getDataRange().getValues();
+      // induk harus ID yang ada (atau kosong = puncak)
+      if (induk) {
+        var ada = false;
+        for (var a = 1; a < rowsS.length; a++) {
+          if (String(rowsS[a][0]) === induk) { ada = true; break; }
+        }
+        if (!ada) induk = "";
+      }
+      if (rowsS.length > 100) return json_({ ok: false, pesan: "Struktur sudah terlalu besar." });
+      var lockS = LockService.getScriptLock();
+      lockS.waitLock(5000);
+      try {
+        shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk]);
+      } finally {
+        lockS.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "struktur-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var idS = String(p.id || "");
+      if (idS) {
+        var shH = lembarStruktur_();
+        var rowsH = shH.getDataRange().getValues();
+        for (var b = 1; b < rowsH.length; b++) {
+          if (String(rowsH[b][3]) === idS && rowsH[b][1]) {
+            return json_({ ok: false, pesan: "Masih punya bawahan. Hapus atau pindahkan bawahannya dulu." });
+          }
+        }
+        for (var c = rowsH.length - 1; c >= 1; c--) {
+          if (String(rowsH[c][0]) === idS) {
+            shH.deleteRow(c + 1);
             ok = true;
             break;
           }

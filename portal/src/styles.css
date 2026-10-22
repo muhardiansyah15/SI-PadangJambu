@@ -68,6 +68,28 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 }
 .btn-hapus:hover { background: var(--merah-accent); color: var(--putih); }
 
+.kartu-nav { padding: 1.1rem 1.8rem; }
+.kartu-nav .bar-atas { margin-bottom: 0.8rem; }
+.menu-tab { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.menu-item {
+  background: var(--krem); color: var(--hijau);
+  border: 1.5px solid #d8d2c4; border-radius: 20px;
+  font: inherit; font-size: 0.88rem; font-weight: 600;
+  padding: 0.45rem 1.1rem; cursor: pointer; transition: all 0.2s;
+}
+.menu-item:hover { border-color: var(--emas); }
+.menu-item.aktif { background: var(--hijau); color: var(--krem); border-color: var(--hijau); }
+
+.str-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+  border: 1px solid #e7e1d3; border-left: 4px solid var(--emas);
+  border-radius: 8px; padding: 0.7rem 1rem; margin-bottom: 0.6rem;
+  background: var(--krem);
+}
+.str-jabatan { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--hijau); }
+.str-nama { font-family: 'Playfair Display', serif; font-size: 1.05rem; }
+.str-anak { margin-left: 1.4rem; padding-left: 1rem; border-left: 2px dashed rgba(201,168,76,0.6); }
+
 .status { margin-top: 0.8rem; font-size: 0.85rem; }
 .status.gagal { color: var(--merah-accent); }
 .status.ok { color: var(--hijau); }

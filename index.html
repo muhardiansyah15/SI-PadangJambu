@@ -148,6 +148,17 @@
   }
   .hero-scroll svg { width: 28px; opacity: 0.6; }
 
+  /* ===== STRUKTUR PEMERINTAHAN ===== */
+  .struktur-pohon { max-width: 640px; margin: 0 auto; }
+  .str-item {
+    border: 1px solid #e7e1d3; border-left: 4px solid var(--emas);
+    border-radius: 10px; padding: 0.8rem 1.1rem; margin-bottom: 0.6rem;
+    background: var(--krem);
+  }
+  .str-jabatan { font-size: 0.72rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--hijau); }
+  .str-nama { font-family: 'Playfair Display', serif; font-size: 1.15rem; }
+  .str-anak { margin-left: 1.6rem; padding-left: 1.1rem; border-left: 2px dashed rgba(201,168,76,0.6); }
+
   .form-status { margin-top: 0.8rem; font-size: 0.85rem; display: none; }
   .form-status.ok { color: var(--hijau-muda); display: block; }
   .form-status.gagal { color: #e8a0a0; display: block; }
@@ -677,6 +688,16 @@
 </section>
 
 <!-- STATISTIK -->
+<!-- STRUKTUR PEMERINTAHAN (diisi dari portal; tersembunyi bila kosong) -->
+<section class="section struktur-section" id="struktur" style="display:none">
+  <div class="section-inner">
+    <div class="section-label">🏛 Pemerintahan</div>
+    <h2 class="section-title">Struktur <em>Pemerintahan Korong</em></h2>
+    <div class="title-bar"></div>
+    <div class="struktur-pohon" id="strukturPohon"></div>
+  </div>
+</section>
+
 <section class="section statistik-section" id="statistik">
   <div class="section-inner">
     <div class="section-label">📊 Data Kependudukan</div>
@@ -1189,6 +1210,28 @@
       .then(r => r.json())
       .then(j => { if (j.ok && j.data.length) renderPengumuman(j.data); })
       .catch(() => {}); // gagal memuat → pengumuman statis tetap tampil
+  }
+
+  // ===== STRUKTUR PEMERINTAHAN =====
+  // Diisi admin lewat portal (sheet STRUKTUR). Section tampil hanya bila ada data.
+  function renderStruktur(list) {
+    const anakDari = id => list.filter(s => s.induk === id);
+    const cabang = item => `
+      <div class="str-item">
+        <div class="str-jabatan">${esc(item.jabatan)}</div>
+        <div class="str-nama">${esc(item.nama)}</div>
+      </div>
+      ${anakDari(item.id).length ? `<div class="str-anak">${anakDari(item.id).map(cabang).join('')}</div>` : ''}`;
+    const puncak = list.filter(s => !s.induk || !list.some(x => x.id === s.induk));
+    document.getElementById('strukturPohon').innerHTML = puncak.map(cabang).join('');
+    document.getElementById('struktur').style.display = '';
+  }
+
+  if (ASPIRASI_URL) {
+    fetch(ASPIRASI_URL + '?daftar=struktur')
+      .then(r => r.json())
+      .then(j => { if (j.ok && Array.isArray(j.data) && j.data.length) renderStruktur(j.data); })
+      .catch(() => {}); // gagal memuat → section tetap tersembunyi
   }
 
   function countUp(el) {
