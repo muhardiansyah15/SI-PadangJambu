@@ -145,6 +145,10 @@
   }
   .hero-scroll svg { width: 28px; opacity: 0.6; }
 
+  .form-status { margin-top: 0.8rem; font-size: 0.85rem; display: none; }
+  .form-status.ok { color: var(--hijau-muda); display: block; }
+  .form-status.gagal { color: #e8a0a0; display: block; }
+
   /* ===== SECTIONS ===== */
   .section { padding: 5rem 2rem; }
   .section-inner { max-width: 1100px; margin: 0 auto; }
@@ -1019,8 +1023,9 @@
             <label class="form-label" for="fPesan">Pesan / Aspirasi</label>
             <textarea id="fPesan" class="form-textarea" placeholder="Tulis pesan Anda di sini..."></textarea>
           </div>
-          <button class="btn-kirim" onclick="kirimPesan()">Kirim via Email ✉️</button>
-          <div class="kontak-desc">Pesan akan dibuka di aplikasi email pada perangkat Anda.</div>
+          <button class="btn-kirim" id="btnKirim" onclick="kirimPesan()">Kirim Pesan 📨</button>
+          <div class="form-status" id="fStatus"></div>
+          <div class="kontak-desc" id="fCatatan">Pesan Anda diteruskan ke pengelola korong.</div>
         </div>
       </div>
     </div>
@@ -1130,15 +1135,55 @@
   }, { threshold: 0.25 });
   document.querySelectorAll('.stat-reveal').forEach(el => statObserver.observe(el));
 
-  // ===== FORM KONTAK (buka aplikasi email) =====
-  function kirimPesan() {
+  // ===== FORM KONTAK & ASPIRASI =====
+  // Isi dengan URL /exec hasil deploy tools/apps-script-aspirasi.gs.
+  // Selama kosong, form memakai fallback mailto: (buka aplikasi email).
+  const ASPIRASI_URL = '';
+
+  function statusForm(teks, berhasil) {
+    const el = document.getElementById('fStatus');
+    el.textContent = teks;
+    el.className = 'form-status ' + (berhasil ? 'ok' : 'gagal');
+  }
+
+  async function kirimPesan() {
     const nama = document.getElementById('fNama').value.trim();
     const kontak = document.getElementById('fKontak').value.trim();
     const pesan = document.getElementById('fPesan').value.trim();
-    if (!pesan) { alert('Silakan tulis pesan Anda terlebih dahulu.'); return; }
-    const body = 'Nama: ' + (nama || '-') + '\nKontak: ' + (kontak || '-') + '\n\n' + pesan;
-    window.location.href = 'mailto:muhardiansyah.dev@gmail.com?subject=' +
-      encodeURIComponent('Aspirasi Warga Korong Padang Jambu') + '&body=' + encodeURIComponent(body);
+    if (!pesan) { statusForm('Silakan tulis pesan Anda terlebih dahulu.', false); return; }
+
+    if (!ASPIRASI_URL) {
+      const body = 'Nama: ' + (nama || '-') + '\nKontak: ' + (kontak || '-') + '\n\n' + pesan;
+      window.location.href = 'mailto:muhardiansyah.dev@gmail.com?subject=' +
+        encodeURIComponent('Aspirasi Warga Korong Padang Jambu') + '&body=' + encodeURIComponent(body);
+      return;
+    }
+
+    const btn = document.getElementById('btnKirim');
+    btn.disabled = true;
+    btn.textContent = 'Mengirim…';
+    try {
+      const res = await fetch(ASPIRASI_URL, {
+        method: 'POST',
+        body: JSON.stringify({ nama, kontak, pesan })
+      });
+      const j = await res.json();
+      if (!j.ok) throw new Error(j.pesan || 'gagal');
+      document.getElementById('fNama').value = '';
+      document.getElementById('fKontak').value = '';
+      document.getElementById('fPesan').value = '';
+      statusForm('Terima kasih! Pesan Anda sudah kami terima. 🙏', true);
+    } catch (err) {
+      statusForm('Gagal mengirim pesan. Periksa koneksi internet lalu coba lagi.', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Kirim Pesan 📨';
+    }
+  }
+
+  if (!ASPIRASI_URL) {
+    document.getElementById('fCatatan').textContent = 'Pesan akan dibuka di aplikasi email pada perangkat Anda.';
+    document.getElementById('btnKirim').textContent = 'Kirim via Email ✉️';
   }
 
   // ===== FILTER PENGUMUMAN =====
