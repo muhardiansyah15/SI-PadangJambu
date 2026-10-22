@@ -31,45 +31,55 @@ export default function App() {
 
   const sesiBerakhir = () => keluar('Sesi berakhir. Silakan masuk lagi.')
 
-  return (
-    <div className="wrap">
-      <div className="brand">
-        <img src="./logo.svg" alt="" />
-        <h1>
-          Portal Admin
-          <span>Korong Padang Jambu</span>
-        </h1>
-      </div>
-
-      {!sesi ? (
+  if (!sesi) {
+    return (
+      <div className="wrap">
+        <div className="brand">
+          <img src="./logo.svg" alt="" />
+          <h1>
+            Portal Admin
+            <span>Korong Padang Jambu</span>
+          </h1>
+        </div>
         <Login onMasuk={masuk} pesanAwal={pesanLogin} />
-      ) : (
-        <>
-          <div className="kartu kartu-nav">
-            <div className="bar-atas">
-              <div className="salam">Masuk sebagai <b>{sesi.nama}</b></div>
-              <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
-            </div>
-            <nav className="menu-tab">
-              {MENU.map(m => (
-                <button
-                  key={m.id}
-                  className={'menu-item' + (tab === m.id ? ' aktif' : '')}
-                  onClick={() => setTab(m.id)}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+        <Footer />
+      </div>
+    )
+  }
 
-          {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
-          {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
-          {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
-        </>
-      )}
+  return (
+    <div className="tataletak">
+      <aside className="sisi">
+        <div className="brand brand-sisi">
+          <img src="./logo.svg" alt="" />
+          <h1>
+            Portal Admin
+            <span>Korong Padang Jambu</span>
+          </h1>
+        </div>
+        <nav className="menu-sisi">
+          {MENU.map(m => (
+            <button
+              key={m.id}
+              className={'menu-item' + (tab === m.id ? ' aktif' : '')}
+              onClick={() => setTab(m.id)}
+            >
+              {m.label}
+            </button>
+          ))}
+        </nav>
+        <div className="sisi-bawah">
+          <div className="salam-sisi">Masuk sebagai<br /><b>{sesi.nama}</b></div>
+          <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
+        </div>
+      </aside>
 
-      <Footer />
+      <main className="isi">
+        {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        <Footer />
+      </main>
     </div>
   )
 }

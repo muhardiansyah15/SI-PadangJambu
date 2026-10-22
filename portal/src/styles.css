@@ -68,17 +68,48 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 }
 .btn-hapus:hover { background: var(--merah-accent); color: var(--putih); }
 
-.kartu-nav { padding: 1.1rem 1.8rem; }
-.kartu-nav .bar-atas { margin-bottom: 0.8rem; }
-.menu-tab { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.menu-item {
-  background: var(--krem); color: var(--hijau);
-  border: 1.5px solid #d8d2c4; border-radius: 20px;
-  font: inherit; font-size: 0.88rem; font-weight: 600;
-  padding: 0.45rem 1.1rem; cursor: pointer; transition: all 0.2s;
+/* ===== Tata letak sidebar (setelah login) ===== */
+.tataletak {
+  max-width: 1150px; margin: 0 auto;
+  display: grid; grid-template-columns: 250px 1fr; gap: 1.5rem;
+  align-items: start;
 }
-.menu-item:hover { border-color: var(--emas); }
-.menu-item.aktif { background: var(--hijau); color: var(--krem); border-color: var(--hijau); }
+.sisi {
+  position: sticky; top: 1rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 14px; padding: 1.4rem 1.1rem;
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+.brand-sisi { margin-bottom: 0; justify-content: flex-start; }
+.brand-sisi img { width: 44px; height: 44px; }
+.brand-sisi h1 { font-size: 1.05rem; }
+.menu-sisi { display: flex; flex-direction: column; gap: 0.3rem; }
+.menu-item {
+  background: transparent; color: var(--krem);
+  border: none; border-radius: 8px;
+  font: inherit; font-size: 0.95rem; font-weight: 600;
+  padding: 0.65rem 0.9rem; cursor: pointer; text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+.menu-item:hover { background: rgba(248, 243, 232, 0.12); }
+.menu-item.aktif { background: var(--emas); color: var(--hijau-tua); }
+.sisi-bawah {
+  border-top: 1px solid rgba(201, 168, 76, 0.3);
+  padding-top: 1rem; display: flex; align-items: center;
+  justify-content: space-between; gap: 0.6rem;
+}
+.salam-sisi { font-size: 0.78rem; color: rgba(248, 243, 232, 0.75); line-height: 1.4; }
+.salam-sisi b { color: var(--krem); font-size: 0.88rem; }
+.isi { min-width: 0; }
+.isi footer { margin-top: 2rem; }
+
+@media (max-width: 820px) {
+  .tataletak { grid-template-columns: 1fr; }
+  .sisi { position: static; }
+  .menu-sisi { flex-direction: row; flex-wrap: wrap; }
+  .menu-item { flex: 1 1 auto; text-align: center; }
+}
 
 .str-item {
   display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
