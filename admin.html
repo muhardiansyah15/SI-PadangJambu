@@ -86,6 +86,24 @@
   .kosong { text-align: center; color: var(--abu); padding: 2rem 0; font-size: 0.9rem; }
 
   .tersembunyi { display: none; }
+  .kartu + .kartu { margin-top: 1.2rem; }
+  select.form-input { appearance: auto; }
+  textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; }
+  .sub-judul { font-family: 'Playfair Display', serif; font-size: 1.05rem; margin: 1.4rem 0 0.8rem; }
+  .peng-tag-mini {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 10px; margin-right: 6px;
+    background: var(--hijau); color: var(--krem);
+  }
+  .peng-tag-mini.penting { background: var(--merah-accent); }
+  .peng-tag-mini.layanan { background: var(--emas); color: var(--hijau-tua); }
+  .btn-hapus {
+    background: transparent; border: 1px solid var(--merah-accent);
+    color: var(--merah-accent); border-radius: 6px;
+    font: inherit; font-size: 0.75rem; padding: 0.25rem 0.7rem; cursor: pointer;
+  }
+  .btn-hapus:hover { background: var(--merah-accent); color: var(--putih); }
 
   footer {
     margin-top: 2.5rem; padding-top: 1.5rem;
@@ -141,6 +159,38 @@
     <div id="daftar"><div class="kosong">Memuat…</div></div>
   </div>
 
+  <!-- ===== KARTU PENGUMUMAN (setelah login) ===== -->
+  <div class="kartu tersembunyi" id="kartuPengumuman">
+    <h2>Kelola Pengumuman</h2>
+    <form onsubmit="kirimPengumuman(event)">
+      <div class="form-group">
+        <label class="form-label" for="pJudul">Judul</label>
+        <input type="text" id="pJudul" class="form-input" maxlength="120" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pKategori">Kategori</label>
+        <select id="pKategori" class="form-input">
+          <option value="kegiatan">Kegiatan</option>
+          <option value="penting">Penting</option>
+          <option value="layanan">Layanan</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pIsi">Isi pengumuman</label>
+        <textarea id="pIsi" class="form-input" maxlength="1000" required></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pKet">Keterangan (opsional — jam/tempat/batas waktu)</label>
+        <input type="text" id="pKet" class="form-input" maxlength="120" placeholder="mis. 🕘 09.00 WIB · 📍 Balai Korong">
+      </div>
+      <button class="btn" id="btnPeng" type="submit">Terbitkan ke Website 📢</button>
+      <div class="status" id="sPeng"></div>
+    </form>
+
+    <div class="sub-judul">Pengumuman Tayang</div>
+    <div id="daftarPeng"><div class="kosong">Memuat…</div></div>
+  </div>
+
   <footer>
     <img src="assets/logo.svg" alt="">
     <div class="footer-nama">Korong Padang Jambu</div>
@@ -170,6 +220,7 @@
   function tampilkan(login) {
     document.getElementById('kartuLogin').classList.toggle('tersembunyi', !!login);
     document.getElementById('kartuAspirasi').classList.toggle('tersembunyi', !login);
+    document.getElementById('kartuPengumuman').classList.toggle('tersembunyi', !login);
     if (login) document.getElementById('salam').textContent = 'Masuk sebagai ' + login.nama;
   }
 
@@ -194,6 +245,7 @@
       document.getElementById('lPass').value = '';
       tampilkan(sesi);
       muatAspirasi();
+      muatPengumuman();
     } catch (err) {
       status('sLogin', 'Gagal terhubung. Periksa koneksi internet.', false);
     } finally {
@@ -239,8 +291,86 @@
     }
   }
 
+  /* ---------- Pengumuman ---------- */
+
+  const labelKat = { penting: 'Penting', kegiatan: 'Kegiatan', layanan: 'Layanan' };
+
+  async function kirimPengumuman(ev) {
+    ev.preventDefault();
+    const btn = document.getElementById('btnPeng');
+    btn.disabled = true; btn.textContent = 'Menerbitkan…';
+    try {
+      const res = await fetch(ASPIRASI_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          aksi: 'pengumuman',
+          token: sesi.token,
+          judul: document.getElementById('pJudul').value,
+          kategori: document.getElementById('pKategori').value,
+          isi: document.getElementById('pIsi').value,
+          ket: document.getElementById('pKet').value
+        })
+      });
+      const j = await res.json();
+      if (j.butuhLogin) { keluar(); status('sLogin', 'Sesi berakhir. Silakan masuk lagi.', false); return; }
+      if (!j.ok) { status('sPeng', j.pesan || 'Gagal menerbitkan.', false); return; }
+      document.getElementById('pJudul').value = '';
+      document.getElementById('pIsi').value = '';
+      document.getElementById('pKet').value = '';
+      status('sPeng', 'Pengumuman tayang di website. ✅', true);
+      muatPengumuman();
+    } catch (err) {
+      status('sPeng', 'Gagal terhubung. Periksa koneksi internet.', false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Terbitkan ke Website 📢';
+    }
+  }
+
+  async function muatPengumuman() {
+    const wadah = document.getElementById('daftarPeng');
+    wadah.innerHTML = '<div class="kosong">Memuat…</div>';
+    try {
+      const res = await fetch(ASPIRASI_URL + '?daftar=pengumuman');
+      const j = await res.json();
+      if (!j.ok) throw new Error();
+      if (!j.data.length) {
+        wadah.innerHTML = '<div class="kosong">Belum ada pengumuman. Website menampilkan contoh bawaan.</div>';
+        return;
+      }
+      wadah.innerHTML = j.data.map(pg => `
+        <div class="aspirasi-item">
+          <div class="aspirasi-meta">
+            <b><span class="peng-tag-mini ${esc(pg.kategori)}">${labelKat[pg.kategori] || esc(pg.kategori)}</span>${esc(pg.judul)}</b>
+            <span>${esc(fmtWaktu(pg.waktu))}</span>
+          </div>
+          <div class="aspirasi-pesan">${esc(pg.isi)}</div>
+          ${pg.ket ? `<div class="aspirasi-kontak">${esc(pg.ket)}</div>` : ''}
+          <div style="margin-top:0.6rem;text-align:right;">
+            <button class="btn-hapus" onclick="hapusPengumuman('${esc(pg.id)}')">Hapus</button>
+          </div>
+        </div>`).join('');
+    } catch (err) {
+      wadah.innerHTML = '<div class="kosong">Gagal memuat. Coba muat ulang.</div>';
+    }
+  }
+
+  async function hapusPengumuman(id) {
+    if (!confirm('Hapus pengumuman ini dari website?')) return;
+    try {
+      const res = await fetch(ASPIRASI_URL, {
+        method: 'POST',
+        body: JSON.stringify({ aksi: 'pengumuman-hapus', token: sesi.token, id: id })
+      });
+      const j = await res.json();
+      if (j.butuhLogin) { keluar(); status('sLogin', 'Sesi berakhir. Silakan masuk lagi.', false); return; }
+      muatPengumuman();
+    } catch (err) {
+      alert('Gagal menghapus. Periksa koneksi internet.');
+    }
+  }
+
   // sesi tersimpan? langsung masuk & muat
-  if (sesi && sesi.token) { tampilkan(sesi); muatAspirasi(); }
+  if (sesi && sesi.token) { tampilkan(sesi); muatAspirasi(); muatPengumuman(); }
 </script>
 </body>
 </html>

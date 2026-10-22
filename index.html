@@ -1090,6 +1090,8 @@
   };
 
   const fmt = n => n.toLocaleString('id-ID');
+  const esc = s => String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let statTampil = false; // bagian statistik sudah pernah terlihat di layar?
 
   function renderBars(id, rows, fillClass) {
@@ -1150,6 +1152,37 @@
         }
       })
       .catch(() => {}); // gagal memuat → angka statis tetap tampil
+  }
+
+  // ===== PENGUMUMAN DARI PORTAL =====
+  // Diisi admin lewat admin.html (sheet PENGUMUMAN). Markup statis di bawah
+  // adalah fallback selama URL kosong, fetch gagal, atau belum ada pengumuman.
+  function renderPengumuman(list) {
+    const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const label = { penting: 'Penting', kegiatan: 'Kegiatan', layanan: 'Layanan' };
+    document.querySelector('.peng-list').innerHTML = list.map(pg => {
+      const d = pg.waktu ? new Date(pg.waktu) : null;
+      return `<article class="peng-item" data-kat="${pg.kategori}">
+        <div class="peng-date"><b>${d ? d.getDate() : ''}</b><span>${d ? bulan[d.getMonth()] : ''}</span></div>
+        <div class="peng-body">
+          <span class="peng-tag ${pg.kategori}">${label[pg.kategori] || pg.kategori}</span>
+          <h3>${esc(pg.judul)}</h3>
+          <p>${esc(pg.isi)}</p>
+          ${pg.ket ? `<div class="peng-meta"><span>${esc(pg.ket)}</span></div>` : ''}
+        </div>
+      </article>`;
+    }).join('');
+    // terapkan ulang filter chip yang sedang aktif
+    const aktif = document.querySelector('.chip.active');
+    const k = aktif ? aktif.dataset.filter : 'semua';
+    document.querySelectorAll('.peng-item').forEach(i => i.classList.toggle('hide', k !== 'semua' && i.dataset.kat !== k));
+  }
+
+  if (ASPIRASI_URL) {
+    fetch(ASPIRASI_URL + '?daftar=pengumuman')
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.data.length) renderPengumuman(j.data); })
+      .catch(() => {}); // gagal memuat → pengumuman statis tetap tampil
   }
 
   function countUp(el) {

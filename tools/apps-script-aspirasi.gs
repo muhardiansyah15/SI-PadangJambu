@@ -18,7 +18,9 @@
 var SHEET_NAME = "ASPIRASI";
 var SHEET_USER = "ADMIN";
 var SHEET_PENDUDUK = "PENDUDUK";
+var SHEET_PENGUMUMAN = "PENGUMUMAN";
 var TOKEN_HARI = 7; // token login berlaku 7 hari
+var KATEGORI_SAH = ["penting", "kegiatan", "layanan"];
 
 function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -34,6 +36,15 @@ function lembarUser_() {
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
     sh.appendRow(["Username", "Password", "Nama"]);
+  }
+  return sh;
+}
+
+function lembarPengumuman_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_PENGUMUMAN) || ss.insertSheet(SHEET_PENGUMUMAN);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Waktu", "Judul", "Kategori", "Isi", "Keterangan"]);
   }
   return sh;
 }
@@ -209,12 +220,29 @@ function bersihkanTokenKadaluarsa_() {
  * GET: cek hidup saja — isi aspirasi TIDAK pernah keluar tanpa login.
  * GET ?daftar=statistik: agregat kependudukan (publik — hanya angka,
  *   tidak pernah data per orang).
+ * GET ?daftar=pengumuman: daftar pengumuman (publik, maks. 50 terbaru).
  * GET ?daftar=aspirasi&token=…: daftar aspirasi (hanya admin login,
  *   maks. 500 terbaru).
  */
 function doGet(e) {
   if (e && e.parameter && e.parameter.daftar === "statistik") {
     return json_({ ok: true, data: hitungStatistik_() });
+  }
+  if (e && e.parameter && e.parameter.daftar === "pengumuman") {
+    var rowsP = lembarPengumuman_().getDataRange().getValues();
+    var peng = [];
+    for (var j = rowsP.length - 1; j >= 1 && peng.length < 50; j--) {
+      if (!rowsP[j][2]) continue;
+      peng.push({
+        id: String(rowsP[j][0]),
+        waktu: rowsP[j][1] ? new Date(rowsP[j][1]).toISOString() : "",
+        judul: String(rowsP[j][2]),
+        kategori: String(rowsP[j][3] || "kegiatan"),
+        isi: String(rowsP[j][4] || ""),
+        ket: String(rowsP[j][5] || "")
+      });
+    }
+    return json_({ ok: true, data: peng });
   }
   if (e && e.parameter && e.parameter.daftar === "aspirasi") {
     var admin = adminDariToken_(e.parameter.token);
@@ -237,6 +265,9 @@ function doGet(e) {
 
 /**
  * POST {aksi:"login", user, pass}: masuk, balasannya {ok, token, nama}.
+ * POST {aksi:"pengumuman", token, judul, kategori, isi, ket}: tambah
+ *   pengumuman (wajib login).
+ * POST {aksi:"pengumuman-hapus", token, id}: hapus pengumuman (wajib login).
  * POST {nama, kontak, pesan}: simpan aspirasi warga (publik).
  * Rem sederhana: maks. 1 kiriman per 30 detik untuk seluruh situs
  * (cukup untuk korong kecil, menahan spam beruntun dari skrip).
@@ -248,6 +279,41 @@ function doPost(e) {
 
     if (p.aksi === "login") {
       return json_(login_(p.user, p.pass));
+    }
+
+    if (p.aksi === "pengumuman") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var judul = String(p.judul || "").trim().slice(0, 120);
+      var kategori = KATEGORI_SAH.indexOf(p.kategori) >= 0 ? p.kategori : "kegiatan";
+      var isi = String(p.isi || "").trim().slice(0, 1000);
+      var ket = String(p.ket || "").trim().slice(0, 120);
+      if (!judul || !isi) return json_({ ok: false, pesan: "Judul dan isi wajib diisi." });
+      var lockP = LockService.getScriptLock();
+      lockP.waitLock(5000);
+      try {
+        lembarPengumuman_().appendRow([Utilities.getUuid(), new Date(),
+          teks_(judul), kategori, teks_(isi), teks_(ket)]);
+      } finally {
+        lockP.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "pengumuman-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var id = String(p.id || "");
+      if (id) {
+        var sh = lembarPengumuman_();
+        var rows = sh.getDataRange().getValues();
+        for (var i = rows.length - 1; i >= 1; i--) {
+          if (String(rows[i][0]) === id) {
+            sh.deleteRow(i + 1);
+            ok = true;
+            break;
+          }
+        }
+      }
+      return json_({ ok: ok });
     }
 
     var nama = String(p.nama || "").trim().slice(0, 80);

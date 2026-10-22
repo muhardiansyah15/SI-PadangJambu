@@ -20,7 +20,10 @@ Semua konten masih ditulis langsung di `index.html`:
 - **Statistik penduduk** — dimuat otomatis dari sheet `PENDUDUK` (lihat di bawah).
   Objek `STATISTIK` di bagian `<script>` (cari `DATA STATISTIK`) adalah angka
   fallback yang tampil selama `ASPIRASI_URL` kosong atau server gagal dihubungi.
-- **Pengumuman, keuangan, potensi** — edit langsung di markup masing-masing `<section>`.
+- **Pengumuman** — dikelola lewat portal admin (`admin.html` → Kelola Pengumuman),
+  tersimpan di sheet `PENGUMUMAN`. Markup statis di section Pengumuman adalah
+  fallback selama belum ada pengumuman dari portal.
+- **Keuangan, potensi** — edit langsung di markup masing-masing `<section>`.
 - **Foto hero** — masih memakai gambar Unsplash (cari `images.unsplash.com`); ganti dengan foto asli korong.
 
 ## Form Aspirasi (Google Sheets)
