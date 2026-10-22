@@ -7,11 +7,26 @@ Situs statis satu halaman (`index.html`) tanpa build step dan tanpa server — b
 ## Struktur
 
 ```
-index.html                     Seluruh situs: HTML + CSS + JS dalam satu file
-admin.html                     Portal admin (login + daftar aspirasi masuk)
+index.html                     Situs utama: HTML + CSS + JS dalam satu file
+portal/                        Portal admin — aplikasi React + Vite
 assets/logo.svg                Logo & favicon
-tools/apps-script-aspirasi.gs  Backend Apps Script: form aspirasi + login admin
+tools/apps-script-aspirasi.gs  Backend Apps Script: aspirasi, pengumuman, login admin
+.github/workflows/deploy.yml   Build portal + deploy ke GitHub Pages tiap push
 ```
+
+## Pengembangan portal
+
+```bash
+cd portal
+npm install
+npm run dev     # server pengembangan di localhost
+npm run build   # hasil produksi di portal/dist
+```
+
+Deploy otomatis lewat GitHub Actions (lihat `deploy.yml`): tiap push ke `main`,
+portal di-build lalu seluruh situs ditayangkan — portal di `/portal/`.
+**Prasyarat satu kali:** Settings → Pages → Source: ubah ke **GitHub Actions**.
+Endpoint bisa dioverride saat build lewat env `VITE_ASPIRASI_URL` (opsional).
 
 ## Mengubah isi situs
 
@@ -37,10 +52,10 @@ Form kontak mengirim pesan ke spreadsheet privat lewat Apps Script:
 
 Selama `ASPIRASI_URL` kosong, form otomatis memakai fallback `mailto:`.
 
-## Portal Admin (`admin.html`)
+## Portal Admin (`portal/`)
 
-Halaman login untuk pengelola; setelah masuk, menampilkan daftar aspirasi yang masuk
-tanpa perlu membuka spreadsheet.
+Aplikasi React untuk pengelola; setelah login, menampilkan daftar aspirasi masuk
+dan form kelola pengumuman tanpa perlu membuka spreadsheet.
 
 - Akun disimpan di sheet **ADMIN** pada spreadsheet yang sama: kolom
   `Username | Password | Nama` (satu baris per pengelola).
