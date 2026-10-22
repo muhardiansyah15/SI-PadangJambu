@@ -17,7 +17,9 @@ tools/apps-script-aspirasi.gs  Backend Apps Script: form aspirasi + login admin
 
 Semua konten masih ditulis langsung di `index.html`:
 
-- **Statistik penduduk** — objek `STATISTIK` di bagian `<script>` (cari `DATA STATISTIK`). Ubah angkanya, grafik dan tabel ikut berubah otomatis.
+- **Statistik penduduk** — dimuat otomatis dari sheet `PENDUDUK` (lihat di bawah).
+  Objek `STATISTIK` di bagian `<script>` (cari `DATA STATISTIK`) adalah angka
+  fallback yang tampil selama `ASPIRASI_URL` kosong atau server gagal dihubungi.
 - **Pengumuman, keuangan, potensi** — edit langsung di markup masing-masing `<section>`.
 - **Foto hero** — masih memakai gambar Unsplash (cari `images.unsplash.com`); ganti dengan foto asli korong.
 
@@ -43,6 +45,25 @@ tanpa perlu membuka spreadsheet.
   sebagai teks biasa di spreadsheet (yang tetap privat).
 - Login menghasilkan token (berlaku 7 hari, tersimpan di browser); salah password
   5× mengunci username 10 menit.
+
+## Data Penduduk (sheet `PENDUDUK`)
+
+Data penduduk **tidak diinput lewat portal web** — perangkat korong mengisinya
+langsung di Google Sheets (yang dilindungi login Google + 2FA). Website hanya
+menerima **agregat** (jumlah per RW, kelompok umur, pekerjaan, pendidikan) lewat
+`GET ?daftar=statistik`; data per orang tidak pernah melewati endpoint publik.
+
+Kolom sheet `PENDUDUK` — sengaja minim sesuai asas minimalisasi UU PDP
+(No. 27/2022), **tanpa NIK dan tanpa tanggal lahir lengkap**:
+
+| Nama | RW | JK (L/P) | Tahun Lahir | Pekerjaan | Pendidikan | Kepala Keluarga (Y) |
+|------|----|----------|-------------|-----------|------------|---------------------|
+
+- Kolom *Kepala Keluarga* diisi `Y` hanya pada baris kepala keluarga (dasar hitungan KK).
+- Agregat di-cache 10 menit — perubahan data muncul di situs maks. 10 menit kemudian.
+- Statistik baru menggantikan angka fallback bila sheet berisi minimal 1 penduduk.
+- Catatan tata kelola: pengendali data sebaiknya pemerintahan korong/nagari —
+  mintakan penugasan tertulis dari wali korong/wali nagari untuk pendataan ini.
 
 ## Rencana
 

@@ -17,6 +17,7 @@
  */
 var SHEET_NAME = "ASPIRASI";
 var SHEET_USER = "ADMIN";
+var SHEET_PENDUDUK = "PENDUDUK";
 var TOKEN_HARI = 7; // token login berlaku 7 hari
 
 function lembar_() {
@@ -47,6 +48,98 @@ function json_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Sheet PENDUDUK: diisi perangkat korong LANGSUNG di Google Sheets (privat),
+ * bukan lewat portal. Sengaja minim data — tanpa NIK, tanpa tanggal lahir
+ * lengkap (asas minimalisasi UU PDP). Yang keluar ke publik HANYA agregat.
+ */
+function lembarPenduduk_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_PENDUDUK) || ss.insertSheet(SHEET_PENDUDUK);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["Nama", "RW", "JK (L/P)", "Tahun Lahir", "Pekerjaan", "Pendidikan", "Kepala Keluarga (Y)"]);
+  }
+  return sh;
+}
+
+function kelompokUmur_(umur) {
+  if (umur <= 14) return "0–14 tahun";
+  if (umur <= 24) return "15–24 tahun";
+  if (umur <= 44) return "25–44 tahun";
+  if (umur <= 59) return "45–59 tahun";
+  return "60 tahun ke atas";
+}
+
+/** Ambil 5 kelompok terbesar, sisanya digabung jadi "Lainnya". */
+function kelompokkan_(peta) {
+  var pasang = [];
+  for (var k in peta) if (k !== "Lainnya") pasang.push([k, peta[k]]);
+  pasang.sort(function (a, b) { return b[1] - a[1]; });
+  var hasil = pasang.slice(0, 5);
+  var sisa = peta["Lainnya"] || 0;
+  for (var i = 5; i < pasang.length; i++) sisa += pasang[i][1];
+  if (sisa > 0) hasil.push(["Lainnya", sisa]);
+  return hasil;
+}
+
+/**
+ * Hitung statistik agregat dari sheet PENDUDUK.
+ * Bentuknya SAMA dengan objek STATISTIK di index.html.
+ * Di-cache 10 menit supaya tidak membaca ulang sheet tiap kunjungan;
+ * artinya perubahan data baru terlihat di situs maks. 10 menit kemudian.
+ */
+function hitungStatistik_() {
+  var cache = CacheService.getScriptCache();
+  var simpanan = cache.get("stat_agregat");
+  if (simpanan) return JSON.parse(simpanan);
+
+  var rows = lembarPenduduk_().getDataRange().getValues();
+  var tahunKini = new Date().getFullYear();
+  var laki = 0, perempuan = 0, kk = 0;
+  var umur = { "0–14 tahun": 0, "15–24 tahun": 0, "25–44 tahun": 0, "45–59 tahun": 0, "60 tahun ke atas": 0 };
+  var pekerjaan = {}, pendidikan = {}, wilayah = {};
+
+  for (var i = 1; i < rows.length; i++) {
+    if (!String(rows[i][0]).trim()) continue;
+    var jk = String(rows[i][2]).trim().toUpperCase().charAt(0);
+    if (jk === "L") laki++; else perempuan++;
+    var adalahKK = String(rows[i][6]).trim() !== "";
+    if (adalahKK) kk++;
+
+    var tahun = parseInt(rows[i][3], 10);
+    if (!isNaN(tahun) && tahun > 1900) umur[kelompokUmur_(tahunKini - tahun)]++;
+
+    var kerja = String(rows[i][4]).trim() || "Lainnya";
+    pekerjaan[kerja] = (pekerjaan[kerja] || 0) + 1;
+    var didik = String(rows[i][5]).trim() || "Lainnya";
+    pendidikan[didik] = (pendidikan[didik] || 0) + 1;
+
+    var rw = String(rows[i][1]).trim();
+    if (rw) {
+      if (!wilayah[rw]) wilayah[rw] = { kk: 0, jiwa: 0 };
+      wilayah[rw].jiwa++;
+      if (adalahKK) wilayah[rw].kk++;
+    }
+  }
+
+  var umurList = [];
+  for (var u in umur) umurList.push([u, umur[u]]);
+  var wilayahList = [];
+  for (var w in wilayah) wilayahList.push([w, wilayah[w].kk, wilayah[w].jiwa]);
+  wilayahList.sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+
+  var hasil = {
+    tahun: tahunKini,
+    penduduk: { laki: laki, perempuan: perempuan, kk: kk },
+    umur: umurList,
+    pekerjaan: kelompokkan_(pekerjaan),
+    pendidikan: kelompokkan_(pendidikan),
+    wilayah: wilayahList
+  };
+  cache.put("stat_agregat", JSON.stringify(hasil), 600);
+  return hasil;
 }
 
 /* ---------- Login & token (pola sama dengan skrip RSVP) ---------- */
@@ -114,10 +207,15 @@ function bersihkanTokenKadaluarsa_() {
 
 /**
  * GET: cek hidup saja — isi aspirasi TIDAK pernah keluar tanpa login.
+ * GET ?daftar=statistik: agregat kependudukan (publik — hanya angka,
+ *   tidak pernah data per orang).
  * GET ?daftar=aspirasi&token=…: daftar aspirasi (hanya admin login,
  *   maks. 500 terbaru).
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.daftar === "statistik") {
+    return json_({ ok: true, data: hitungStatistik_() });
+  }
   if (e && e.parameter && e.parameter.daftar === "aspirasi") {
     var admin = adminDariToken_(e.parameter.token);
     if (!admin) return json_({ ok: false, butuhLogin: true });

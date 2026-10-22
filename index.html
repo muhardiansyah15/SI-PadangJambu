@@ -1054,6 +1054,11 @@
 </footer>
 
 <script>
+  // URL /exec deployment Apps Script (tools/apps-script-aspirasi.gs).
+  // Dipakai form aspirasi DAN statistik kependudukan.
+  // Selama kosong: form memakai fallback mailto:, statistik memakai angka statis di bawah.
+  const ASPIRASI_URL = '';
+
   // Scroll fade-in
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
@@ -1085,16 +1090,10 @@
   };
 
   const fmt = n => n.toLocaleString('id-ID');
-  const P = STATISTIK.penduduk;
-  const total = P.laki + P.perempuan;
-
-  document.getElementById('numJiwa').dataset.count = total;
-  document.getElementById('numKK').dataset.count = P.kk;
-  document.getElementById('numLaki').dataset.count = P.laki;
-  document.getElementById('numPerempuan').dataset.count = P.perempuan;
+  let statTampil = false; // bagian statistik sudah pernah terlihat di layar?
 
   function renderBars(id, rows, fillClass) {
-    const sum = rows.reduce((a, r) => a + r[1], 0);
+    const sum = rows.reduce((a, r) => a + r[1], 0) || 1;
     document.getElementById(id).innerHTML = rows.map(([label, val]) => {
       const pct = val / sum * 100;
       return `<div class="progress-item">
@@ -1103,23 +1102,55 @@
       </div>`;
     }).join('');
   }
-  renderBars('barUmur', STATISTIK.umur, 'fill-hijau');
-  renderBars('barPekerjaan', STATISTIK.pekerjaan, 'fill-emas');
-  renderBars('barPendidikan', STATISTIK.pendidikan, 'fill-biru');
 
-  const lakiPct = P.laki / total * 100;
-  document.getElementById('donut').style.background =
-    `conic-gradient(var(--emas) 0% ${lakiPct}%, var(--hijau-muda) ${lakiPct}% 100%)`;
-  document.getElementById('donutTotal').textContent = fmt(total);
-  document.getElementById('legLaki').textContent = fmt(P.laki);
-  document.getElementById('legPerempuan').textContent = fmt(P.perempuan);
+  function renderStatistik(S, dariServer) {
+    const P = S.penduduk;
+    const total = P.laki + P.perempuan;
 
-  document.getElementById('rwBody').innerHTML = STATISTIK.wilayah
-    .map(([n, kk, j]) => `<tr><td>${n}</td><td>${fmt(kk)}</td><td>${fmt(j)}</td></tr>`).join('');
-  const sumKK = STATISTIK.wilayah.reduce((a, r) => a + r[1], 0);
-  const sumJ = STATISTIK.wilayah.reduce((a, r) => a + r[2], 0);
-  document.getElementById('rwFoot').innerHTML = `<tr><td>Total</td><td>${fmt(sumKK)}</td><td>${fmt(sumJ)}</td></tr>`;
-  document.getElementById('statNote').textContent = `Data kependudukan Korong Padang Jambu tahun ${STATISTIK.tahun}.`;
+    document.getElementById('numJiwa').dataset.count = total;
+    document.getElementById('numKK').dataset.count = P.kk;
+    document.getElementById('numLaki').dataset.count = P.laki;
+    document.getElementById('numPerempuan').dataset.count = P.perempuan;
+
+    renderBars('barUmur', S.umur, 'fill-hijau');
+    renderBars('barPekerjaan', S.pekerjaan, 'fill-emas');
+    renderBars('barPendidikan', S.pendidikan, 'fill-biru');
+
+    const lakiPct = total ? P.laki / total * 100 : 50;
+    document.getElementById('donut').style.background =
+      `conic-gradient(var(--emas) 0% ${lakiPct}%, var(--hijau-muda) ${lakiPct}% 100%)`;
+    document.getElementById('donutTotal').textContent = fmt(total);
+    document.getElementById('legLaki').textContent = fmt(P.laki);
+    document.getElementById('legPerempuan').textContent = fmt(P.perempuan);
+
+    document.getElementById('rwBody').innerHTML = S.wilayah
+      .map(([n, kk, j]) => `<tr><td>${n}</td><td>${fmt(kk)}</td><td>${fmt(j)}</td></tr>`).join('');
+    const sumKK = S.wilayah.reduce((a, r) => a + r[1], 0);
+    const sumJ = S.wilayah.reduce((a, r) => a + r[2], 0);
+    document.getElementById('rwFoot').innerHTML = `<tr><td>Total</td><td>${fmt(sumKK)}</td><td>${fmt(sumJ)}</td></tr>`;
+    document.getElementById('statNote').textContent =
+      `Data kependudukan Korong Padang Jambu tahun ${S.tahun}.` +
+      (dariServer ? ' Dihitung otomatis dari pendataan korong.' : '');
+
+    // data server datang setelah bagian ini terlihat → jalankan animasinya langsung
+    if (statTampil) {
+      document.querySelectorAll('#statistik .progress-fill[data-w]').forEach(b => b.style.width = b.dataset.w + '%');
+      document.querySelectorAll('#statistik .big-num').forEach(countUp);
+    }
+  }
+  renderStatistik(STATISTIK, false);
+
+  // Agregat dari sheet PENDUDUK (hanya angka, tidak pernah data per orang).
+  if (ASPIRASI_URL) {
+    fetch(ASPIRASI_URL + '?daftar=statistik')
+      .then(r => r.json())
+      .then(j => {
+        if (j.ok && j.data && (j.data.penduduk.laki + j.data.penduduk.perempuan) > 0) {
+          renderStatistik(j.data, true);
+        }
+      })
+      .catch(() => {}); // gagal memuat → angka statis tetap tampil
+  }
 
   function countUp(el) {
     const target = +el.dataset.count, t0 = performance.now(), dur = 1400;
@@ -1132,6 +1163,7 @@
   const statObserver = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
+      statTampil = true;
       e.target.querySelectorAll('.progress-fill[data-w]').forEach(b => b.style.width = b.dataset.w + '%');
       e.target.querySelectorAll('.big-num').forEach(countUp);
       statObserver.unobserve(e.target);
@@ -1139,11 +1171,7 @@
   }, { threshold: 0.25 });
   document.querySelectorAll('.stat-reveal').forEach(el => statObserver.observe(el));
 
-  // ===== FORM KONTAK & ASPIRASI =====
-  // Isi dengan URL /exec hasil deploy tools/apps-script-aspirasi.gs.
-  // Selama kosong, form memakai fallback mailto: (buka aplikasi email).
-  const ASPIRASI_URL = '';
-
+  // ===== FORM KONTAK & ASPIRASI ===== (ASPIRASI_URL dideklarasikan di atas)
   function statusForm(teks, berhasil) {
     const el = document.getElementById('fStatus');
     el.textContent = teks;
