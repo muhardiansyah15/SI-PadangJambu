@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Korong Padang Jambu — Nagari Guguak Kuranji Hilir</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hijau-tua: #1a3a2a;
+    --hijau: #2d6a4f;
+    --hijau-muda: #52b788;
+    --emas: #c9a84c;
+    --emas-muda: #e8c97a;
+    --krem: #f8f3e8;
+    --putih: #fefdfb;
+    --coklat: #5c3d2e;
+    --abu: #6b7280;
+    --merah-accent: #9b2335;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--putih);
+    color: var(--hijau-tua);
+    overflow-x: hidden;
+  }
+
+  /* ===== NAVBAR ===== */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(26,58,42,0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--emas);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+  }
+  .nav-logo {
+    width: 40px; height: 40px;
+    background: var(--emas);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .nav-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--krem);
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+  .nav-title span { color: var(--emas-muda); font-size: 0.75rem; display: block; font-family: 'Source Sans 3', sans-serif; font-weight: 300; letter-spacing: 1px; }
+  .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--krem); text-decoration: none;
+    font-size: 0.9rem; font-weight: 300; letter-spacing: 0.5px;
+    opacity: 0.85; transition: opacity 0.2s, color 0.2s;
+  }
+  .nav-links a:hover { opacity: 1; color: var(--emas-muda); }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh;
+    background: 
+      linear-gradient(160deg, rgba(26,58,42,0.88) 0%, rgba(45,106,79,0.75) 50%, rgba(26,58,42,0.92) 100%),
+      url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80') center/cover no-repeat;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 6rem 2rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  /* Ornamen atap rumah gadang */
+  .hero-ornament {
+    position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 60px solid transparent;
+    border-right: 60px solid transparent;
+    border-bottom: 40px solid rgba(201,168,76,0.3);
+    filter: drop-shadow(0 4px 20px rgba(201,168,76,0.2));
+  }
+  .hero-ornament::after {
+    content: '';
+    position: absolute; top: 10px; left: -45px;
+    width: 0; height: 0;
+    border-left: 45px solid transparent;
+    border-right: 45px solid transparent;
+    border-bottom: 30px solid rgba(201,168,76,0.2);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(201,168,76,0.2);
+    border: 1px solid var(--emas);
+    color: var(--emas-muda);
+    padding: 6px 20px; border-radius: 30px;
+    font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeDown 0.8s ease forwards;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    color: var(--putih); line-height: 1.05;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    animation: fadeUp 1s ease 0.2s both;
+  }
+  .hero h1 em { color: var(--emas-muda); font-style: italic; }
+  .hero-sub {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem; color: rgba(248,243,232,0.85);
+    margin-top: 1rem; letter-spacing: 0.5px;
+    animation: fadeUp 1s ease 0.4s both;
+  }
+  .hero-divider {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--emas), transparent);
+    margin: 2rem auto;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+  .hero-stats {
+    display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 1s ease 0.6s both;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; color: var(--emas-muda); font-weight: 700;
+  }
+  .hero-stat-label { font-size: 0.75rem; color: rgba(248,243,232,0.7); letter-spacing: 1px; text-transform: uppercase; }
+  .hero-scroll {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    animation: bounce 2s infinite;
+  }
+  .hero-scroll svg { width: 28px; opacity: 0.6; }
+
+  /* ===== SECTIONS ===== */
+  .section { padding: 5rem 2rem; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--hijau-muda); font-weight: 600; margin-bottom: 0.5rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.2; color: var(--hijau-tua);
+  }
+  .section-title em { color: var(--hijau); font-style: italic; }
+  .title-bar {
+    width: 50px; height: 3px; background: var(--emas);
+    margin: 1rem 0 2rem; border-radius: 2px;
+  }
+
+  /* ===== PENGUMUMAN (BANNER) ===== */
+  .pengumuman-bar {
+    background: var(--hijau-tua);
+    padding: 12px 2rem;
+    display: flex; align-items: center; gap: 1rem;
+    overflow: hidden;
+  }
+  .pengumuman-label {
+    background: var(--emas); color: var(--hijau-tua);
+    padding: 2px 12px; border-radius: 4px;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .marquee-wrap { overflow: hidden; flex: 1; }
+  .marquee {
+    display: inline-flex; gap: 4rem;
+    animation: marquee 25s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee span { color: var(--krem); font-size: 0.85rem; opacity: 0.9; }
+  .marquee span::before { content: '◆ '; color: var(--emas); }
+
+  /* ===== KEUANGAN ===== */
+  .keuangan-section { background: var(--hijau-tua); color: var(--krem); }
+  .keuangan-section .section-title { color: var(--krem); }
+  .keuangan-section .section-label { color: var(--emas-muda); }
+  .keuangan-section .title-bar { background: var(--emas); }
+  .keuangan-intro { color: rgba(248,243,232,0.75); font-size: 0.95rem; line-height: 1.7; max-width: 600px; margin-bottom: 2.5rem; }
+  .anggaran-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 16px; padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .anggaran-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+  .anggaran-tahun {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; color: var(--emas-muda);
+  }
+  .anggaran-total { text-align: right; }
+  .anggaran-total-label { font-size: 0.7rem; letter-spacing: 1px; color: rgba(248,243,232,0.5); text-transform: uppercase; }
+  .anggaran-total-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--emas-muda); }
+  .progress-list { display: flex; flex-direction: column; gap: 1rem; }
+  .progress-item {}
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(248,243,232,0.8); margin-bottom: 6px; }
+  .progress-label span:last-child { color: var(--emas-muda); font-weight: 600; }
+  .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+  .fill-hijau { background: linear-gradient(90deg, var(--hijau-muda), #74c69d); }
+  .fill-emas { background: linear-gradient(90deg, var(--emas), var(--emas-muda)); }
+  .fill-merah { background: linear-gradient(90deg, #e07a5f, #f4a261); }
+  .fill-biru { background: linear-gradient(90deg, #4a90d9, #74b9e8); }
+  .fill-ungu { background: linear-gradient(90deg, #9b72cf, #b39ddb); }
+  
+  .keuangan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+  .keu-stat {
+    background: rgba(255,255,255,0.06); border-radius: 12px;
+    padding: 1.25rem; text-align: center;
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  .keu-stat-num { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--emas-muda); }
+  .keu-stat-label { font-size: 0.75rem; color: rgba(248,243,232,0.55); margin-top: 4px; }
+  
+  .dokumen-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  .dokumen-item {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px; padding: 1rem;
+    text-decoration: none; color: var(--krem);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .dokumen-item:hover { background: rgba(201,168,76,0.1); border-color: var(--emas); }
+  .dokumen-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .dokumen-name { font-size: 0.85rem; font-weight: 600; }
+  .dokumen-desc { font-size: 0.75rem; opacity: 0.6; margin-top: 2px; }
+
+  /* ===== PETA ===== */
+  .peta-section { background: var(--putih); }
+  .peta-container {
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(26,58,42,0.12);
+    border: 2px solid rgba(45,106,79,0.2);
+    margin-top: 2rem; position: relative;
+  }
+  .peta-container iframe { width: 100%; height: 450px; border: none; display: block; }
+  .peta-info {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 1.5rem;
+  }
+  .peta-info-item {
+    background: var(--krem); border-radius: 10px; padding: 1.25rem;
+    border: 1px solid rgba(45,106,79,0.1);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .peta-info-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .peta-info-label { font-size: 0.7rem; color: var(--abu); text-transform: uppercase; letter-spacing: 1px; }
+  .peta-info-value { font-size: 0.9rem; font-weight: 600; color: var(--hijau-tua); margin-top: 2px; line-height: 1.4; }
+
+  /* ===== GALLERY / POTENSI ===== */
+  .potensi-section { background: var(--krem); }
+  .potensi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-top: 2rem; }
+  .potensi-card {
+    border-radius: 12px; overflow: hidden; position: relative;
+    aspect-ratio: 3/4; cursor: pointer;
+    background: var(--hijau);
+  }
+  .potensi-bg {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    transition: transform 0.5s ease;
+  }
+  .potensi-card:hover .potensi-bg { transform: scale(1.1); }
+  .potensi-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(26,58,42,0.9) 0%, transparent 60%);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 1.2rem;
+  }
+  .potensi-name { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; color: var(--putih); }
+  .potensi-desc { font-size: 0.75rem; color: rgba(248,243,232,0.75); margin-top: 4px; line-height: 1.4; }
+
+  /* ===== KONTAK ===== */
+  .kontak-section { background: var(--hijau-tua); color: var(--krem); }
+  .kontak-section .section-title { color: var(--krem); }
+  .kontak-section .section-label { color: var(--emas-muda); }
+  .kontak-section .title-bar { background: var(--emas); }
+  .kontak-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 2rem; }
+  .kontak-info { display: flex; flex-direction: column; gap: 1.25rem; }
+  .kontak-item { display: flex; gap: 1rem; align-items: flex-start; }
+  .kontak-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .kontak-label { font-size: 0.7rem; color: rgba(248,243,232,0.5); text-transform: uppercase; letter-spacing: 1px; }
+  .kontak-value { font-size: 0.95rem; color: var(--krem); margin-top: 2px; font-weight: 400; }
+  .kontak-form { display: flex; flex-direction: column; gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 0.8rem; color: rgba(248,243,232,0.7); }
+  .form-input, .form-textarea {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 8px; padding: 10px 14px;
+    color: var(--krem); font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem; outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--emas); background: rgba(201,168,76,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 100px; }
+  .btn-kirim {
+    background: var(--emas); color: var(--hijau-tua);
+    border: none; border-radius: 8px; padding: 12px 2rem;
+    font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    font-family: 'Source Sans 3', sans-serif;
+  }
+  .kontak-desc { font-size: 0.8rem; color: rgba(248,243,232,0.5); margin-top: 4px; line-height: 1.5; }
+  .kontak-value a { color: var(--emas-muda); text-decoration: none; border-bottom: 1px solid rgba(232,201,122,0.4); }
+  .kontak-value a:hover { border-bottom-color: var(--emas-muda); }
+  .footer-copy a { color: var(--emas-muda); text-decoration: none; }
+  .peta-link { display: inline-block; margin-top: 1rem; color: var(--hijau); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .peta-link:hover { text-decoration: underline; }
+  .btn-kirim:hover { background: var(--emas-muda); transform: translateY(-1px); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    background: #0f2318;
+    padding: 3rem 2rem 1.5rem;
+    text-align: center;
+    border-top: 2px solid rgba(201,168,76,0.3);
+  }
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; color: var(--emas-muda);
+    margin-bottom: 0.5rem;
+  }
+  .footer-sub { font-size: 0.8rem; color: rgba(248,243,232,0.45); margin-bottom: 1.5rem; }
+  .footer-links { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .footer-links a { color: rgba(248,243,232,0.55); font-size: 0.8rem; text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--emas-muda); }
+  .footer-copy { font-size: 0.75rem; color: rgba(248,243,232,0.3); }
+
+  /* ===== NAV EXTRA ===== */
+  section[id] { scroll-margin-top: 64px; }
+  .nav-links a { padding-bottom: 4px; border-bottom: 2px solid transparent; }
+  .nav-links a.active { color: var(--emas-muda); opacity: 1; border-bottom-color: var(--emas); }
+  .nav-toggle {
+    display: none; background: none; cursor: pointer;
+    border: 1px solid rgba(201,168,76,0.5); color: var(--emas-muda);
+    font-size: 1.3rem; width: 42px; height: 42px; border-radius: 8px;
+  }
+
+  /* ===== PROFIL ===== */
+  .profil-section { background: var(--putih); }
+  .profil-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.5rem; align-items: start; }
+  .profil-text h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1rem; }
+  .profil-text p { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.85; color: #33463c; margin-bottom: 1rem; }
+  .minang-quote {
+    margin-top: 1.5rem; padding: 1.25rem 1.5rem;
+    border-left: 4px solid var(--emas); background: var(--krem);
+    border-radius: 0 12px 12px 0;
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 1.15rem; color: var(--hijau-tua);
+  }
+  .minang-quote cite {
+    display: block; margin-top: 0.5rem;
+    font-family: 'Source Sans 3', sans-serif; font-style: normal;
+    font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: var(--abu);
+  }
+  .profil-card {
+    background: var(--hijau-tua); color: var(--krem);
+    border-radius: 16px; padding: 2rem;
+    border: 1px solid rgba(201,168,76,0.3);
+    box-shadow: 0 8px 32px rgba(26,58,42,0.15);
+  }
+  .profil-card h3 { font-family: 'Playfair Display', serif; color: var(--emas-muda); font-size: 1.2rem; margin-bottom: 0.6rem; }
+  .profil-card h3.misi-title { margin-top: 1.5rem; }
+  .profil-card p { font-size: 0.92rem; line-height: 1.7; color: rgba(248,243,232,0.85); }
+  .profil-card ol { padding-left: 1.2rem; display: grid; gap: 0.5rem; font-size: 0.9rem; line-height: 1.65; color: rgba(248,243,232,0.85); }
+  .sub-heading { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin: 3.5rem 0 1.25rem; color: var(--hijau-tua); }
+  .struktur-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .struktur-card {
+    background: var(--krem); border-radius: 14px; padding: 1.5rem 1rem; text-align: center;
+    border: 1px solid rgba(45,106,79,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .struktur-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(26,58,42,0.12); }
+  .struktur-card.utama { background: linear-gradient(160deg, var(--hijau), var(--hijau-tua)); color: var(--krem); }
+  .struktur-avatar {
+    width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 0.9rem;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem;
+    background: rgba(82,183,136,0.18); border: 2px solid var(--emas);
+  }
+  .struktur-role { font-family: 'Lora', serif; font-weight: 600; font-size: 0.95rem; }
+  .struktur-name { font-size: 0.8rem; color: var(--abu); margin-top: 4px; font-style: italic; }
+  .struktur-card.utama .struktur-name { color: rgba(248,243,232,0.65); }
+
+  /* ===== STATISTIK ===== */
+  .statistik-section { background: var(--hijau-tua); color: var(--krem); }
+  .statistik-section .section-title { color: var(--krem); }
+  .statistik-section .section-title em { color: var(--emas-muda); }
+  .statistik-section .section-label { color: var(--emas-muda); }
+  .stat-big-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-big {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 16px; padding: 1.5rem 1rem; text-align: center;
+  }
+  .big-num { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; color: var(--emas-muda); line-height: 1.1; }
+  .big-label { font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(248,243,232,0.6); margin-top: 6px; }
+  .stat-panels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .stat-bottom { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.5rem; margin-top: 1.5rem; }
+  .stat-panel {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 16px; padding: 1.5rem;
+  }
+  .stat-panel h4 { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--emas-muda); margin-bottom: 1.25rem; }
+  .donut-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto 1.25rem; }
+  .donut {
+    width: 100%; height: 100%; border-radius: 50%;
+    -webkit-mask: radial-gradient(circle, transparent 54%, #000 55%);
+    mask: radial-gradient(circle, transparent 54%, #000 55%);
+  }
+  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-center b { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--krem); }
+  .donut-center span { font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(248,243,232,0.55); }
+  .donut-legend { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem; color: rgba(248,243,232,0.8); }
+  .donut-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .donut-legend b { color: var(--emas-muda); margin-left: 4px; }
+  .rw-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .rw-table th { text-align: left; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(248,243,232,0.5); padding: 0 0 0.75rem; font-weight: 600; }
+  .rw-table th:not(:first-child), .rw-table td:not(:first-child) { text-align: right; }
+  .rw-table td { padding: 0.7rem 0; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(248,243,232,0.85); }
+  .rw-table tfoot td { border-top: 1px solid rgba(201,168,76,0.4); font-weight: 700; color: var(--emas-muda); }
+  .stat-note { margin-top: 1.5rem; font-size: 0.75rem; color: rgba(248,243,232,0.45); text-align: center; }
+
+  /* ===== PENGUMUMAN ===== */
+  .pengumuman-section { background: var(--putih); }
+  .peng-filter { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .chip {
+    border: 1px solid rgba(45,106,79,0.35); background: transparent; color: var(--hijau);
+    padding: 6px 18px; border-radius: 30px; cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif; font-weight: 600; font-size: 0.82rem;
+    transition: background 0.2s, color 0.2s;
+  }
+  .chip:hover, .chip.active { background: var(--hijau); color: var(--putih); }
+  .peng-list { display: grid; gap: 1rem; }
+  .peng-item {
+    display: flex; gap: 1.25rem; align-items: flex-start;
+    background: var(--krem); border-radius: 12px; padding: 1.25rem;
+    border: 1px solid rgba(45,106,79,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .peng-item:hover { transform: translateX(4px); box-shadow: 0 4px 20px rgba(26,58,42,0.08); }
+  .peng-item.hide { display: none; }
+  .peng-date {
+    flex-shrink: 0; width: 62px; text-align: center;
+    background: var(--hijau-tua); border-radius: 10px; padding: 8px 0; color: var(--krem);
+  }
+  .peng-date b { display: block; font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--emas-muda); line-height: 1.1; }
+  .peng-date span { font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; }
+  .peng-tag { display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; margin-bottom: 0.5rem; }
+  .peng-tag.penting { background: rgba(155,35,53,0.1); color: var(--merah-accent); }
+  .peng-tag.kegiatan { background: rgba(82,183,136,0.18); color: var(--hijau); }
+  .peng-tag.layanan { background: rgba(201,168,76,0.18); color: var(--coklat); }
+  .peng-body h3 { font-family: 'Lora', serif; font-size: 1.05rem; font-weight: 600; line-height: 1.4; color: var(--hijau-tua); }
+  .peng-body p { font-size: 0.88rem; color: var(--abu); line-height: 1.6; margin-top: 4px; }
+  .peng-meta { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: 0.6rem; font-size: 0.78rem; color: var(--hijau); }
+
+  /* ===== RESPONSIVE EXTRA ===== */
+  @media (max-width: 1100px) {
+    .nav-toggle { display: block; }
+    .nav-links {
+      display: none; position: absolute; top: 64px; left: 0; right: 0;
+      flex-direction: column; gap: 0; padding: 0.5rem 0;
+      background: rgba(26,58,42,0.98); border-bottom: 2px solid var(--emas);
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { display: block; padding: 0.85rem 2rem; opacity: 1; border-bottom: none; }
+    .nav-links a.active { background: rgba(201,168,76,0.12); }
+  }
+  @media (max-width: 900px) {
+    .profil-grid, .stat-bottom { grid-template-columns: 1fr; }
+    .stat-panels { grid-template-columns: 1fr; }
+    .stat-big-grid { grid-template-columns: 1fr 1fr; }
+    .struktur-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 500px) {
+    .struktur-grid { grid-template-columns: 1fr; }
+    .big-num { font-size: 2rem; }
+    .peng-item { gap: 0.9rem; }
+    .peng-date { width: 52px; }
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-8px); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .keuangan-grid { grid-template-columns: 1fr 1fr; }
+    .dokumen-list { grid-template-columns: 1fr; }
+    .potensi-grid { grid-template-columns: 1fr 1fr; }
+    .kontak-grid { grid-template-columns: 1fr; }
+    .peta-info { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .keuangan-grid { grid-template-columns: 1fr; }
+    .potensi-grid { grid-template-columns: 1fr 1fr; }
+    .hero-stats { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div id="home"></div>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-brand">
+    <div class="nav-logo">🌿</div>
+    <div class="nav-title">
+      Korong Padang Jambu
+      <span>Nagari Guguak Kuranji Hilir</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#profil">Profil</a></li>
+    <li><a href="#statistik">Statistik</a></li>
+    <li><a href="#pengumuman">Pengumuman</a></li>
+    <li><a href="#keuangan">Keuangan</a></li>
+    <li><a href="#potensi">Potensi</a></li>
+    <li><a href="#peta">Lokasi</a></li>
+    <li><a href="#kontak">Kontak</a></li>
+  </ul>
+  <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+</nav>
+
+<!-- TICKER PENGUMUMAN -->
+<div class="pengumuman-bar" style="margin-top:64px;">
+  <div class="pengumuman-label">📢 Pengumuman</div>
+  <div class="marquee-wrap">
+    <div class="marquee">
+      <span>Musyawarah Desa Tahun 2025 — Sabtu, 15 Maret 2025 pukul 09.00 WIB di Balai Korong</span>
+      <span>Laporan APBDes 2024 telah diterbitkan — unduh di menu Keuangan</span>
+      <span>Program Posyandu rutin setiap Rabu minggu pertama</span>
+      <span>Pendaftaran BLT Desa 2025 dibuka s/d 28 Februari 2025</span>
+      <span>Musyawarah Desa Tahun 2025 — Sabtu, 15 Maret 2025 pukul 09.00 WIB di Balai Desa</span>
+      <span>Laporan APBDes 2024 telah diterbitkan — unduh di menu Keuangan</span>
+      <span>Program Posyandu rutin setiap Rabu minggu pertama</span>
+      <span>Pendaftaran BLT Desa 2025 dibuka s/d 28 Februari 2025</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-ornament"></div>
+  <div class="hero-badge">🏔 Sumatera Barat · Padang Pariaman</div>
+  <h1>Korong <em>Padang Jambu</em></h1>
+  <p class="hero-sub">Nagari Guguak Kuranji Hilir · Kecamatan Sungai Limau</p>
+  <div class="hero-divider"></div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">1.240</div>
+      <div class="hero-stat-label">Jiwa</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">312</div>
+      <div class="hero-stat-label">KK</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">4</div>
+      <div class="hero-stat-label">RW</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">2025</div>
+      <div class="hero-stat-label">Tahun Aktif</div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <svg viewBox="0 0 24 24" fill="none" stroke="rgba(248,243,232,0.7)" stroke-width="2">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+  </div>
+</section>
+
+<!-- PROFIL -->
+<section class="section profil-section" id="profil">
+  <div class="section-inner">
+    <div class="section-label">🏘 Mengenal Kami</div>
+    <h2 class="section-title">Profil <em>Korong Padang Jambu</em></h2>
+    <div class="title-bar"></div>
+
+    <div class="profil-grid fade-in">
+      <div class="profil-text">
+        <h3>Selayang Pandang</h3>
+        <p>Korong Padang Jambu adalah salah satu korong di Nagari Guguak Kuranji Hilir, Kecamatan Sungai Limau, Kabupaten Padang Pariaman, Provinsi Sumatera Barat. Warganya hidup berdampingan dengan alam dan menjaga tatanan adat Minangkabau dalam keseharian.</p>
+        <p>Sebagian besar warga menggantungkan penghidupan pada pertanian, perkebunan, dan perikanan darat. Semangat gotong royong menjadi fondasi dalam setiap pembangunan dan kegiatan kemasyarakatan di korong.</p>
+        <blockquote class="minang-quote">
+          “Adat basandi syarak, syarak basandi Kitabullah.”
+          <cite>Falsafah hidup masyarakat Minangkabau</cite>
+        </blockquote>
+      </div>
+      <div class="profil-card">
+        <h3>Visi</h3>
+        <p>Terwujudnya Korong Padang Jambu yang maju, mandiri, dan sejahtera berlandaskan adat dan syarak, dengan tata kelola yang transparan serta melibatkan seluruh warga.</p>
+        <h3 class="misi-title">Misi</h3>
+        <ol>
+          <li>Meningkatkan kualitas pelayanan publik yang cepat, ramah, dan terbuka.</li>
+          <li>Mengelola keuangan dan program pembangunan secara transparan dan akuntabel.</li>
+          <li>Mengembangkan potensi pertanian, perkebunan, dan perikanan sebagai penggerak ekonomi warga.</li>
+          <li>Memperkuat nilai adat, agama, dan gotong royong dalam kehidupan bermasyarakat.</li>
+        </ol>
+      </div>
+    </div>
+
+    <h3 class="sub-heading">Struktur Pemerintahan Korong</h3>
+    <div class="struktur-grid fade-in">
+      <div class="struktur-card utama">
+        <div class="struktur-avatar">👤</div>
+        <div class="struktur-role">Kepala Korong</div>
+        <div class="struktur-name">Nama Lengkap</div>
+      </div>
+      <div class="struktur-card">
+        <div class="struktur-avatar">👤</div>
+        <div class="struktur-role">Sekretaris Korong</div>
+        <div class="struktur-name">Nama Lengkap</div>
+      </div>
+      <div class="struktur-card">
+        <div class="struktur-avatar">👤</div>
+        <div class="struktur-role">Kaur Keuangan</div>
+        <div class="struktur-name">Nama Lengkap</div>
+      </div>
+      <div class="struktur-card">
+        <div class="struktur-avatar">👤</div>
+        <div class="struktur-role">Kaur Pembangunan</div>
+        <div class="struktur-name">Nama Lengkap</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATISTIK -->
+<section class="section statistik-section" id="statistik">
+  <div class="section-inner">
+    <div class="section-label">📊 Data Kependudukan</div>
+    <h2 class="section-title">Statistik <em>Korong Padang Jambu</em></h2>
+    <div class="title-bar"></div>
+
+    <div class="stat-big-grid stat-reveal">
+      <div class="stat-big"><div class="big-num" id="numJiwa" data-count="0">0</div><div class="big-label">Total Penduduk (Jiwa)</div></div>
+      <div class="stat-big"><div class="big-num" id="numKK" data-count="0">0</div><div class="big-label">Kepala Keluarga</div></div>
+      <div class="stat-big"><div class="big-num" id="numLaki" data-count="0">0</div><div class="big-label">Laki-laki</div></div>
+      <div class="stat-big"><div class="big-num" id="numPerempuan" data-count="0">0</div><div class="big-label">Perempuan</div></div>
+    </div>
+
+    <div class="stat-panels">
+      <div class="stat-panel stat-reveal">
+        <h4>Kelompok Umur</h4>
+        <div class="progress-list" id="barUmur"></div>
+      </div>
+      <div class="stat-panel stat-reveal">
+        <h4>Mata Pencaharian</h4>
+        <div class="progress-list" id="barPekerjaan"></div>
+      </div>
+      <div class="stat-panel stat-reveal">
+        <h4>Tingkat Pendidikan</h4>
+        <div class="progress-list" id="barPendidikan"></div>
+      </div>
+    </div>
+
+    <div class="stat-bottom">
+      <div class="stat-panel stat-reveal">
+        <h4>Jenis Kelamin</h4>
+        <div class="donut-wrap">
+          <div class="donut" id="donut"></div>
+          <div class="donut-center"><b id="donutTotal">0</b><span>jiwa</span></div>
+        </div>
+        <div class="donut-legend">
+          <div><i style="background:var(--emas)"></i>Laki-laki <b id="legLaki"></b></div>
+          <div><i style="background:var(--hijau-muda)"></i>Perempuan <b id="legPerempuan"></b></div>
+        </div>
+      </div>
+      <div class="stat-panel stat-reveal">
+        <h4>Penduduk per Wilayah</h4>
+        <table class="rw-table">
+          <thead><tr><th>Wilayah</th><th>KK</th><th>Jiwa</th></tr></thead>
+          <tbody id="rwBody"></tbody>
+          <tfoot id="rwFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <p class="stat-note" id="statNote"></p>
+  </div>
+</section>
+
+<!-- PENGUMUMAN -->
+<section class="section pengumuman-section" id="pengumuman">
+  <div class="section-inner">
+    <div class="section-label">📢 Informasi Resmi</div>
+    <h2 class="section-title">Pengumuman <em>Korong</em></h2>
+    <div class="title-bar"></div>
+
+    <div class="peng-filter" role="tablist">
+      <button class="chip active" data-filter="semua">Semua</button>
+      <button class="chip" data-filter="penting">Penting</button>
+      <button class="chip" data-filter="kegiatan">Kegiatan</button>
+      <button class="chip" data-filter="layanan">Layanan</button>
+    </div>
+
+    <div class="peng-list fade-in">
+      <article class="peng-item" data-kat="kegiatan">
+        <div class="peng-date"><b>23</b><span>Mar</span></div>
+        <div class="peng-body">
+          <span class="peng-tag kegiatan">Kegiatan</span>
+          <h3>Gotong Royong Membersihkan Lingkungan dan Saluran Irigasi</h3>
+          <p>Seluruh warga diharapkan hadir dan membawa peralatan masing-masing seperti cangkul, parang, dan keranjang.</p>
+          <div class="peng-meta"><span>🕖 07.30 WIB</span><span>📍 Titik kumpul Balai Korong</span></div>
+        </div>
+      </article>
+      <article class="peng-item" data-kat="kegiatan">
+        <div class="peng-date"><b>15</b><span>Mar</span></div>
+        <div class="peng-body">
+          <span class="peng-tag kegiatan">Kegiatan</span>
+          <h3>Musyawarah Korong Tahun 2025</h3>
+          <p>Seluruh warga diundang menghadiri musyawarah penyusunan rencana kerja dan pembahasan program prioritas tahun 2025.</p>
+          <div class="peng-meta"><span>🕘 09.00 WIB</span><span>📍 Balai Korong</span></div>
+        </div>
+      </article>
+      <article class="peng-item" data-kat="penting">
+        <div class="peng-date"><b>10</b><span>Mar</span></div>
+        <div class="peng-body">
+          <span class="peng-tag penting">Penting</span>
+          <h3>Laporan APBDes 2024 Telah Diterbitkan</h3>
+          <p>Laporan pertanggungjawaban realisasi APBDes 2024 dapat diunduh pada menu Keuangan dan dilihat di papan informasi korong.</p>
+          <div class="peng-meta"><span>📁 Menu Keuangan</span></div>
+        </div>
+      </article>
+      <article class="peng-item" data-kat="layanan">
+        <div class="peng-date"><b>05</b><span>Mar</span></div>
+        <div class="peng-body">
+          <span class="peng-tag layanan">Layanan</span>
+          <h3>Jadwal Posyandu Balita dan Lansia</h3>
+          <p>Posyandu dilaksanakan setiap hari Rabu pada minggu pertama setiap bulan. Mohon membawa buku KIA atau KMS.</p>
+          <div class="peng-meta"><span>🕘 08.30 WIB</span><span>📍 Posyandu</span></div>
+        </div>
+      </article>
+      <article class="peng-item" data-kat="penting">
+        <div class="peng-date"><b>10</b><span>Feb</span></div>
+        <div class="peng-body">
+          <span class="peng-tag penting">Penting</span>
+          <h3>Pendaftaran Calon Penerima BLT Dana Desa 2025</h3>
+          <p>Warga yang merasa memenuhi syarat dapat mendaftar melalui Kepala Korong dengan membawa KTP dan Kartu Keluarga.</p>
+          <div class="peng-meta"><span>⏳ Batas pendaftaran 28 Februari 2025</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- KEUANGAN -->
+<section class="section keuangan-section" id="keuangan">
+  <div class="section-inner">
+    <div class="section-label">💼 Transparansi</div>
+    <h2 class="section-title">Pengelolaan <em>Keuangan Desa</em></h2>
+    <div class="title-bar"></div>
+    <p class="keuangan-intro">Korong Padang Jambu berkomitmen pada pengelolaan keuangan yang transparan dan akuntabel. Seluruh laporan keuangan dapat diakses oleh warga sesuai ketentuan perundang-undangan.</p>
+
+    <div class="anggaran-card fade-in">
+      <div class="anggaran-header">
+        <div>
+          <div style="font-size:0.7rem;color:rgba(248,243,232,0.5);text-transform:uppercase;letter-spacing:1px;">APBDes</div>
+          <div class="anggaran-tahun">Tahun Anggaran 2025</div>
+        </div>
+        <div class="anggaran-total">
+          <div class="anggaran-total-label">Total Anggaran</div>
+          <div class="anggaran-total-num">Rp 1,2 M</div>
+        </div>
+      </div>
+      <div class="progress-list">
+        <div class="progress-item">
+          <div class="progress-label"><span>Pembangunan Infrastruktur</span><span>42%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-hijau" style="width:42%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label"><span>Pemberdayaan Masyarakat</span><span>25%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-emas" style="width:25%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label"><span>Bantuan Langsung Tunai (BLT)</span><span>18%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-merah" style="width:18%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label"><span>Operasional Pemerintahan Desa</span><span>10%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-biru" style="width:10%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label"><span>Kesehatan & Posyandu</span><span>5%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-ungu" style="width:5%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="keuangan-grid fade-in">
+      <div class="keu-stat">
+        <div class="keu-stat-num">Rp 867 Jt</div>
+        <div class="keu-stat-label">Dana Desa 2025</div>
+      </div>
+      <div class="keu-stat">
+        <div class="keu-stat-num">Rp 215 Jt</div>
+        <div class="keu-stat-label">ADD (Alokasi Dana Desa)</div>
+      </div>
+      <div class="keu-stat">
+        <div class="keu-stat-num">Rp 120 Jt</div>
+        <div class="keu-stat-label">PADes & Lain-lain</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <div style="font-size:0.7rem;color:rgba(248,243,232,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">📁 Dokumen Keuangan</div>
+      <div class="dokumen-list fade-in">
+        <a href="#" class="dokumen-item">
+          <div class="dokumen-icon">📄</div>
+          <div>
+            <div class="dokumen-name">APBDes 2025</div>
+            <div class="dokumen-desc">Anggaran Pendapatan & Belanja Desa</div>
+          </div>
+        </a>
+        <a href="#" class="dokumen-item">
+          <div class="dokumen-icon">📊</div>
+          <div>
+            <div class="dokumen-name">Realisasi Anggaran Kumulatif</div>
+            <div class="dokumen-desc">Update terakhir: Februari 2025</div>
+          </div>
+        </a>
+        <a href="#" class="dokumen-item">
+          <div class="dokumen-icon">📑</div>
+          <div>
+            <div class="dokumen-name">Laporan APBDes 2024</div>
+            <div class="dokumen-desc">Laporan Pertanggungjawaban Akhir Tahun</div>
+          </div>
+        </a>
+        <a href="#" class="dokumen-item">
+          <div class="dokumen-icon">📋</div>
+          <div>
+            <div class="dokumen-name">RKPDes 2025</div>
+            <div class="dokumen-desc">Rencana Kerja Pemerintah Desa</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POTENSI DESA -->
+<section class="section potensi-section" id="potensi">
+  <div class="section-inner">
+    <div class="section-label">🌾 Unggulan</div>
+    <h2 class="section-title">Potensi <em>Korong Padang Jambu</em></h2>
+    <div class="title-bar"></div>
+    <div class="potensi-grid fade-in">
+      <div class="potensi-card" style="background: linear-gradient(135deg, #1a3a2a, #2d6a4f);">
+        <div class="potensi-bg">🌾</div>
+        <div class="potensi-overlay">
+          <div class="potensi-name">Pertanian Padi</div>
+          <div class="potensi-desc">Sawah produktif dengan sistem irigasi teknis seluas ±85 ha</div>
+        </div>
+      </div>
+      <div class="potensi-card" style="background: linear-gradient(135deg, #3d5a3e, #52796f);">
+        <div class="potensi-bg">🥥</div>
+        <div class="potensi-overlay">
+          <div class="potensi-name">Perkebunan Kelapa</div>
+          <div class="potensi-desc">Komoditi unggulan dengan potensi produksi kopra lokal</div>
+        </div>
+      </div>
+      <div class="potensi-card" style="background: linear-gradient(135deg, #3b4a6b, #4a7c98);">
+        <div class="potensi-bg">🐟</div>
+        <div class="potensi-overlay">
+          <div class="potensi-name">Budidaya Ikan</div>
+          <div class="potensi-desc">Kolam ikan produktif milik warga dan kelompok tani ikan</div>
+        </div>
+      </div>
+      <div class="potensi-card" style="background: linear-gradient(135deg, #5c3d2e, #7d5a3c);">
+        <div class="potensi-bg">🏔</div>
+        <div class="potensi-overlay">
+          <div class="potensi-name">Wisata Alam</div>
+          <div class="potensi-desc">Pemandangan perbukitan dan alam khas Sumatera Barat</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PETA -->
+<section class="section peta-section" id="peta">
+  <div class="section-inner">
+    <div class="section-label">📍 Lokasi</div>
+    <h2 class="section-title">Peta <em>Korong Padang Jambu</em></h2>
+    <div class="title-bar"></div>
+    <div class="peta-container fade-in">
+      <iframe
+        src="https://maps.google.com/maps?q=-0.451495,100.026362&z=15&hl=id&output=embed"
+        title="Peta Korong Padang Jambu" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+    <a class="peta-link" href="https://maps.app.goo.gl/hvLq2as3HCRx6MEu7" target="_blank" rel="noopener">Buka di Google Maps ↗</a>
+    <div class="peta-info fade-in">
+      <div class="peta-info-item">
+        <div class="peta-info-icon">🏘</div>
+        <div>
+          <div class="peta-info-label">Korong</div>
+          <div class="peta-info-value">Padang Jambu</div>
+        </div>
+      </div>
+      <div class="peta-info-item">
+        <div class="peta-info-icon">🏔</div>
+        <div>
+          <div class="peta-info-label">Nagari</div>
+          <div class="peta-info-value">Guguak Kuranji Hilir</div>
+        </div>
+      </div>
+      <div class="peta-info-item">
+        <div class="peta-info-icon">🗺</div>
+        <div>
+          <div class="peta-info-label">Kecamatan</div>
+          <div class="peta-info-value">Sungai Limau</div>
+        </div>
+      </div>
+      <div class="peta-info-item">
+        <div class="peta-info-icon">🏛</div>
+        <div>
+          <div class="peta-info-label">Kabupaten</div>
+          <div class="peta-info-value">Padang Pariaman</div>
+        </div>
+      </div>
+      <div class="peta-info-item">
+        <div class="peta-info-icon">🌏</div>
+        <div>
+          <div class="peta-info-label">Provinsi</div>
+          <div class="peta-info-value">Sumatera Barat</div>
+        </div>
+      </div>
+      <div class="peta-info-item">
+        <div class="peta-info-icon">📌</div>
+        <div>
+          <div class="peta-info-label">Kode Pos</div>
+          <div class="peta-info-value">25572</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KONTAK -->
+<section class="section kontak-section" id="kontak">
+  <div class="section-inner">
+    <div class="section-label">📬 Hubungi Kami</div>
+    <h2 class="section-title">Kontak <em>&amp; Aspirasi</em></h2>
+    <div class="title-bar"></div>
+    <div class="kontak-grid fade-in">
+      <div class="kontak-info">
+        <div class="kontak-item">
+          <div class="kontak-icon">👤</div>
+          <div>
+            <div class="kontak-label">Pengelola Website</div>
+            <div class="kontak-value"><a href="https://muhardiansyah15.github.io/" target="_blank" rel="noopener">Muhardiansyah</a></div>
+            <div class="kontak-desc">Website ini dikelola secara mandiri sebagai media informasi bagi warga Korong Padang Jambu.</div>
+          </div>
+        </div>
+        <div class="kontak-item">
+          <div class="kontak-icon">📧</div>
+          <div>
+            <div class="kontak-label">Email</div>
+            <div class="kontak-value"><a href="mailto:muhardiansyah.dev@gmail.com">muhardiansyah.dev@gmail.com</a></div>
+            <div class="kontak-desc">Untuk pertanyaan, saran, atau koreksi informasi di website ini.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.85rem;color:rgba(248,243,232,0.6);margin-bottom:1rem;">Kirimkan pertanyaan, saran, atau aspirasi Anda:</div>
+        <div class="kontak-form">
+          <div class="form-group">
+            <label class="form-label" for="fNama">Nama</label>
+            <input type="text" id="fNama" class="form-input" placeholder="Nama Anda">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fKontak">No. WhatsApp / Email (opsional)</label>
+            <input type="text" id="fKontak" class="form-input" placeholder="Kontak yang bisa dihubungi">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fPesan">Pesan / Aspirasi</label>
+            <textarea id="fPesan" class="form-textarea" placeholder="Tulis pesan Anda di sini..."></textarea>
+          </div>
+          <button class="btn-kirim" onclick="kirimPesan()">Kirim via Email ✉️</button>
+          <div class="kontak-desc">Pesan akan dibuka di aplikasi email pada perangkat Anda.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🌿 Korong Padang Jambu</div>
+  <div class="footer-sub">Nagari Guguak Kuranji Hilir · Kecamatan Sungai Limau · Kabupaten Padang Pariaman · Sumatera Barat</div>
+  <div class="footer-links">
+    <a href="#home">Home</a>
+    <a href="#profil">Profil</a>
+    <a href="#statistik">Statistik</a>
+    <a href="#pengumuman">Pengumuman</a>
+    <a href="#keuangan">Keuangan</a>
+    <a href="#potensi">Potensi</a>
+    <a href="#peta">Lokasi</a>
+    <a href="#kontak">Kontak</a>
+  </div>
+  <div class="footer-copy">© 2025 Korong Padang Jambu · Website dikelola oleh <a href="https://muhardiansyah15.github.io/" target="_blank" rel="noopener">Muhardiansyah</a></div>
+</footer>
+
+<script>
+  // Scroll fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Animate progress bars on scroll
+  const progObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.progress-fill').forEach(bar => {
+          const w = bar.style.width;
+          bar.style.width = '0';
+          setTimeout(() => bar.style.width = w, 100);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.anggaran-card').forEach(el => progObserver.observe(el));
+
+  // ===== DATA STATISTIK (ubah angka di sini) =====
+  const STATISTIK = {
+    tahun: 2025,
+    penduduk: { laki: 618, perempuan: 622, kk: 312 },
+    umur: [['0–14 tahun', 298], ['15–24 tahun', 211], ['25–44 tahun', 360], ['45–59 tahun', 223], ['60 tahun ke atas', 148]],
+    pekerjaan: [['Petani / Pekebun', 245], ['Pedagang', 90], ['Buruh', 77], ['Wiraswasta', 64], ['PNS / TNI / Polri', 38], ['Lainnya', 126]],
+    pendidikan: [['Belum / tidak sekolah', 150], ['SD / sederajat', 380], ['SMP / sederajat', 290], ['SMA / SMK', 320], ['Diploma / Sarjana', 100]],
+    wilayah: [['RW 01', 78, 312], ['RW 02', 74, 298], ['RW 03', 85, 335], ['RW 04', 75, 295]]
+  };
+
+  const fmt = n => n.toLocaleString('id-ID');
+  const P = STATISTIK.penduduk;
+  const total = P.laki + P.perempuan;
+
+  document.getElementById('numJiwa').dataset.count = total;
+  document.getElementById('numKK').dataset.count = P.kk;
+  document.getElementById('numLaki').dataset.count = P.laki;
+  document.getElementById('numPerempuan').dataset.count = P.perempuan;
+
+  function renderBars(id, rows, fillClass) {
+    const sum = rows.reduce((a, r) => a + r[1], 0);
+    document.getElementById(id).innerHTML = rows.map(([label, val]) => {
+      const pct = val / sum * 100;
+      return `<div class="progress-item">
+        <div class="progress-label"><span>${label}</span><span>${fmt(val)} · ${pct.toFixed(1).replace('.', ',')}%</span></div>
+        <div class="progress-bar"><div class="progress-fill ${fillClass}" data-w="${pct.toFixed(1)}" style="width:0"></div></div>
+      </div>`;
+    }).join('');
+  }
+  renderBars('barUmur', STATISTIK.umur, 'fill-hijau');
+  renderBars('barPekerjaan', STATISTIK.pekerjaan, 'fill-emas');
+  renderBars('barPendidikan', STATISTIK.pendidikan, 'fill-biru');
+
+  const lakiPct = P.laki / total * 100;
+  document.getElementById('donut').style.background =
+    `conic-gradient(var(--emas) 0% ${lakiPct}%, var(--hijau-muda) ${lakiPct}% 100%)`;
+  document.getElementById('donutTotal').textContent = fmt(total);
+  document.getElementById('legLaki').textContent = fmt(P.laki);
+  document.getElementById('legPerempuan').textContent = fmt(P.perempuan);
+
+  document.getElementById('rwBody').innerHTML = STATISTIK.wilayah
+    .map(([n, kk, j]) => `<tr><td>${n}</td><td>${fmt(kk)}</td><td>${fmt(j)}</td></tr>`).join('');
+  const sumKK = STATISTIK.wilayah.reduce((a, r) => a + r[1], 0);
+  const sumJ = STATISTIK.wilayah.reduce((a, r) => a + r[2], 0);
+  document.getElementById('rwFoot').innerHTML = `<tr><td>Total</td><td>${fmt(sumKK)}</td><td>${fmt(sumJ)}</td></tr>`;
+  document.getElementById('statNote').textContent = `Data kependudukan Korong Padang Jambu tahun ${STATISTIK.tahun}.`;
+
+  function countUp(el) {
+    const target = +el.dataset.count, t0 = performance.now(), dur = 1400;
+    (function step(t) {
+      const k = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(Math.round(target * e));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.querySelectorAll('.progress-fill[data-w]').forEach(b => b.style.width = b.dataset.w + '%');
+      e.target.querySelectorAll('.big-num').forEach(countUp);
+      statObserver.unobserve(e.target);
+    });
+  }, { threshold: 0.25 });
+  document.querySelectorAll('.stat-reveal').forEach(el => statObserver.observe(el));
+
+  // ===== FORM KONTAK (buka aplikasi email) =====
+  function kirimPesan() {
+    const nama = document.getElementById('fNama').value.trim();
+    const kontak = document.getElementById('fKontak').value.trim();
+    const pesan = document.getElementById('fPesan').value.trim();
+    if (!pesan) { alert('Silakan tulis pesan Anda terlebih dahulu.'); return; }
+    const body = 'Nama: ' + (nama || '-') + '\nKontak: ' + (kontak || '-') + '\n\n' + pesan;
+    window.location.href = 'mailto:muhardiansyah.dev@gmail.com?subject=' +
+      encodeURIComponent('Aspirasi Warga Korong Padang Jambu') + '&body=' + encodeURIComponent(body);
+  }
+
+  // ===== FILTER PENGUMUMAN =====
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const k = chip.dataset.filter;
+      document.querySelectorAll('.peng-item').forEach(i => i.classList.toggle('hide', k !== 'semua' && i.dataset.kat !== k));
+    });
+  });
+
+  // ===== MENU MOBILE =====
+  const navLinks = document.querySelector('.nav-links');
+  const navToggle = document.querySelector('.nav-toggle');
+  navToggle.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }));
+
+  // ===== MENU AKTIF SAAT SCROLL =====
+  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'keuangan', 'potensi', 'peta', 'kontak'];
+  const targets = ids.map(id => ({ id, el: id === 'home' ? document.querySelector('.hero') : document.getElementById(id) }));
+  function setActive() {
+    const y = window.scrollY + 120;
+    let current = 'home';
+    targets.forEach(t => { if (t.el && y >= t.el.offsetTop) current = t.id; });
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  }
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+</script>
+</body>
+</html>
