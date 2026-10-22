@@ -26,7 +26,8 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
     setGagal(false)
     try {
       const j = await apiGet({ daftar: 'pengumuman' })
-      if (!j.ok) throw new Error()
+      // data bukan array = backend versi lama / jawaban tak terduga → tampilkan "gagal"
+      if (!j.ok || !Array.isArray(j.data)) throw new Error()
       setData(j.data)
     } catch {
       setGagal(true)

@@ -11,7 +11,8 @@ export default function Aspirasi({ sesi, onSesiBerakhir, onKeluar }) {
     try {
       const j = await apiGet({ daftar: 'aspirasi', token: sesi.token })
       if (j.butuhLogin) { onSesiBerakhir(); return }
-      if (!j.ok) throw new Error()
+      // data bukan array = backend versi lama / jawaban tak terduga → tampilkan "gagal"
+      if (!j.ok || !Array.isArray(j.data)) throw new Error()
       setData(j.data)
     } catch {
       setGagal(true)
