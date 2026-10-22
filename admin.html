@@ -85,9 +85,21 @@
   .aspirasi-kontak { font-size: 0.8rem; color: var(--hijau); margin-top: 0.4rem; }
   .kosong { text-align: center; color: var(--abu); padding: 2rem 0; font-size: 0.9rem; }
 
-  .catatan { margin-top: 1.2rem; font-size: 0.78rem; color: rgba(248,243,232,0.7); text-align: center; }
-  .catatan a { color: var(--emas-muda); }
   .tersembunyi { display: none; }
+
+  footer {
+    margin-top: 2.5rem; padding-top: 1.5rem;
+    border-top: 1px solid rgba(201,168,76,0.35);
+    text-align: center; color: rgba(248,243,232,0.7);
+  }
+  footer img { width: 34px; height: 34px; display: block; margin: 0 auto 0.5rem; }
+  .footer-nama { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--krem); }
+  .footer-sub { font-size: 0.75rem; letter-spacing: 0.5px; margin-top: 0.2rem; }
+  .footer-links { margin-top: 0.8rem; display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; font-size: 0.8rem; }
+  .footer-links a { color: var(--emas-muda); text-decoration: none; }
+  .footer-links a:hover { text-decoration: underline; }
+  .footer-copy { margin-top: 0.9rem; font-size: 0.72rem; }
+  .footer-copy a { color: var(--emas-muda); }
 </style>
 </head>
 <body>
@@ -129,7 +141,16 @@
     <div id="daftar"><div class="kosong">Memuat…</div></div>
   </div>
 
-  <div class="catatan">Halaman khusus pengelola · <a href="index.html">← kembali ke website</a></div>
+  <footer>
+    <img src="assets/logo.svg" alt="">
+    <div class="footer-nama">Korong Padang Jambu</div>
+    <div class="footer-sub">Nagari Guguak Kuranji Hilir · Kecamatan Sungai Limau · Kabupaten Padang Pariaman</div>
+    <div class="footer-links">
+      <a href="index.html">← Kembali ke Website</a>
+      <a href="index.html#kontak">Kontak</a>
+    </div>
+    <div class="footer-copy">© 2025 Korong Padang Jambu · Halaman khusus pengelola · Dikelola oleh <a href="https://muhardiansyah15.github.io/" target="_blank" rel="noopener">Muhardiansyah</a></div>
+  </footer>
 </div>
 
 <script>
