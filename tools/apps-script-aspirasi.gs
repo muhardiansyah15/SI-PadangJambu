@@ -26,6 +26,8 @@ var KATEGORI_SAH = ["penting", "kegiatan", "layanan"];
 var SHEET_SURAT = "SURAT";
 var STATUS_SAH = ["baru", "diproses", "selesai"];
 var JENIS_SURAT_SAH = ["pengantar", "domisili", "usaha", "tidak-mampu", "lainnya"];
+var SHEET_KONFIG = "KONFIG";
+var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder"];
 
 function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -35,6 +37,25 @@ function lembar_() {
     sh.appendRow(["Waktu", "Nama", "Kontak", "Pesan"].concat(KOLOM_JEJAK).concat(["Status"]));
   }
   return sh;
+}
+
+/** Konfigurasi sistem (kunci-nilai), diedit pemilik lewat portal. */
+function lembarKonfig_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_KONFIG) || ss.insertSheet(SHEET_KONFIG);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["Kunci", "Nilai"].concat(KOLOM_JEJAK));
+  }
+  return sh;
+}
+
+function bacaKonfig_() {
+  var rows = lembarKonfig_().getDataRange().getValues();
+  var k = {};
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0]) k[String(rows[i][0])] = String(rows[i][1] || "");
+  }
+  return k;
 }
 
 /** Permohonan surat pengantar/keterangan dari warga. */
@@ -359,6 +380,14 @@ function doGet(e) {
       });
     }
     return json_({ ok: true, data: struktur });
+  }
+  if (e && e.parameter && e.parameter.daftar === "konfig") {
+    if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
+    return json_({
+      ok: true,
+      konfig: bacaKonfig_(),
+      spreadsheetUrl: SpreadsheetApp.getActiveSpreadsheet().getUrl()
+    });
   }
   if (e && e.parameter && e.parameter.daftar === "surat") {
     if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
@@ -738,6 +767,37 @@ function doPost(e) {
         }
       }
       return json_({ ok: ok });
+    }
+
+    // Simpan konfigurasi (hanya pemilik); kunci dibatasi whitelist
+    if (p.aksi === "konfig-set") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var pemilikK = adminPemilik_(p.token);
+      if (!pemilikK) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengubah konfigurasi." });
+      var kunciK = String(p.kunci || "");
+      if (KUNCI_KONFIG_SAH.indexOf(kunciK) < 0) return json_({ ok: false, pesan: "Kunci konfigurasi tidak dikenal." });
+      var nilaiK = String(p.nilai || "").trim().slice(0, 300);
+      if (kunciK === "drive_folder" && nilaiK &&
+          !/^https:\/\/drive\.google\.com\//.test(nilaiK)) {
+        return json_({ ok: false, pesan: "Isi dengan tautan folder Google Drive (drive.google.com)." });
+      }
+      if ((kunciK === "cloudinary_cloud" || kunciK === "cloudinary_preset") &&
+          nilaiK && !/^[A-Za-z0-9._-]+$/.test(nilaiK)) {
+        return json_({ ok: false, pesan: "Nilai Cloudinary hanya huruf/angka/titik/strip." });
+      }
+      var shK = lembarKonfig_();
+      var rowsK2 = shK.getDataRange().getValues();
+      var rK = 0;
+      for (var ik = 1; ik < rowsK2.length; ik++) {
+        if (String(rowsK2[ik][0]) === kunciK) { rK = ik + 1; break; }
+      }
+      if (rK) {
+        shK.getRange(rK, 2).setValue(teks_(nilaiK));
+        tulisJejak_(shK, rK, 5, pemilikK.user);
+      } else {
+        shK.appendRow([kunciK, teks_(nilaiK)].concat(jejak_(pemilikK.user)));
+      }
+      return json_({ ok: true });
     }
 
     if (p.aksi === "user-tambah") {

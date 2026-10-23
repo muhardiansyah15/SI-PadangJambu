@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { apiPost, bacaSesi, simpanSesi, unggahCloudinary, urlTransform, CLOUDINARY } from './api.js'
+import { useEffect, useRef, useState } from 'react'
+import { apiGet, apiPost, bacaSesi, simpanSesi, terapkanKonfig, unggahCloudinary, urlTransform, CLOUDINARY } from './api.js'
 import Login from './Login.jsx'
 import Aspirasi from './Aspirasi.jsx'
 import Surat from './Surat.jsx'
@@ -7,6 +7,7 @@ import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
 import Galeri from './Galeri.jsx'
 import Pengguna from './Pengguna.jsx'
+import Konfig from './Konfig.jsx'
 import Footer from './Footer.jsx'
 
 const MENU = [
@@ -16,6 +17,7 @@ const MENU = [
   { id: 'struktur', label: '🏛 Struktur' },
   { id: 'galeri', label: '🖼 Galeri' },
   { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
+  { id: 'konfig', label: '⚙️ Konfigurasi', khususPemilik: true },
 ]
 
 export default function App() {
@@ -23,6 +25,14 @@ export default function App() {
   const [pesanLogin, setPesanLogin] = useState('')
   const [tab, setTab] = useState('aspirasi')
   const fotoRef = useRef(null)
+
+  // terapkan konfigurasi server (Cloudinary dsb.) begitu ada sesi
+  useEffect(() => {
+    if (!sesi) return
+    apiGet({ daftar: 'konfig', token: sesi.token })
+      .then(j => { if (j.ok) terapkanKonfig(j.konfig) })
+      .catch(() => {})
+  }, [sesi])
 
   async function gantiFotoProfil(e) {
     const f = e.target.files[0]
@@ -115,6 +125,7 @@ export default function App() {
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'galeri' && <Galeri sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengguna' && sesi.peran === 'pemilik' && <Pengguna sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'konfig' && sesi.peran === 'pemilik' && <Konfig sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />
       </main>
     </div>

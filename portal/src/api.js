@@ -1,15 +1,37 @@
+const bacaLokal = (k, cadangan) => {
+  try { return localStorage.getItem(k) || cadangan } catch { return cadangan }
+}
+
+export const simpanLokal = (k, v) => {
+  try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k) } catch { /* abaikan */ }
+}
+
 // Endpoint Apps Script (tools/apps-script-aspirasi.gs).
-// Bisa dioverride lewat env VITE_ASPIRASI_URL (Netlify/CI) tanpa mengubah kode.
-export const ASPIRASI_URL =
+// Urutan: override per perangkat (menu Konfigurasi) > env build > bawaan.
+export const URL_BAWAAN =
   import.meta.env.VITE_ASPIRASI_URL ||
   'https://script.google.com/macros/s/AKfycbyFgEX7Sf9nDCuHhH1i8h2_jbyXMt6zWb2clZ6hoe7IqtP8bFKkk99mZnsp3pAK8A7t/exec'
+export const ASPIRASI_URL = bacaLokal('pj_api_url', URL_BAWAAN)
 
 // Cloudinary (galeri foto): isi cloud name + unsigned upload preset dari
 // dashboard Cloudinary (Settings > Upload > Upload presets, mode Unsigned).
 // Bisa juga lewat env VITE_CLOUDINARY_CLOUD / VITE_CLOUDINARY_PRESET.
 export const CLOUDINARY = {
-  cloud: import.meta.env.VITE_CLOUDINARY_CLOUD || 'aifdjyjs',
-  preset: import.meta.env.VITE_CLOUDINARY_PRESET || 'SI-padangjambu',
+  cloud: bacaLokal('pj_cld_cloud', import.meta.env.VITE_CLOUDINARY_CLOUD || 'aifdjyjs'),
+  preset: bacaLokal('pj_cld_preset', import.meta.env.VITE_CLOUDINARY_PRESET || 'SI-padangjambu'),
+}
+
+/** Terapkan konfigurasi dari server (sheet KONFIG) + simpan salinan lokal. */
+export function terapkanKonfig(k) {
+  if (!k) return
+  if (k.cloudinary_cloud) {
+    CLOUDINARY.cloud = k.cloudinary_cloud
+    simpanLokal('pj_cld_cloud', k.cloudinary_cloud)
+  }
+  if (k.cloudinary_preset) {
+    CLOUDINARY.preset = k.cloudinary_preset
+    simpanLokal('pj_cld_preset', k.cloudinary_preset)
+  }
 }
 
 /** Sisipkan transformasi ke URL Cloudinary (thumbnail/tampilan besar). */
