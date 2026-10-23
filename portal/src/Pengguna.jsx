@@ -148,6 +148,8 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
       </>
       )}
 
+      {!formTampil && (
+      <>
       <div className="sub-judul">Daftar Pengguna</div>
       {data === null && <div className="kosong">Memuat…</div>}
       {data !== null && gagal && <div className="kosong">Gagal memuat. Coba muat ulang.</div>}
@@ -176,6 +178,8 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
           </div>
         </div>
       ))}
+      </>
+      )}
     </div>
   )
 }

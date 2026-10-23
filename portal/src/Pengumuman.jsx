@@ -149,6 +149,8 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
       </form>
       )}
 
+      {!formTampil && (
+      <>
       <div className="sub-judul">Pengumuman Tayang</div>
       {data === null && <div className="kosong">Memuat…</div>}
       {data !== null && gagal && <div className="kosong">Gagal memuat. Coba muat ulang.</div>}
@@ -172,6 +174,8 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
           </div>
         </div>
       ))}
+      </>
+      )}
     </div>
   )
 }

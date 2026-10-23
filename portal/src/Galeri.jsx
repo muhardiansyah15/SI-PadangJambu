@@ -157,6 +157,8 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
       </>
       )}
 
+      {!formTampil && (
+      <>
       <div className="sub-judul">Foto Tayang</div>
       {data === null && <div className="kosong">Memuat…</div>}
       {data !== null && gagal && <div className="kosong">Gagal memuat. Coba muat ulang.</div>}
@@ -178,6 +180,8 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -178,6 +178,8 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
       </form>
       )}
 
+      {!formTampil && (
+      <>
       <div className="sub-judul">Bagan Saat Ini</div>
       {data === null && <div className="kosong">Memuat…</div>}
       {data !== null && gagal && <div className="kosong">Gagal memuat. Coba muat ulang.</div>}
@@ -187,6 +189,8 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
       {data !== null && puncak.map(p => (
         <Cabang key={p.id} item={p} semua={data} onHapus={hapus} onEdit={mulaiEdit} />
       ))}
+      </>
+      )}
     </div>
   )
 }
