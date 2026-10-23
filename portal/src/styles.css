@@ -161,6 +161,22 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .peng-tag-mini.penting { background: var(--merah-accent); }
 .peng-tag-mini.layanan { background: var(--emas); color: var(--hijau-tua); }
 .baris-hapus { margin-top: 0.6rem; text-align: right; }
+.baris-status { display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem; }
+.pilih-status { width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; appearance: auto; }
+.status-tag {
+  display: inline-block; font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px; margin-right: 6px;
+}
+.status-tag.baru { background: var(--merah-accent); color: var(--putih); }
+.status-tag.diproses { background: var(--emas); color: var(--hijau-tua); }
+.status-tag.selesai { background: var(--hijau-muda); color: var(--hijau-tua); }
+.saring-status { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.menu-item.saring {
+  color: var(--hijau); background: var(--krem);
+  border: 1.5px solid #d8d2c4; font-size: 0.82rem; padding: 0.4rem 0.9rem;
+}
+.menu-item.saring.aktif { background: var(--hijau); color: var(--krem); border-color: var(--hijau); }
 
 .galeri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
 .galeri-item {

@@ -320,6 +320,16 @@
   .potensi-desc { font-size: 0.75rem; color: rgba(248,243,232,0.75); margin-top: 4px; line-height: 1.4; }
 
   /* ===== KONTAK ===== */
+  /* ===== LAYANAN SURAT ===== */
+  .surat-section { background: var(--hijau); color: var(--krem); }
+  .surat-section .section-title { color: var(--krem); }
+  .surat-section .section-label { color: var(--emas-muda); }
+  .surat-section .title-bar { background: var(--emas); }
+  .surat-wrap { max-width: 640px; margin: 0 auto; }
+  .surat-intro { font-size: 0.95rem; color: rgba(248,243,232,0.85); line-height: 1.7; margin-bottom: 1.6rem; text-align: center; }
+  .surat-section select.form-input { appearance: auto; }
+  .surat-section select.form-input option { color: var(--hijau-tua); }
+
   .kontak-section { background: var(--hijau-tua); color: var(--krem); }
   .kontak-section .section-title { color: var(--krem); }
   .kontak-section .section-label { color: var(--emas-muda); }
@@ -687,6 +697,7 @@
     <!-- Potensi disembunyikan sementara sampai datanya terverifikasi
     <li><a href="#potensi">Potensi</a></li> -->
     <li><a href="#galeri" id="menuGaleri" style="display:none">Galeri</a></li>
+    <li><a href="#surat">Layanan</a></li>
     <li><a href="#peta">Lokasi</a></li>
     <li><a href="#kontak">Kontak</a></li>
     <li><a href="portal/" class="nav-portal">Portal 🔐</a></li>
@@ -1091,6 +1102,45 @@
 </section>
 
 <!-- KONTAK -->
+<!-- LAYANAN SURAT -->
+<section class="section surat-section" id="surat">
+  <div class="section-inner">
+    <div class="section-label">📄 Layanan Administrasi</div>
+    <h2 class="section-title">Permohonan <em>Surat Pengantar</em></h2>
+    <div class="title-bar"></div>
+    <div class="surat-wrap">
+      <p class="surat-intro">Ajukan permohonan surat pengantar/keterangan secara online — tidak perlu bolak-balik.
+        Wali korong akan menghubungi Anda lewat kontak yang dicantumkan ketika surat siap diambil.</p>
+      <div class="kontak-form">
+        <div class="form-group">
+          <label class="form-label" for="wNama">Nama lengkap</label>
+          <input type="text" id="wNama" class="form-input" placeholder="Nama sesuai KTP">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="wKontak">No. WhatsApp yang bisa dihubungi</label>
+          <input type="text" id="wKontak" class="form-input" placeholder="08xx-xxxx-xxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="wJenis">Jenis surat</label>
+          <select id="wJenis" class="form-input">
+            <option value="pengantar">Surat Pengantar Umum</option>
+            <option value="domisili">Surat Keterangan Domisili</option>
+            <option value="usaha">Surat Keterangan Usaha</option>
+            <option value="tidak-mampu">Surat Keterangan Tidak Mampu</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="wKeperluan">Keperluan</label>
+          <textarea id="wKeperluan" class="form-textarea" placeholder="mis. untuk mengurus KTP baru di kantor camat"></textarea>
+        </div>
+        <button class="btn-kirim" id="btnSurat" onclick="kirimSurat()">Ajukan Permohonan 📄</button>
+        <div class="form-status" id="wStatus"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section kontak-section" id="kontak">
   <div class="section-inner">
     <div class="section-label">📬 Hubungi Kami</div>
@@ -1140,6 +1190,7 @@
     <a href="#profil">Profil</a>
     <a href="#statistik">Statistik</a>
     <a href="#pengumuman">Pengumuman</a>
+    <a href="#surat">Layanan</a>
     <a href="#peta">Lokasi</a>
     <a href="#kontak">Kontak</a>
   </div>
@@ -1472,6 +1523,41 @@
   }, { threshold: 0.25 });
   document.querySelectorAll('.stat-reveal').forEach(el => statObserver.observe(el));
 
+  // ===== FORM PERMOHONAN SURAT =====
+  function statusSurat(teks, berhasil) {
+    const el = document.getElementById('wStatus');
+    el.textContent = teks;
+    el.className = 'form-status ' + (berhasil ? 'ok' : 'gagal');
+  }
+
+  async function kirimSurat() {
+    const nama = document.getElementById('wNama').value.trim();
+    const kontak = document.getElementById('wKontak').value.trim();
+    const jenis = document.getElementById('wJenis').value;
+    const keperluan = document.getElementById('wKeperluan').value.trim();
+    if (!nama || !kontak) { statusSurat('Nama dan nomor WhatsApp wajib diisi.', false); return; }
+    const btn = document.getElementById('btnSurat');
+    btn.disabled = true;
+    btn.textContent = 'Mengirim…';
+    try {
+      const res = await fetch(ASPIRASI_URL, {
+        method: 'POST',
+        body: JSON.stringify({ aksi: 'surat', nama, kontak, jenis, keperluan })
+      });
+      const j = await res.json();
+      if (!j.ok) throw new Error(j.pesan || 'gagal');
+      document.getElementById('wNama').value = '';
+      document.getElementById('wKontak').value = '';
+      document.getElementById('wKeperluan').value = '';
+      statusSurat('Permohonan terkirim. Anda akan dihubungi bila surat siap. 🙏', true);
+    } catch (err) {
+      statusSurat(err.message === 'gagal' || !err.message ? 'Gagal mengirim. Coba lagi.' : err.message, false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Ajukan Permohonan 📄';
+    }
+  }
+
   // ===== FORM KONTAK & ASPIRASI ===== (ASPIRASI_URL dideklarasikan di atas)
   function statusForm(teks, berhasil) {
     const el = document.getElementById('fStatus');
@@ -1536,7 +1622,7 @@
   }));
 
   // ===== MENU AKTIF SAAT SCROLL =====
-  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'galeri', 'peta', 'kontak'];
+  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'galeri', 'surat', 'peta', 'kontak'];
   const targets = ids.map(id => ({ id, el: id === 'home' ? document.querySelector('.hero') : document.getElementById(id) }));
   function setActive() {
     const y = window.scrollY + 120;

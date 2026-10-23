@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { apiPost, bacaSesi, simpanSesi, unggahCloudinary, urlTransform, CLOUDINARY } from './api.js'
 import Login from './Login.jsx'
 import Aspirasi from './Aspirasi.jsx'
+import Surat from './Surat.jsx'
 import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
 import Galeri from './Galeri.jsx'
@@ -10,6 +11,7 @@ import Footer from './Footer.jsx'
 
 const MENU = [
   { id: 'aspirasi', label: '💬 Aspirasi' },
+  { id: 'surat', label: '📄 Surat' },
   { id: 'pengumuman', label: '📢 Pengumuman' },
   { id: 'struktur', label: '🏛 Struktur' },
   { id: 'galeri', label: '🖼 Galeri' },
@@ -108,6 +110,7 @@ export default function App() {
 
       <main className="isi">
         {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'surat' && <Surat sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'galeri' && <Galeri sesi={sesi} onSesiBerakhir={sesiBerakhir} />}

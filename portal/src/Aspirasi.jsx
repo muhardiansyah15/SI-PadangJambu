@@ -22,6 +22,17 @@ export default function Aspirasi({ sesi, onSesiBerakhir }) {
 
   useEffect(() => { muat() }, [muat])
 
+  async function ubahStatus(a, status) {
+    try {
+      const j = await apiPost({ aksi: 'aspirasi-status', token: sesi.token, baris: a.baris, pesan: a.pesan, status })
+      if (j.butuhLogin) { onSesiBerakhir(); return }
+      if (!j.ok && j.pesan) alert(j.pesan)
+      muat()
+    } catch {
+      alert('Gagal menyimpan status. Periksa koneksi internet.')
+    }
+  }
+
   async function hapus(a) {
     if (!confirm(`Hapus aspirasi dari "${a.nama}"? Tindakan ini tidak bisa dibatalkan.`)) return
     try {
@@ -49,12 +60,23 @@ export default function Aspirasi({ sesi, onSesiBerakhir }) {
       {data !== null && data.map((a, i) => (
         <div className="aspirasi-item" key={i}>
           <div className="aspirasi-meta">
-            <b>{a.nama}</b>
+            <b>
+              <span className={'status-tag ' + a.status}>
+                {a.status === 'baru' ? 'Baru' : a.status === 'diproses' ? 'Diproses' : 'Selesai'}
+              </span>
+              {a.nama}
+            </b>
             <span>{fmtWaktu(a.waktu)}</span>
           </div>
           <div className="aspirasi-pesan">{a.pesan}</div>
           {a.kontak && a.kontak !== '-' && <div className="aspirasi-kontak">📱 {a.kontak}</div>}
-          <div className="baris-hapus">
+          <div className="baris-hapus baris-status">
+            <select className="form-input pilih-status" value={a.status}
+              onChange={e => ubahStatus(a, e.target.value)}>
+              <option value="baru">Baru</option>
+              <option value="diproses">Diproses</option>
+              <option value="selesai">Selesai</option>
+            </select>
             <button className="btn-hapus" onClick={() => hapus(a)}>Hapus</button>
           </div>
         </div>

@@ -23,12 +23,26 @@ var SHEET_STRUKTUR = "STRUKTUR";
 var SHEET_GALERI = "GALERI";
 var TOKEN_HARI = 7; // token login berlaku 7 hari
 var KATEGORI_SAH = ["penting", "kegiatan", "layanan"];
+var SHEET_SURAT = "SURAT";
+var STATUS_SAH = ["baru", "diproses", "selesai"];
+var JENIS_SURAT_SAH = ["pengantar", "domisili", "usaha", "tidak-mampu", "lainnya"];
 
 function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Waktu", "Nama", "Kontak", "Pesan"].concat(KOLOM_JEJAK));
+    // Status di ujung (setelah jejak) agar posisi kolom lama tidak bergeser
+    sh.appendRow(["Waktu", "Nama", "Kontak", "Pesan"].concat(KOLOM_JEJAK).concat(["Status"]));
+  }
+  return sh;
+}
+
+/** Permohonan surat pengantar/keterangan dari warga. */
+function lembarSurat_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_SURAT) || ss.insertSheet(SHEET_SURAT);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Waktu", "Nama", "Kontak", "Jenis", "Keperluan", "Status"].concat(KOLOM_JEJAK));
   }
   return sh;
 }
@@ -346,6 +360,24 @@ function doGet(e) {
     }
     return json_({ ok: true, data: struktur });
   }
+  if (e && e.parameter && e.parameter.daftar === "surat") {
+    if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
+    var rowsSu = lembarSurat_().getDataRange().getValues();
+    var surat = [];
+    for (var su = rowsSu.length - 1; su >= 1 && surat.length < 200; su--) {
+      if (!rowsSu[su][2]) continue;
+      surat.push({
+        id: String(rowsSu[su][0]),
+        waktu: rowsSu[su][1] ? new Date(rowsSu[su][1]).toISOString() : "",
+        nama: String(rowsSu[su][2]),
+        kontak: String(rowsSu[su][3] || ""),
+        jenis: String(rowsSu[su][4] || "lainnya"),
+        keperluan: String(rowsSu[su][5] || ""),
+        status: STATUS_SAH.indexOf(rowsSu[su][6]) >= 0 ? rowsSu[su][6] : "baru"
+      });
+    }
+    return json_({ ok: true, data: surat });
+  }
   if (e && e.parameter && e.parameter.daftar === "user") {
     if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
     if (!adminPemilik_(e.parameter.token)) return json_({ ok: false, pesan: "Khusus pemilik." });
@@ -374,7 +406,8 @@ function doGet(e) {
         waktu: rows[i][0] ? new Date(rows[i][0]).toISOString() : "",
         nama: String(rows[i][1] || ""),
         kontak: String(rows[i][2] || ""),
-        pesan: String(rows[i][3] || "")
+        pesan: String(rows[i][3] || ""),
+        status: STATUS_SAH.indexOf(rows[i][8]) >= 0 ? rows[i][8] : "baru"
       });
     }
     return json_({ ok: true, nama: admin.nama, data: data });
@@ -433,6 +466,68 @@ function doPost(e) {
         lockP.releaseLock();
       }
       return json_({ ok: true });
+    }
+
+    // Warga mengajukan permohonan surat (publik)
+    if (p.aksi === "surat") {
+      var namaW = String(p.nama || "").trim().slice(0, 80);
+      var kontakW = String(p.kontak || "").trim().slice(0, 80);
+      var jenisW = JENIS_SURAT_SAH.indexOf(p.jenis) >= 0 ? p.jenis : "lainnya";
+      var keperluanW = String(p.keperluan || "").trim().slice(0, 300);
+      if (!namaW || !kontakW) {
+        return json_({ ok: false, pesan: "Nama dan kontak (WhatsApp) wajib diisi." });
+      }
+      var cacheW = CacheService.getScriptCache();
+      if (cacheW.get("rem_surat")) {
+        return json_({ ok: false, pesan: "Terlalu cepat. Coba lagi sebentar lagi." });
+      }
+      cacheW.put("rem_surat", "1", 30);
+      var lockW = LockService.getScriptLock();
+      lockW.waitLock(5000);
+      try {
+        lembarSurat_().appendRow([Utilities.getUuid(), new Date(),
+          teks_(namaW), teks_(kontakW), jenisW, teks_(keperluanW), "baru"]
+          .concat(jejak_("publik")));
+      } finally {
+        lockW.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "surat-status") {
+      var akunSs = adminDariToken_(p.token);
+      if (!akunSs) return json_({ ok: false, butuhLogin: true });
+      var statusSs = STATUS_SAH.indexOf(p.status) >= 0 ? p.status : "baru";
+      var shSu = lembarSurat_();
+      var rSu = barisDariId_(shSu.getDataRange().getValues(), p.id);
+      if (!rSu) return json_({ ok: false, pesan: "Permohonan tidak ditemukan." });
+      shSu.getRange(rSu, 7).setValue(statusSs);
+      tulisJejak_(shSu, rSu, 10, akunSs.user);
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "surat-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var shSh = lembarSurat_();
+      var rSh = barisDariId_(shSh.getDataRange().getValues(), p.id);
+      if (rSh) { shSh.deleteRow(rSh); ok = true; }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "aspirasi-status") {
+      var akunAs = adminDariToken_(p.token);
+      if (!akunAs) return json_({ ok: false, butuhLogin: true });
+      var barisSt = parseInt(p.baris, 10) || 0;
+      var statusSt = STATUS_SAH.indexOf(p.status) >= 0 ? p.status : "baru";
+      var shSt = lembar_();
+      var rowsSt = shSt.getDataRange().getValues();
+      if (barisSt >= 2 && barisSt <= rowsSt.length &&
+          String(rowsSt[barisSt - 1][3]) === String(p.pesan || "")) {
+        shSt.getRange(barisSt, 9).setValue(statusSt);
+        tulisJejak_(shSt, barisSt, 7, akunAs.user);
+        return json_({ ok: true });
+      }
+      return json_({ ok: false, pesan: "Data sudah berubah. Muat ulang lalu coba lagi." });
     }
 
     if (p.aksi === "aspirasi-hapus") {
