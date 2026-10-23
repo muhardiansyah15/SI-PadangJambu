@@ -28,7 +28,7 @@ function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Waktu", "Nama", "Kontak", "Pesan"]);
+    sh.appendRow(["Waktu", "Nama", "Kontak", "Pesan"].concat(KOLOM_JEJAK));
   }
   return sh;
 }
@@ -42,7 +42,7 @@ function lembarUser_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"]);
+    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"].concat(KOLOM_JEJAK));
   }
   return sh;
 }
@@ -57,7 +57,7 @@ function lembarPengumuman_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_PENGUMUMAN) || ss.insertSheet(SHEET_PENGUMUMAN);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Waktu Terbit", "Judul", "Kategori", "Isi", "Tanggal Acara", "Jam", "Tempat"]);
+    sh.appendRow(["ID", "Waktu Terbit", "Judul", "Kategori", "Isi", "Tanggal Acara", "Jam", "Tempat"].concat(KOLOM_JEJAK));
   }
   return sh;
 }
@@ -67,7 +67,7 @@ function lembarGaleri_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_GALERI) || ss.insertSheet(SHEET_GALERI);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Waktu", "URL", "Judul", "Album"]);
+    sh.appendRow(["ID", "Waktu", "URL", "Judul", "Album"].concat(KOLOM_JEJAK));
   }
   return sh;
 }
@@ -76,9 +76,22 @@ function lembarStruktur_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_STRUKTUR) || ss.insertSheet(SHEET_STRUKTUR);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan", "Foto"]);
+    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan", "Foto"].concat(KOLOM_JEJAK));
   }
   return sh;
+}
+
+var KOLOM_JEJAK = ["Create UID", "Create Date", "Write UID", "Write Date"];
+
+/**
+ * Jejak audit ala Odoo, ditaruh di ujung tiap baris data:
+ * create uid/date = siapa & kapan dibuat; write uid/date = terakhir diubah.
+ * Aksi tanpa login (form publik) dicatat sebagai "publik".
+ */
+function jejak_(user) {
+  var kini = new Date();
+  var u = String(user || "publik");
+  return [u, kini, u, kini];
 }
 
 /** Cegah formula injection: teks berawalan = + - @ disimpan sebagai teks biasa. */
@@ -386,7 +399,8 @@ function doPost(e) {
     }
 
     if (p.aksi === "pengumuman") {
-      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var akunPg = adminDariToken_(p.token);
+      if (!akunPg) return json_({ ok: false, butuhLogin: true });
       var judul = String(p.judul || "").trim().slice(0, 120);
       var kategori = KATEGORI_SAH.indexOf(p.kategori) >= 0 ? p.kategori : "kegiatan";
       var isi = String(p.isi || "").trim().slice(0, 1000);
@@ -399,7 +413,8 @@ function doPost(e) {
       lockP.waitLock(5000);
       try {
         lembarPengumuman_().appendRow([Utilities.getUuid(), new Date(),
-          teks_(judul), kategori, teks_(isi), "'" + tgl, "'" + jam, teks_(tempat)]);
+          teks_(judul), kategori, teks_(isi), "'" + tgl, "'" + jam, teks_(tempat)]
+          .concat(jejak_(akunPg.user)));
       } finally {
         lockP.releaseLock();
       }
@@ -424,7 +439,8 @@ function doPost(e) {
     }
 
     if (p.aksi === "struktur") {
-      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var akunSt = adminDariToken_(p.token);
+      if (!akunSt) return json_({ ok: false, butuhLogin: true });
       var namaS = String(p.nama || "").trim().slice(0, 80);
       var jabatan = String(p.jabatan || "").trim().slice(0, 80);
       var induk = String(p.induk || "").trim().slice(0, 64);
@@ -444,7 +460,8 @@ function doPost(e) {
       var lockS = LockService.getScriptLock();
       lockS.waitLock(5000);
       try {
-        shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk, fotoS]);
+        shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk, fotoS]
+          .concat(jejak_(akunSt.user)));
       } finally {
         lockS.releaseLock();
       }
@@ -474,7 +491,8 @@ function doPost(e) {
     }
 
     if (p.aksi === "galeri") {
-      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var akunGl = adminDariToken_(p.token);
+      if (!akunGl) return json_({ ok: false, butuhLogin: true });
       var urlFoto = String(p.url || "").trim().slice(0, 500);
       if (!/^https:\/\/res\.cloudinary\.com\//.test(urlFoto)) {
         return json_({ ok: false, pesan: "URL foto tidak dikenal (harus Cloudinary)." });
@@ -485,7 +503,7 @@ function doPost(e) {
       lockG.waitLock(5000);
       try {
         lembarGaleri_().appendRow([Utilities.getUuid(), new Date(),
-          urlFoto, teks_(judulF), teks_(albumF)]);
+          urlFoto, teks_(judulF), teks_(albumF)].concat(jejak_(akunGl.user)));
       } finally {
         lockG.releaseLock();
       }
@@ -520,6 +538,8 @@ function doPost(e) {
       for (var fp = 1; fp < rowsP2.length; fp++) {
         if (String(rowsP2[fp][0]).trim().toLowerCase() === akun.user) {
           shP.getRange(fp + 1, 5).setValue(fotoP);
+          // perbarui jejak write uid/date (kolom 8-9)
+          shP.getRange(fp + 1, 8, 1, 2).setValues([[akun.user, new Date()]]);
           ok = true;
           break;
         }
@@ -529,7 +549,8 @@ function doPost(e) {
 
     if (p.aksi === "user-tambah") {
       if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
-      if (!adminPemilik_(p.token)) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengelola pengguna." });
+      var pemilikT = adminPemilik_(p.token);
+      if (!pemilikT) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengelola pengguna." });
       var userBaru = String(p.user || "").trim().toLowerCase().slice(0, 40).replace(/[^a-z0-9._-]/g, "");
       var passBaru = String(p.pass || "").slice(0, 80);
       var namaBaru = String(p.nama || "").trim().slice(0, 80);
@@ -546,7 +567,8 @@ function doPost(e) {
       var lockU = LockService.getScriptLock();
       lockU.waitLock(5000);
       try {
-        shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru]);
+        shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru, ""]
+          .concat(jejak_(pemilikT.user)));
       } finally {
         lockU.releaseLock();
       }
@@ -598,7 +620,8 @@ function doPost(e) {
       var lock = LockService.getScriptLock();
       lock.waitLock(5000);
       try {
-        lembar_().appendRow([new Date(), teks_(nama || "-"), teks_(kontak || "-"), teks_(pesan)]);
+        lembar_().appendRow([new Date(), teks_(nama || "-"), teks_(kontak || "-"), teks_(pesan)]
+          .concat(jejak_("publik")));
       } finally {
         lock.releaseLock();
       }
