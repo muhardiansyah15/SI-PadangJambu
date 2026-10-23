@@ -8,6 +8,7 @@ import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
 import Galeri from './Galeri.jsx'
 import Pamsimas from './Pamsimas.jsx'
+import Penduduk from './Penduduk.jsx'
 import Pengguna from './Pengguna.jsx'
 import Konfig from './Konfig.jsx'
 import Footer from './Footer.jsx'
@@ -20,6 +21,8 @@ const MENU = [
   { id: 'struktur', label: '🏛 Struktur' },
   { id: 'galeri', label: '🖼 Galeri' },
   { id: 'pamsimas', label: '💧 Pamsimas', butuhBaca: 'pamsimas' },
+  // write-only; muncul hanya bila konfigurasi penduduk_portal = ya (gerbang SK wali korong)
+  { id: 'penduduk', label: '🪪 Penduduk', butuhCreate: 'penduduk', butuhKonfig: 'penduduk_portal' },
   { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
   { id: 'konfig', label: '⚙️ Konfigurasi', khususPemilik: true },
 ]
@@ -28,13 +31,14 @@ export default function App() {
   const [sesi, setSesi] = useState(bacaSesi)
   const [pesanLogin, setPesanLogin] = useState('')
   const [tab, setTab] = useState('beranda')
+  const [konfig, setKonfig] = useState({})
   const fotoRef = useRef(null)
 
   // terapkan konfigurasi server (Cloudinary dsb.) begitu ada sesi
   useEffect(() => {
     if (!sesi) return
     apiGet({ daftar: 'konfig', token: sesi.token })
-      .then(j => { if (j.ok) terapkanKonfig(j.konfig) })
+      .then(j => { if (j.ok) { terapkanKonfig(j.konfig); setKonfig(j.konfig || {}) } })
       .catch(() => {})
   }, [sesi])
 
@@ -116,7 +120,9 @@ export default function App() {
         <nav className="menu-sisi">
           {MENU.filter(m =>
             (!m.khususPemilik || sesi.peran === 'pemilik') &&
-            (!m.butuhBaca || sesi.peran === 'pemilik' || sesi.akses?.[m.butuhBaca]?.r)
+            (!m.butuhBaca || sesi.peran === 'pemilik' || sesi.akses?.[m.butuhBaca]?.r) &&
+            (!m.butuhCreate || sesi.peran === 'pemilik' || sesi.akses?.[m.butuhCreate]?.c) &&
+            (!m.butuhKonfig || konfig[m.butuhKonfig] === 'ya')
           ).map(m => (
             <button
               key={m.id}
@@ -137,6 +143,7 @@ export default function App() {
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'galeri' && <Galeri sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pamsimas' && <Pamsimas sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'penduduk' && konfig.penduduk_portal === 'ya' && <Penduduk sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengguna' && sesi.peran === 'pemilik' && <Pengguna sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'konfig' && sesi.peran === 'pemilik' && <Konfig sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />

@@ -27,7 +27,7 @@ var SHEET_SURAT = "SURAT";
 var STATUS_SAH = ["baru", "diproses", "selesai"];
 var JENIS_SURAT_SAH = ["pengantar", "domisili", "usaha", "tidak-mampu", "lainnya"];
 var SHEET_KONFIG = "KONFIG";
-var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder", "pamsimas_publik"];
+var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder", "pamsimas_publik", "penduduk_portal"];
 var SHEET_PAM_PELANGGAN = "PAMSIMAS_PELANGGAN";
 var SHEET_PAM_KAS = "PAMSIMAS_KAS";
 /**
@@ -37,7 +37,7 @@ var SHEET_PAM_KAS = "PAMSIMAS_KAS";
  * Tanpa baris = tanpa akses (semantik Odoo).
  */
 var SHEET_AKSES = "AKSES";
-var MODEL_SAH = ["pamsimas"];
+var MODEL_SAH = ["pamsimas", "penduduk"];
 
 function lembarAkses_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -353,15 +353,19 @@ function json_(obj) {
 }
 
 /**
- * Sheet PENDUDUK: diisi perangkat korong LANGSUNG di Google Sheets (privat),
- * bukan lewat portal. Sengaja minim data — tanpa NIK, tanpa tanggal lahir
- * lengkap (asas minimalisasi UU PDP). Yang keluar ke publik HANYA agregat.
+ * Sheet PENDUDUK: data WRITE-ONLY dari portal — input bisa lewat portal bila
+ * konfigurasi penduduk_portal = "ya" (aktifkan setelah ada SK/penugasan
+ * tertulis wali korong), tapi melihat/mengedit per orang tetap HANYA
+ * langsung di Google Sheets. Sengaja minim data — tanpa NIK, tanpa tanggal
+ * lahir lengkap (asas minimalisasi UU PDP). Yang keluar ke publik HANYA agregat.
  */
 function lembarPenduduk_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_PENDUDUK) || ss.insertSheet(SHEET_PENDUDUK);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Nama", "RW", "JK (L/P)", "Tahun Lahir", "Pekerjaan", "Pendidikan", "Kepala Keluarga (Y)"]);
+    sh.appendRow(["Nama", "RW", "JK (L/P)", "Tahun Lahir", "Pekerjaan", "Pendidikan", "Kepala Keluarga (Y)"].concat(KOLOM_JEJAK));
+  } else if (!sh.getRange(1, 8).getValue()) {
+    sh.getRange(1, 8, 1, 4).setValues([KOLOM_JEJAK]); // lengkapi header jejak di sheet lama
   }
   return sh;
 }
@@ -1265,6 +1269,45 @@ function doPost(e) {
       return json_({ ok: ok });
     }
 
+    /**
+     * Input data warga dari portal — WRITE-ONLY: hanya menambah baris, tidak
+     * pernah membaca/mengubah data per orang lewat API. Dua gerbang:
+     * konfigurasi penduduk_portal = "ya" (diaktifkan pemilik setelah ada
+     * SK/penugasan tertulis wali korong) DAN hak create model "penduduk".
+     */
+    if (p.aksi === "penduduk-tambah") {
+      var akunPd = adminDariToken_(p.token);
+      if (!akunPd) return json_({ ok: false, butuhLogin: true });
+      if (bacaKonfig_().penduduk_portal !== "ya") {
+        return json_({ ok: false, pesan: "Input penduduk belum diaktifkan. Pemilik bisa mengaktifkannya di menu Konfigurasi setelah ada SK/penugasan tertulis wali korong." });
+      }
+      if (!punyaAkses_(akunPd, "penduduk", "c")) {
+        return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Penduduk. Minta Super User mengaturnya di menu Pengguna." });
+      }
+      var namaPd = String(p.nama || "").trim().slice(0, 80);
+      var rwPd = String(p.rw || "").trim().slice(0, 20);
+      var jkPd = String(p.jk || "").trim().toUpperCase().charAt(0) === "P" ? "P" : "L";
+      var tahunPd = parseInt(p.tahun, 10);
+      var tahunKiniPd = new Date().getFullYear();
+      if (!namaPd) return json_({ ok: false, pesan: "Nama wajib diisi." });
+      if (!(tahunPd > 1900 && tahunPd <= tahunKiniPd)) {
+        return json_({ ok: false, pesan: "Tahun lahir tidak valid." });
+      }
+      var kerjaPd = String(p.pekerjaan || "").trim().slice(0, 60);
+      var didikPd = String(p.pendidikan || "").trim().slice(0, 60);
+      var lockPd = LockService.getScriptLock();
+      lockPd.waitLock(5000);
+      try {
+        var shPd = lembarPenduduk_();
+        shPd.appendRow([teks_(namaPd), teks_(rwPd), jkPd, tahunPd,
+          teks_(kerjaPd), teks_(didikPd), p.kk ? "Y" : ""].concat(jejak_(akunPd.user)));
+        CacheService.getScriptCache().remove("stat_agregat"); // agregat langsung segar
+        return json_({ ok: true, total: shPd.getLastRow() - 1 });
+      } finally {
+        lockPd.releaseLock();
+      }
+    }
+
     // Simpan konfigurasi (hanya pemilik); kunci dibatasi whitelist
     if (p.aksi === "konfig-set") {
       if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
@@ -1277,7 +1320,8 @@ function doPost(e) {
           !/^https:\/\/drive\.google\.com\//.test(nilaiK)) {
         return json_({ ok: false, pesan: "Isi dengan tautan folder Google Drive (drive.google.com)." });
       }
-      if (kunciK === "pamsimas_publik" && nilaiK && nilaiK !== "ya" && nilaiK !== "tidak") {
+      if ((kunciK === "pamsimas_publik" || kunciK === "penduduk_portal") &&
+          nilaiK && nilaiK !== "ya" && nilaiK !== "tidak") {
         return json_({ ok: false, pesan: "Nilai harus 'ya' atau 'tidak'." });
       }
       if ((kunciK === "cloudinary_cloud" || kunciK === "cloudinary_preset") &&

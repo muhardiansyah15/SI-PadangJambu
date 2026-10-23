@@ -117,9 +117,14 @@ menjadi hash saat login pertama yang berhasil — tidak perlu migrasi manual.
 
 ## Data Penduduk (sheet `PENDUDUK`)
 
-Data penduduk **tidak diinput lewat portal web** — perangkat korong mengisinya
-langsung di Google Sheets (yang dilindungi login Google + 2FA). Website hanya
-menerima **agregat** (jumlah per RW, kelompok umur, pekerjaan, pendidikan) lewat
+Data penduduk utamanya diisi perangkat korong langsung di Google Sheets (yang
+dilindungi login Google + 2FA). Portal punya menu **Input Penduduk (write-only)**
+— hanya bisa *menambah* baris, tidak pernah membaca/mengubah data per orang —
+yang **nonaktif secara bawaan**: pemilik mengaktifkannya lewat Konfigurasi →
+*Input Penduduk dari Portal* (kunci `penduduk_portal = ya`) **setelah ada
+SK/penugasan tertulis dari wali korong**, lalu memberi hak *Create* model
+`penduduk` ke petugas pendataan di menu Pengguna. Website hanya menerima
+**agregat** (jumlah per RW, kelompok umur, pekerjaan, pendidikan) lewat
 `GET ?daftar=statistik`; data per orang tidak pernah melewati endpoint publik.
 
 Kolom sheet `PENDUDUK` — sengaja minim sesuai asas minimalisasi UU PDP

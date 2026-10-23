@@ -9,6 +9,7 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
   const [preset, setPreset] = useState(CLOUDINARY.preset)
   const [drive, setDrive] = useState('')
   const [pamPublik, setPamPublik] = useState('tidak')
+  const [pddkPortal, setPddkPortal] = useState('tidak')
   const [spreadsheetUrl, setSpreadsheetUrl] = useState('')
   const [apiUrl, setApiUrl] = useState(ASPIRASI_URL)
   const [status, setStatus] = useState(null)
@@ -24,6 +25,7 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
       if (j.konfig.cloudinary_preset) setPreset(j.konfig.cloudinary_preset)
       setDrive(j.konfig.drive_folder || '')
       setPamPublik(j.konfig.pamsimas_publik === 'ya' ? 'ya' : 'tidak')
+      setPddkPortal(j.konfig.penduduk_portal === 'ya' ? 'ya' : 'tidak')
       setSpreadsheetUrl(j.spreadsheetUrl || '')
     } catch { /* biarkan nilai bawaan */ }
   }, [sesi.token, onSesiBerakhir])
@@ -117,6 +119,23 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
       <button className="btn btn-kecil" disabled={sibuk}
         onClick={() => simpan([['pamsimas_publik', pamPublik]])}>
         Simpan Transparansi
+      </button>
+
+      <div className="sub-judul">🪪 Input Penduduk dari Portal</div>
+      <div className="form-group">
+        <label className="form-label" htmlFor="kPddk">
+          Buka menu input penduduk (write-only) di portal — aktifkan setelah ada
+          SK/penugasan tertulis dari wali korong (tata kelola UU PDP). Melihat/mengubah
+          data per orang tetap hanya lewat spreadsheet.
+        </label>
+        <select id="kPddk" className="form-input" value={pddkPortal} onChange={e => setPddkPortal(e.target.value)}>
+          <option value="tidak">Tidak — input hanya langsung di spreadsheet</option>
+          <option value="ya">Ya — buka menu Penduduk untuk yang punya hak create</option>
+        </select>
+      </div>
+      <button className="btn btn-kecil" disabled={sibuk}
+        onClick={() => simpan([['penduduk_portal', pddkPortal]])}>
+        Simpan Input Penduduk
       </button>
 
       <div className="sub-judul">📊 Spreadsheet & Apps Script</div>

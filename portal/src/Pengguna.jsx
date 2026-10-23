@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost, urlTransform } from './api.js'
 
-const AKSES_KOSONG = { pamsimas: { r: false, w: false, c: false, u: false } }
+const AKSES_KOSONG = {
+  pamsimas: { r: false, w: false, c: false, u: false },
+  penduduk: { r: false, w: false, c: false, u: false },
+}
 const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin', akses: AKSES_KOSONG }
-const MODEL_LABEL = { pamsimas: '💧 Pamsimas (kas KPSPAMS)' }
+const MODEL_LABEL = {
+  pamsimas: '💧 Pamsimas (kas KPSPAMS)',
+  penduduk: '🪪 Penduduk (input saja — Create)',
+}
+const MODEL_IKON = { pamsimas: '💧', penduduk: '🪪' }
 
 export default function Pengguna({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
@@ -66,7 +73,8 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
     setEditUser(u.user)
     setForm({
       user: u.user, pass: '', nama: u.nama, peran: u.peran,
-      akses: { pamsimas: { ...AKSES_KOSONG.pamsimas, ...(u.akses?.pamsimas || {}) } },
+      akses: Object.fromEntries(Object.keys(AKSES_KOSONG).map(m =>
+        [m, { ...AKSES_KOSONG[m], ...(u.akses?.[m] || {}) }])),
     })
     setFormTampil(true)
     setStatus(null)
@@ -199,10 +207,12 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
               <span className={'peng-tag-mini' + (u.peran === 'pemilik' ? ' penting' : '')}>
                 {u.peran === 'pemilik' ? 'Super User' : 'admin'}
               </span>
-              {u.peran !== 'pemilik' && (() => {
-                const huruf = ['r', 'w', 'c', 'u'].filter(op => u.akses?.pamsimas?.[op]).join('')
-                return huruf ? <span className="peng-tag-mini layanan">💧 {huruf}</span> : null
-              })()}
+              {u.peran !== 'pemilik' && Object.keys(AKSES_KOSONG).map(model => {
+                const huruf = ['r', 'w', 'c', 'u'].filter(op => u.akses?.[model]?.[op]).join('')
+                return huruf
+                  ? <span key={model} className="peng-tag-mini layanan">{MODEL_IKON[model]} {huruf}</span>
+                  : null
+              })}
               {u.nama}
             </b>
             <span>
