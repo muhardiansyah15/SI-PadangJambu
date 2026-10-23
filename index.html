@@ -439,6 +439,13 @@
   .pohon .struktur-avatar { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 0.6rem; }
   .pohon .struktur-role { font-size: 0.85rem; }
 
+  .stat-info {
+    max-width: 640px; margin: 0 auto 2rem;
+    background: rgba(201,168,76,0.14); border: 1px solid var(--emas);
+    color: var(--emas-muda); border-radius: 10px;
+    padding: 0.7rem 1.2rem; font-size: 0.9rem; text-align: center;
+  }
+
   /* ===== STATISTIK ===== */
   .statistik-section { background: var(--hijau-tua); color: var(--krem); }
   .statistik-section .section-title { color: var(--krem); }
@@ -626,19 +633,19 @@
   <div class="hero-divider"></div>
   <div class="hero-stats">
     <div class="hero-stat">
-      <div class="hero-stat-num">1.240</div>
+      <div class="hero-stat-num" id="heroJiwa">—</div>
       <div class="hero-stat-label">Jiwa</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">312</div>
+      <div class="hero-stat-num" id="heroKK">—</div>
       <div class="hero-stat-label">KK</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">4</div>
+      <div class="hero-stat-num" id="heroRW">—</div>
       <div class="hero-stat-label">RW</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">2025</div>
+      <div class="hero-stat-num" id="heroTahun">2025</div>
       <div class="hero-stat-label">Tahun Aktif</div>
     </div>
   </div>
@@ -719,6 +726,9 @@
   <div class="section-inner">
     <div class="section-label">📊 Data Kependudukan</div>
     <h2 class="section-title">Statistik <em>Korong Padang Jambu</em></h2>
+    <div class="stat-info" id="statInfo" style="display:none">
+      ⏳ Pendataan penduduk masih berlangsung — angka di bawah belum mencakup seluruh warga.
+    </div>
     <div class="title-bar"></div>
 
     <div class="stat-big-grid stat-reveal">
@@ -938,7 +948,7 @@
         <div class="potensi-bg">🌾</div>
         <div class="potensi-overlay">
           <div class="potensi-name">Pertanian Padi</div>
-          <div class="potensi-desc">Sawah produktif dengan sistem irigasi teknis seluas ±85 ha</div>
+          <div class="potensi-desc">Sawah produktif dengan sistem irigasi teknis</div>
         </div>
       </div>
       <div class="potensi-card" style="background: linear-gradient(135deg, #3d5a3e, #52796f);">
@@ -1180,14 +1190,24 @@
   }
   renderStatistik(STATISTIK, false);
 
+  // Tahun aktif di hero selalu tahun berjalan
+  document.getElementById('heroTahun').textContent = new Date().getFullYear();
+
   // Agregat dari sheet PENDUDUK (hanya angka, tidak pernah data per orang).
   if (ASPIRASI_URL) {
     fetch(ASPIRASI_URL + '?daftar=statistik')
       .then(r => r.json())
       .then(j => {
-        if (j.ok && j.data && (j.data.penduduk.laki + j.data.penduduk.perempuan) > 0) {
+        if (!j.ok || !j.data) return;
+        const total = j.data.penduduk.laki + j.data.penduduk.perempuan;
+        if (total > 0) {
           renderStatistik(j.data, true);
+          document.getElementById('heroJiwa').textContent = fmt(total);
+          document.getElementById('heroKK').textContent = fmt(j.data.penduduk.kk);
+          document.getElementById('heroRW').textContent = fmt(j.data.wilayah.length);
         }
+        // pendataan dianggap belum rampung selama di bawah 100 jiwa
+        document.getElementById('statInfo').style.display = total < 100 ? '' : 'none';
       })
       .catch(() => {}); // gagal memuat → angka statis tetap tampil
   }
