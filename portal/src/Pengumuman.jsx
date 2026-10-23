@@ -169,7 +169,7 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
           <div className="aspirasi-pesan">{pg.isi}</div>
           {metaAcara(pg) && <div className="aspirasi-kontak">{metaAcara(pg)}</div>}
           <div className="baris-hapus">
-            <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(pg)}>Edit ✏️</button>{' '}
+            <button className="btn-ubah" onClick={() => mulaiEdit(pg)}>Edit</button>{' '}
             <button className="btn-hapus" onClick={() => hapus(pg.id)}>Hapus</button>
           </div>
         </div>

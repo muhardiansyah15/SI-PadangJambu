@@ -211,7 +211,7 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
             </span>
           </div>
           <div className="baris-hapus">
-            <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(u)}>Edit ✏️</button>{' '}
+            <button className="btn-ubah" onClick={() => mulaiEdit(u)}>Edit</button>{' '}
             {u.user !== sesi.user && (
               <button className="btn-hapus" onClick={() => hapus(u.user)}>Hapus</button>
             )}

@@ -176,7 +176,7 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
               <div className="galeri-sub">{f.album && <span>{f.album} · </span>}{fmtWaktu(f.waktu)}</div>
             </div>
             <div className="baris-hapus" style={{ margin: '0 0.75rem 0.7rem' }}>
-              <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(f)}>Edit ✏️</button>{' '}
+              <button className="btn-ubah" onClick={() => mulaiEdit(f)}>Edit</button>{' '}
               <button className="btn-hapus" onClick={() => hapus(f.id)}>Hapus</button>
             </div>
           </div>

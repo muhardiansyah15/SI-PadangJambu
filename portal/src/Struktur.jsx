@@ -22,7 +22,7 @@ function Cabang({ item, semua, onHapus, onEdit }) {
           </div>
         </div>
         <div>
-          <button className="btn btn-kecil btn-polos" onClick={() => onEdit(item)}>Edit ✏️</button>{' '}
+          <button className="btn-ubah" onClick={() => onEdit(item)}>Edit</button>{' '}
           <button className="btn-hapus" onClick={() => onHapus(item.id)}>Hapus</button>
         </div>
       </div>

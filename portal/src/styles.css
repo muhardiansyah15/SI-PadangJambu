@@ -67,10 +67,16 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
   font: inherit; font-size: 0.75rem; padding: 0.25rem 0.7rem; cursor: pointer;
 }
 .btn-hapus:hover { background: var(--merah-accent); color: var(--putih); }
+.btn-ubah {
+  background: transparent; border: 1px solid var(--hijau);
+  color: var(--hijau); border-radius: 6px;
+  font: inherit; font-size: 0.75rem; padding: 0.25rem 0.7rem; cursor: pointer;
+}
+.btn-ubah:hover { background: var(--hijau); color: var(--putih); }
 
 /* ===== Tata letak sidebar (setelah login) ===== */
 .tataletak {
-  max-width: 1500px; margin: 0 auto;
+  max-width: 1600px; margin: 0 auto;
   display: grid; grid-template-columns: 260px 1fr; gap: 1.8rem;
   align-items: start;
 }
@@ -169,7 +175,11 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .peng-tag-mini.layanan { background: var(--emas); color: var(--hijau-tua); }
 .baris-hapus { margin-top: 0.6rem; text-align: right; }
 .baris-status { display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem; }
-.pilih-status { width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; appearance: auto; }
+/* kontrol filter diberi aksen emas agar berbeda dari pil sub-menu */
+.pilih-status {
+  width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; appearance: auto;
+  border: 1.5px solid var(--emas); background: #fdf7e9; color: var(--hijau-tua);
+}
 .status-tag {
   display: inline-block; font-size: 0.7rem; font-weight: 600;
   letter-spacing: 0.5px; text-transform: uppercase;

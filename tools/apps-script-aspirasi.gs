@@ -246,6 +246,11 @@ function hitungPamPublik_() {
   return hasil;
 }
 
+/** Tanggal transaksi dari portal (YYYY-MM-DD); tidak valid = sekarang. */
+function waktuTransaksi_(t) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? new Date(t + "T12:00:00") : new Date();
+}
+
 function jumlahSah_(v) {
   var n = Math.round(Number(v));
   return isFinite(n) && n > 0 && n <= 100000000 ? n : 0;
@@ -1088,7 +1093,7 @@ function doPost(e) {
       var lockIu = LockService.getScriptLock();
       lockIu.waitLock(5000);
       try {
-        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
+        lembarPamKas_().appendRow([Utilities.getUuid(), waktuTransaksi_(p.tanggal), "masuk",
           idIu, "'" + bulanIu, teks_(String(p.keterangan || "").trim().slice(0, 200)),
           jumlahIu].concat(jejak_(akunIu.user)).concat([teks_(namaPelangganDariId_(idIu))]));
       } finally {
@@ -1110,7 +1115,7 @@ function doPost(e) {
       var lockKe = LockService.getScriptLock();
       lockKe.waitLock(5000);
       try {
-        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "keluar",
+        lembarPamKas_().appendRow([Utilities.getUuid(), waktuTransaksi_(p.tanggal), "keluar",
           "", bulanKe ? "'" + bulanKe : "", teks_(uraianKe), -jumlahKe]
           .concat(jejak_(akunKe.user)).concat([""]));
       } finally {
@@ -1133,7 +1138,7 @@ function doPost(e) {
       var lockMl = LockService.getScriptLock();
       lockMl.waitLock(5000);
       try {
-        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
+        lembarPamKas_().appendRow([Utilities.getUuid(), waktuTransaksi_(p.tanggal), "masuk",
           "", bulanMl ? "'" + bulanMl : "", teks_(uraianMl), jumlahMl]
           .concat(jejak_(akunMl.user)).concat([""]));
       } finally {
@@ -1158,8 +1163,9 @@ function doPost(e) {
       var lockSa = LockService.getScriptLock();
       lockSa.waitLock(5000);
       try {
+        var bulanSa = /^\d{4}-\d{2}$/.test(p.bulan) ? "'" + p.bulan : "";
         lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "saldo",
-          "", "", "Saldo awal pembukuan (pindahan dari buku)", jumlahSa]
+          "", bulanSa, "Saldo awal pembukuan (pindahan dari buku)", jumlahSa]
           .concat(jejak_(akunSa.user)));
       } finally {
         lockSa.releaseLock();
