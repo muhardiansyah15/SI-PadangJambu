@@ -28,6 +28,8 @@ var STATUS_SAH = ["baru", "diproses", "selesai"];
 var JENIS_SURAT_SAH = ["pengantar", "domisili", "usaha", "tidak-mampu", "lainnya"];
 var SHEET_KONFIG = "KONFIG";
 var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder"];
+var SHEET_PAM_PELANGGAN = "PAMSIMAS_PELANGGAN";
+var SHEET_PAM_KAS = "PAMSIMAS_KAS";
 
 function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -56,6 +58,32 @@ function bacaKonfig_() {
     if (rows[i][0]) k[String(rows[i][0])] = String(rows[i][1] || "");
   }
   return k;
+}
+
+/* ---------- Pamsimas: iuran air & buku kas KPSPAMS ---------- */
+
+function lembarPamPelanggan_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_PAM_PELANGGAN) || ss.insertSheet(SHEET_PAM_PELANGGAN);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Nama", "RW", "Aktif"].concat(KOLOM_JEJAK));
+  }
+  return sh;
+}
+
+/** Buku kas tunggal: jenis "masuk" (iuran) dan "keluar" (pengeluaran). */
+function lembarPamKas_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_PAM_KAS) || ss.insertSheet(SHEET_PAM_KAS);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Waktu", "Jenis", "Pelanggan ID", "Bulan", "Uraian", "Jumlah"].concat(KOLOM_JEJAK));
+  }
+  return sh;
+}
+
+function jumlahSah_(v) {
+  var n = Math.round(Number(v));
+  return isFinite(n) && n > 0 && n <= 100000000 ? n : 0;
 }
 
 /** Permohonan surat pengantar/keterangan dari warga. */
@@ -380,6 +408,35 @@ function doGet(e) {
       });
     }
     return json_({ ok: true, data: struktur });
+  }
+  if (e && e.parameter && e.parameter.daftar === "pamsimas") {
+    if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
+    var rowsPl = lembarPamPelanggan_().getDataRange().getValues();
+    var pelanggan = [];
+    for (var pl = 1; pl < rowsPl.length; pl++) {
+      if (!rowsPl[pl][1]) continue;
+      pelanggan.push({
+        id: String(rowsPl[pl][0]),
+        nama: String(rowsPl[pl][1]),
+        rw: String(rowsPl[pl][2] || ""),
+        aktif: String(rowsPl[pl][3] || "").trim() !== ""
+      });
+    }
+    var rowsKs = lembarPamKas_().getDataRange().getValues();
+    var kas = [];
+    for (var ks = rowsKs.length - 1; ks >= 1 && kas.length < 500; ks--) {
+      if (!rowsKs[ks][0]) continue;
+      kas.push({
+        id: String(rowsKs[ks][0]),
+        waktu: rowsKs[ks][1] ? new Date(rowsKs[ks][1]).toISOString() : "",
+        jenis: String(rowsKs[ks][2]) === "keluar" ? "keluar" : "masuk",
+        pelanggan: String(rowsKs[ks][3] || ""),
+        bulan: String(rowsKs[ks][4] || ""),
+        uraian: String(rowsKs[ks][5] || ""),
+        jumlah: Number(rowsKs[ks][6]) || 0
+      });
+    }
+    return json_({ ok: true, pelanggan: pelanggan, kas: kas });
   }
   if (e && e.parameter && e.parameter.daftar === "konfig") {
     if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
@@ -766,6 +823,109 @@ function doPost(e) {
           break;
         }
       }
+      return json_({ ok: ok });
+    }
+
+    /* ---------- Pamsimas (wajib login) ---------- */
+
+    if (p.aksi === "pam-pelanggan") {
+      var akunPl = adminDariToken_(p.token);
+      if (!akunPl) return json_({ ok: false, butuhLogin: true });
+      var namaPl = String(p.nama || "").trim().slice(0, 80);
+      var rwPl = String(p.rw || "").trim().slice(0, 20);
+      if (!namaPl) return json_({ ok: false, pesan: "Nama pelanggan wajib diisi." });
+      var lockPl = LockService.getScriptLock();
+      lockPl.waitLock(5000);
+      try {
+        lembarPamPelanggan_().appendRow([Utilities.getUuid(), teks_(namaPl), teks_(rwPl), "Y"]
+          .concat(jejak_(akunPl.user)));
+      } finally {
+        lockPl.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "pam-pelanggan-edit") {
+      var akunPle = adminDariToken_(p.token);
+      if (!akunPle) return json_({ ok: false, butuhLogin: true });
+      var shPle = lembarPamPelanggan_();
+      var rPle = barisDariId_(shPle.getDataRange().getValues(), p.id);
+      if (!rPle) return json_({ ok: false, pesan: "Pelanggan tidak ditemukan." });
+      var namaPle = String(p.nama || "").trim().slice(0, 80);
+      if (!namaPle) return json_({ ok: false, pesan: "Nama pelanggan wajib diisi." });
+      shPle.getRange(rPle, 2, 1, 3).setValues([[teks_(namaPle),
+        teks_(String(p.rw || "").trim().slice(0, 20)), p.aktif ? "Y" : ""]]);
+      tulisJejak_(shPle, rPle, 7, akunPle.user);
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "pam-pelanggan-hapus") {
+      var akunPlh = adminDariToken_(p.token);
+      if (!akunPlh) return json_({ ok: false, butuhLogin: true });
+      var idPlh = String(p.id || "");
+      var rowsKasH = lembarPamKas_().getDataRange().getValues();
+      for (var kh = 1; kh < rowsKasH.length; kh++) {
+        if (String(rowsKasH[kh][3]) === idPlh) {
+          return json_({ ok: false, pesan: "Sudah punya catatan iuran — nonaktifkan saja, jangan dihapus." });
+        }
+      }
+      var shPlh = lembarPamPelanggan_();
+      var rPlh = barisDariId_(shPlh.getDataRange().getValues(), idPlh);
+      if (rPlh) { shPlh.deleteRow(rPlh); ok = true; }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "pam-iuran") {
+      var akunIu = adminDariToken_(p.token);
+      if (!akunIu) return json_({ ok: false, butuhLogin: true });
+      var idIu = String(p.pelanggan || "");
+      var bulanIu = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
+      var jumlahIu = jumlahSah_(p.jumlah);
+      if (!idIu || !bulanIu || !jumlahIu) {
+        return json_({ ok: false, pesan: "Pelanggan, bulan, dan jumlah wajib diisi dengan benar." });
+      }
+      var rowsIu = lembarPamKas_().getDataRange().getValues();
+      for (var iu = 1; iu < rowsIu.length; iu++) {
+        if (String(rowsIu[iu][2]) === "masuk" && String(rowsIu[iu][3]) === idIu &&
+            String(rowsIu[iu][4]) === bulanIu) {
+          return json_({ ok: false, pesan: "Iuran bulan itu sudah tercatat untuk pelanggan ini." });
+        }
+      }
+      var lockIu = LockService.getScriptLock();
+      lockIu.waitLock(5000);
+      try {
+        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
+          idIu, "'" + bulanIu, "", jumlahIu].concat(jejak_(akunIu.user)));
+      } finally {
+        lockIu.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "pam-keluar") {
+      var akunKe = adminDariToken_(p.token);
+      if (!akunKe) return json_({ ok: false, butuhLogin: true });
+      var uraianKe = String(p.uraian || "").trim().slice(0, 200);
+      var jumlahKe = jumlahSah_(p.jumlah);
+      if (!uraianKe || !jumlahKe) {
+        return json_({ ok: false, pesan: "Uraian dan jumlah wajib diisi dengan benar." });
+      }
+      var lockKe = LockService.getScriptLock();
+      lockKe.waitLock(5000);
+      try {
+        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "keluar",
+          "", "", teks_(uraianKe), jumlahKe].concat(jejak_(akunKe.user)));
+      } finally {
+        lockKe.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "pam-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var shKh = lembarPamKas_();
+      var rKh = barisDariId_(shKh.getDataRange().getValues(), p.id);
+      if (rKh) { shKh.deleteRow(rKh); ok = true; }
       return json_({ ok: ok });
     }
 

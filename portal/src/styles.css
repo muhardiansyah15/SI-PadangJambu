@@ -172,6 +172,14 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .status-tag.diproses { background: var(--emas); color: var(--hijau-tua); }
 .status-tag.selesai { background: var(--hijau-muda); color: var(--hijau-tua); }
 .saring-status { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.ringkas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.1rem; }
+@media (max-width: 480px) { .ringkas-grid { grid-template-columns: 1fr; } }
+.ringkas-item {
+  background: var(--krem); border: 1px solid #e7e1d3; border-top: 3px solid var(--emas);
+  border-radius: 10px; padding: 0.8rem; text-align: center;
+}
+.ringkas-nilai { font-weight: 700; font-size: 1.1rem; color: var(--hijau); }
+.ringkas-label { font-size: 0.72rem; color: var(--abu); margin-top: 2px; }
 .menu-item.saring {
   color: var(--hijau); background: var(--krem);
   border: 1.5px solid #d8d2c4; font-size: 0.82rem; padding: 0.4rem 0.9rem;

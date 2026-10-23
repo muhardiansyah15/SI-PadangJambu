@@ -6,6 +6,7 @@ import Surat from './Surat.jsx'
 import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
 import Galeri from './Galeri.jsx'
+import Pamsimas from './Pamsimas.jsx'
 import Pengguna from './Pengguna.jsx'
 import Konfig from './Konfig.jsx'
 import Footer from './Footer.jsx'
@@ -16,6 +17,7 @@ const MENU = [
   { id: 'pengumuman', label: '📢 Pengumuman' },
   { id: 'struktur', label: '🏛 Struktur' },
   { id: 'galeri', label: '🖼 Galeri' },
+  { id: 'pamsimas', label: '💧 Pamsimas' },
   { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
   { id: 'konfig', label: '⚙️ Konfigurasi', khususPemilik: true },
 ]
@@ -124,6 +126,7 @@ export default function App() {
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'galeri' && <Galeri sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'pamsimas' && <Pamsimas sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengguna' && sesi.peran === 'pemilik' && <Pengguna sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'konfig' && sesi.peran === 'pemilik' && <Konfig sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />
