@@ -205,6 +205,11 @@ function hitungPamPublik_() {
       var bln = "";
       if (jenis === "masuk") {
         bln = String(rowsKas[i][4] || "");
+        // kas masuk lain tanpa bulan → pakai bulan tanggal catat
+        if (!/^\d{4}-\d{2}$/.test(bln) && rowsKas[i][1]) {
+          var wm = new Date(rowsKas[i][1]);
+          bln = wm.getFullYear() + "-" + ("0" + (wm.getMonth() + 1)).slice(-2);
+        }
       } else if (jenis === "keluar" && rowsKas[i][1]) {
         var w = new Date(rowsKas[i][1]);
         bln = w.getFullYear() + "-" + ("0" + (w.getMonth() + 1)).slice(-2);
@@ -218,8 +223,10 @@ function hitungPamPublik_() {
       }
       if (/^\d{4}-\d{2}$/.test(bln)) {
         if (!perBulan[bln]) perBulan[bln] = { masuk: 0, pembayar: 0, keluar: 0 };
-        if (jenis === "masuk") { perBulan[bln].masuk += jumlah; perBulan[bln].pembayar++; }
-        else perBulan[bln].keluar += jumlah;
+        if (jenis === "masuk") {
+          perBulan[bln].masuk += jumlah;
+          if (String(rowsKas[i][3] || "")) perBulan[bln].pembayar++; // hanya iuran pelanggan
+        } else perBulan[bln].keluar += jumlah;
       }
     }
     var kunci = [];
@@ -1112,6 +1119,29 @@ function doPost(e) {
       return json_({ ok: true });
     }
 
+    // Kas masuk lain (donasi, bantuan, denda, dsb.) — tanpa pelanggan
+    if (p.aksi === "pam-masuk") {
+      var akunMl = adminDariToken_(p.token);
+      if (!akunMl) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunMl, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
+      var uraianMl = String(p.uraian || "").trim().slice(0, 200);
+      var jumlahMl = jumlahSah_(p.jumlah);
+      var bulanMl = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
+      if (!uraianMl || !jumlahMl) {
+        return json_({ ok: false, pesan: "Uraian dan jumlah wajib diisi dengan benar." });
+      }
+      var lockMl = LockService.getScriptLock();
+      lockMl.waitLock(5000);
+      try {
+        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
+          "", bulanMl ? "'" + bulanMl : "", teks_(uraianMl), jumlahMl]
+          .concat(jejak_(akunMl.user)).concat([""]));
+      } finally {
+        lockMl.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
     // Saldo awal pembukuan — hanya boleh satu entri; hapus dulu untuk mengganti
     if (p.aksi === "pam-saldo") {
       var akunSa = adminDariToken_(p.token);
@@ -1152,8 +1182,15 @@ function doPost(e) {
       var jumlahKd = jumlahSah_(p.jumlah);
       if (!jumlahKd) return json_({ ok: false, pesan: "Jumlah tidak valid." });
       var ketKd = String(p.keterangan || "").trim().slice(0, 200);
-      if (jenisKd === "masuk") {
-        var idPelKd = String(p.pelanggan || "") || String(rowsKd[rKd - 1][3]);
+      var pelLamaKd = String(rowsKd[rKd - 1][3] || "");
+      if (jenisKd === "masuk" && !pelLamaKd) {
+        // kas masuk lain (tanpa pelanggan): uraian wajib, bulan opsional
+        if (!ketKd) return json_({ ok: false, pesan: "Uraian wajib diisi." });
+        var blnMl2 = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
+        if (blnMl2) shKd.getRange(rKd, 5).setValue("'" + blnMl2);
+        shKd.getRange(rKd, 6, 1, 2).setValues([[teks_(ketKd), jumlahKd]]);
+      } else if (jenisKd === "masuk") {
+        var idPelKd = String(p.pelanggan || "") || pelLamaKd;
         var blnKd = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : String(rowsKd[rKd - 1][4]);
         for (var dk = 1; dk < rowsKd.length; dk++) {
           if (dk !== rKd - 1 && String(rowsKd[dk][2]) === "masuk" &&

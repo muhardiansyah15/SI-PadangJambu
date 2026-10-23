@@ -26,6 +26,10 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
   // filter buku kas
   const [fltPelanggan, setFltPelanggan] = useState('semua')
   const [fltBulan, setFltBulan] = useState('')
+  const [fltJenis, setFltJenis] = useState('semua')
+  // form kas masuk lain
+  const [fMasuk, setFMasuk] = useState({ uraian: '', bulan: bulanKini(), jumlah: '' })
+  const [formMasuk, setFormMasuk] = useState(false)
   // form iuran
   const [fIuran, setFIuran] = useState({ pelanggan: '', bulan: bulanKini(), jumlah: '', keterangan: '' })
   const [formIuran, setFormIuran] = useState(false)
@@ -85,6 +89,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
   const adaSaldoAwal = kas.some(k => k.jenis === 'saldo')
 
   const kasTersaring = kas.filter(k => {
+    if (fltJenis !== 'semua' && k.jenis !== fltJenis) return false
     if (fltPelanggan !== 'semua' && !(k.jenis === 'masuk' && k.pelanggan === fltPelanggan)) return false
     if (fltBulan) {
       const b = /^\d{4}-\d{2}$/.test(k.bulan) ? k.bulan : bulanDariWaktu(k.waktu)
@@ -157,16 +162,18 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           })
         }}>
           <div className="sub-judul">
-            Edit {editKas.jenis === 'masuk' ? 'Iuran' : editKas.jenis === 'keluar' ? 'Pengeluaran' : 'Saldo Awal'}
+            Edit {editKas.jenis === 'masuk'
+              ? (editKas.pelanggan ? 'Iuran' : 'Kas Masuk')
+              : editKas.jenis === 'keluar' ? 'Pengeluaran' : 'Saldo Awal'}
           </div>
-          {editKas.jenis === 'keluar' && (
+          {(editKas.jenis === 'keluar' || (editKas.jenis === 'masuk' && !editKas.pelanggan)) && (
             <div className="form-group">
               <label className="form-label">Untuk bulan</label>
               <input type="month" className="form-input" value={fEdit.bulan}
                 onChange={e => setFEdit(f => ({ ...f, bulan: e.target.value }))} />
             </div>
           )}
-          {editKas.jenis === 'masuk' && (
+          {editKas.jenis === 'masuk' && !!editKas.pelanggan && (
             <div className="form-baris">
               <div className="form-group">
                 <label className="form-label">Pelanggan</label>
@@ -192,8 +199,12 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
             </div>
             {editKas.jenis !== 'saldo' && (
               <div className="form-group">
-                <label className="form-label">{editKas.jenis === 'keluar' ? 'Uraian' : 'Keterangan (opsional)'}</label>
-                <input className="form-input" maxLength={200} required={editKas.jenis === 'keluar'}
+                <label className="form-label">
+                  {editKas.jenis === 'keluar' || (editKas.jenis === 'masuk' && !editKas.pelanggan)
+                    ? 'Uraian' : 'Keterangan (opsional)'}
+                </label>
+                <input className="form-input" maxLength={200}
+                  required={editKas.jenis === 'keluar' || (editKas.jenis === 'masuk' && !editKas.pelanggan)}
                   value={fEdit.keterangan}
                   onChange={e => setFEdit(f => ({ ...f, keterangan: e.target.value }))} />
               </div>
@@ -295,9 +306,16 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
       {/* ===== BUKU KAS ===== */}
       {pelanggan !== null && !gagal && sub === 'kas' && !editKas && (
         <>
-          {!formKeluar && !formSaldo && (
+          {!formKeluar && !formSaldo && !formMasuk && (
             <div className="bar-atas">
               <div className="aksi">
+                <select className="form-input pilih-status" value={fltJenis}
+                  onChange={e => setFltJenis(e.target.value)}>
+                  <option value="semua">Semua jenis</option>
+                  <option value="masuk">Masuk</option>
+                  <option value="keluar">Keluar</option>
+                  <option value="saldo">Saldo Awal</option>
+                </select>
                 <select className="form-input pilih-status" value={fltPelanggan}
                   onChange={e => setFltPelanggan(e.target.value)}>
                   <option value="semua">Semua pelanggan</option>
@@ -313,12 +331,48 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                   </button>
                 )}
                 {bolehC && (
+                  <button className="btn btn-kecil btn-polos" onClick={() => { setFormMasuk(true); setStatus(null) }}>
+                    + Kas Masuk Lain
+                  </button>
+                )}
+                {bolehC && (
                   <button className="btn btn-kecil" onClick={() => { setFormKeluar(true); setStatus(null) }}>
                     + Catat Pengeluaran
                   </button>
                 )}
               </div>
             </div>
+          )}
+          {formMasuk && (
+            <form onSubmit={ev => {
+              ev.preventDefault()
+              kirim({ aksi: 'pam-masuk', ...fMasuk }, () => {
+                setFMasuk({ uraian: '', bulan: bulanKini(), jumlah: '' }); setFormMasuk(false)
+                setStatus({ ok: true, teks: 'Kas masuk tercatat. ✅' })
+              })
+            }}>
+              <div className="form-baris">
+                <div className="form-group">
+                  <label className="form-label">Uraian kas masuk</label>
+                  <input className="form-input" required maxLength={200}
+                    placeholder="mis. Donasi warga / bantuan nagari / denda"
+                    value={fMasuk.uraian} onChange={e => setFMasuk(f => ({ ...f, uraian: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Untuk bulan</label>
+                  <input type="month" className="form-input" value={fMasuk.bulan}
+                    onChange={e => setFMasuk(f => ({ ...f, bulan: e.target.value }))} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Jumlah (Rp)</label>
+                <input type="number" min="1" className="form-input" required
+                  value={fMasuk.jumlah} onChange={e => setFMasuk(f => ({ ...f, jumlah: e.target.value }))} />
+              </div>
+              <button className="btn" type="submit" disabled={sibuk}>{sibuk ? 'Menyimpan…' : 'Simpan Kas Masuk 💵'}</button>
+              <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }}
+                onClick={() => setFormMasuk(false)}>Batal</button>
+            </form>
           )}
           {formSaldo && (
             <form onSubmit={ev => {
@@ -369,7 +423,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                 onClick={() => setFormKeluar(false)}>Batal</button>
             </form>
           )}
-          {!formKeluar && !formSaldo && (
+          {!formKeluar && !formSaldo && !formMasuk && (
             <div className="tabel-gulir">
               <table className="tabel-kas">
                 <thead><tr><th>Tanggal</th><th>Jenis</th><th>Uraian</th><th>Bulan</th><th>Jumlah</th>{adaAksi && <th>Aksi</th>}</tr></thead>
@@ -386,7 +440,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                         </span>
                       </td>
                       <td>
-                        {k.jenis === 'masuk'
+                        {k.jenis === 'masuk' && k.pelanggan
                           ? <>Iuran {namaPelanggan(k.pelanggan)}{k.uraian ? <span className="ket-kecil"> — {k.uraian}</span> : ''}</>
                           : k.uraian}
                       </td>
