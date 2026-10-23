@@ -581,7 +581,8 @@
     <li><a href="#profil">Profil</a></li>
     <li><a href="#statistik">Statistik</a></li>
     <li><a href="#pengumuman">Pengumuman</a></li>
-    <li><a href="#keuangan">Keuangan</a></li>
+    <!-- Keuangan disembunyikan sementara sampai datanya siap
+    <li><a href="#keuangan">Keuangan</a></li> -->
     <li><a href="#potensi">Potensi</a></li>
     <li><a href="#peta">Lokasi</a></li>
     <li><a href="#kontak">Kontak</a></li>
@@ -803,7 +804,8 @@
 </section>
 
 <!-- KEUANGAN -->
-<section class="section keuangan-section" id="keuangan">
+<!-- Keuangan disembunyikan sementara sampai datanya siap: hapus style di bawah untuk menampilkan lagi -->
+<section class="section keuangan-section" id="keuangan" style="display:none">
   <div class="section-inner">
     <div class="section-label">💼 Transparansi</div>
     <h2 class="section-title">Pengelolaan <em>Keuangan Desa</em></h2>
@@ -1053,7 +1055,6 @@
     <a href="#profil">Profil</a>
     <a href="#statistik">Statistik</a>
     <a href="#pengumuman">Pengumuman</a>
-    <a href="#keuangan">Keuangan</a>
     <a href="#potensi">Potensi</a>
     <a href="#peta">Lokasi</a>
     <a href="#kontak">Kontak</a>
@@ -1328,7 +1329,7 @@
   }));
 
   // ===== MENU AKTIF SAAT SCROLL =====
-  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'keuangan', 'potensi', 'peta', 'kontak'];
+  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'potensi', 'peta', 'kontak'];
   const targets = ids.map(id => ({ id, el: id === 'home' ? document.querySelector('.hero') : document.getElementById(id) }));
   function setActive() {
     const y = window.scrollY + 120;
