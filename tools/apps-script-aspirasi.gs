@@ -149,14 +149,31 @@ function lembarPamPelanggan_() {
   return sh;
 }
 
-/** Buku kas tunggal: jenis "masuk" (iuran) dan "keluar" (pengeluaran). */
+/**
+ * Buku kas tunggal: jenis "masuk" (iuran) dan "keluar" (pengeluaran).
+ * Jumlah disimpan NEGATIF untuk "keluar", positif untuk "masuk"/"saldo",
+ * agar SUM kolom di spreadsheet langsung = saldo. Pembacaan selalu
+ * memakai Math.abs sehingga baris lama (keluar positif) tetap benar.
+ * "Nama Pelanggan" di ujung (setelah jejak) agar posisi kolom lama
+ * tidak bergeser — hanya salinan nama untuk dibaca manusia di sheet.
+ */
 function lembarPamKas_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_PAM_KAS) || ss.insertSheet(SHEET_PAM_KAS);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Waktu", "Jenis", "Pelanggan ID", "Bulan", "Uraian", "Jumlah"].concat(KOLOM_JEJAK));
+    sh.appendRow(["ID", "Waktu", "Jenis", "Pelanggan ID", "Bulan", "Uraian", "Jumlah"]
+      .concat(KOLOM_JEJAK).concat(["Nama Pelanggan"]));
   }
   return sh;
+}
+
+function namaPelangganDariId_(id) {
+  if (!id) return "";
+  var rows = lembarPamPelanggan_().getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) return String(rows[i][1] || "");
+  }
+  return "";
 }
 
 /**
@@ -183,7 +200,7 @@ function hitungPamPublik_() {
     for (var i = rowsKas.length - 1; i >= 1; i--) {
       if (!rowsKas[i][0]) continue;
       var jenis = String(rowsKas[i][2]);
-      var jumlah = Number(rowsKas[i][6]) || 0;
+      var jumlah = Math.abs(Number(rowsKas[i][6])) || 0;
       saldo += jenis === "keluar" ? -jumlah : jumlah;
       var bln = "";
       if (jenis === "masuk") {
@@ -587,7 +604,7 @@ function doGet(e) {
         pelanggan: String(rowsKs[ks][3] || ""),
         bulan: String(rowsKs[ks][4] || ""),
         uraian: String(rowsKs[ks][5] || ""),
-        jumlah: Number(rowsKs[ks][6]) || 0
+        jumlah: Math.abs(Number(rowsKs[ks][6])) || 0
       });
     }
     return json_({ ok: true, pelanggan: pelanggan, kas: kas });
@@ -1066,7 +1083,7 @@ function doPost(e) {
       try {
         lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
           idIu, "'" + bulanIu, teks_(String(p.keterangan || "").trim().slice(0, 200)),
-          jumlahIu].concat(jejak_(akunIu.user)));
+          jumlahIu].concat(jejak_(akunIu.user)).concat([teks_(namaPelangganDariId_(idIu))]));
       } finally {
         lockIu.releaseLock();
       }
@@ -1079,6 +1096,7 @@ function doPost(e) {
       if (!punyaAkses_(akunKe, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
       var uraianKe = String(p.uraian || "").trim().slice(0, 200);
       var jumlahKe = jumlahSah_(p.jumlah);
+      var bulanKe = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
       if (!uraianKe || !jumlahKe) {
         return json_({ ok: false, pesan: "Uraian dan jumlah wajib diisi dengan benar." });
       }
@@ -1086,7 +1104,8 @@ function doPost(e) {
       lockKe.waitLock(5000);
       try {
         lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "keluar",
-          "", "", teks_(uraianKe), jumlahKe].concat(jejak_(akunKe.user)));
+          "", bulanKe ? "'" + bulanKe : "", teks_(uraianKe), -jumlahKe]
+          .concat(jejak_(akunKe.user)).concat([""]));
       } finally {
         lockKe.releaseLock();
       }
@@ -1143,9 +1162,12 @@ function doPost(e) {
           }
         }
         shKd.getRange(rKd, 4, 1, 4).setValues([[idPelKd, "'" + blnKd, teks_(ketKd), jumlahKd]]);
+        shKd.getRange(rKd, 12).setValue(teks_(namaPelangganDariId_(idPelKd)));
       } else if (jenisKd === "keluar") {
         if (!ketKd) return json_({ ok: false, pesan: "Uraian pengeluaran wajib diisi." });
-        shKd.getRange(rKd, 6, 1, 2).setValues([[teks_(ketKd), jumlahKd]]);
+        var blnKe2 = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
+        if (blnKe2) shKd.getRange(rKd, 5).setValue("'" + blnKe2);
+        shKd.getRange(rKd, 6, 1, 2).setValues([[teks_(ketKd), -jumlahKd]]);
       } else {
         shKd.getRange(rKd, 7).setValue(jumlahKd);
       }
