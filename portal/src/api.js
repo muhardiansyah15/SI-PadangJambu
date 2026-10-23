@@ -8,8 +8,8 @@ export const ASPIRASI_URL =
 // dashboard Cloudinary (Settings > Upload > Upload presets, mode Unsigned).
 // Bisa juga lewat env VITE_CLOUDINARY_CLOUD / VITE_CLOUDINARY_PRESET.
 export const CLOUDINARY = {
-  cloud: import.meta.env.VITE_CLOUDINARY_CLOUD || '',
-  preset: import.meta.env.VITE_CLOUDINARY_PRESET || '',
+  cloud: import.meta.env.VITE_CLOUDINARY_CLOUD || 'aifdjyjs',
+  preset: import.meta.env.VITE_CLOUDINARY_PRESET || 'SI-padangjambu',
 }
 
 /** Sisipkan transformasi ke URL Cloudinary (thumbnail/tampilan besar). */
