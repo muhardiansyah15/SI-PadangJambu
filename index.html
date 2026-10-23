@@ -1085,14 +1085,6 @@
             <div class="kontak-desc">Website ini dikelola secara mandiri sebagai media informasi bagi warga Korong Padang Jambu.</div>
           </div>
         </div>
-        <div class="kontak-item">
-          <div class="kontak-icon">📧</div>
-          <div>
-            <div class="kontak-label">Email</div>
-            <div class="kontak-value"><a href="mailto:muhardiansyah.dev@gmail.com">muhardiansyah.dev@gmail.com</a></div>
-            <div class="kontak-desc">Untuk pertanyaan, saran, atau koreksi informasi di website ini.</div>
-          </div>
-        </div>
       </div>
       <div>
         <div style="font-size:0.85rem;color:rgba(248,243,232,0.6);margin-bottom:1rem;">Kirimkan pertanyaan, saran, atau aspirasi Anda:</div>
@@ -1389,9 +1381,7 @@
     if (!pesan) { statusForm('Silakan tulis pesan Anda terlebih dahulu.', false); return; }
 
     if (!ASPIRASI_URL) {
-      const body = 'Nama: ' + (nama || '-') + '\nKontak: ' + (kontak || '-') + '\n\n' + pesan;
-      window.location.href = 'mailto:muhardiansyah.dev@gmail.com?subject=' +
-        encodeURIComponent('Aspirasi Warga Korong Padang Jambu') + '&body=' + encodeURIComponent(body);
+      statusForm('Form belum tersambung ke server. Silakan hubungi pengelola.', false);
       return;
     }
 
@@ -1417,10 +1407,6 @@
     }
   }
 
-  if (!ASPIRASI_URL) {
-    document.getElementById('fCatatan').textContent = 'Pesan akan dibuka di aplikasi email pada perangkat Anda.';
-    document.getElementById('btnKirim').textContent = 'Kirim via Email ✉️';
-  }
 
   // ===== FILTER PENGUMUMAN =====
   document.querySelectorAll('.chip').forEach(chip => {
