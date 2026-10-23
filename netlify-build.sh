@@ -8,6 +8,6 @@ set -euo pipefail
 
 rm -rf _site
 mkdir -p _site/portal
-cp index.html _site/
+cp index.html robots.txt sitemap.xml _site/
 cp -r assets _site/
 cp -r portal/dist/. _site/portal/
