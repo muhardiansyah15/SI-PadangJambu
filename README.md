@@ -28,6 +28,22 @@ portal di-build lalu seluruh situs ditayangkan — portal di `/portal/`.
 **Prasyarat satu kali:** Settings → Pages → Source: ubah ke **GitHub Actions**.
 Endpoint bisa dioverride saat build lewat env `VITE_ASPIRASI_URL` (opsional).
 
+## Alur staging → production
+
+- Branch **`main`** = staging: tiap push tayang di GitHub Pages
+  (`muhardiansyah15.github.io/SI-PadangJambu`) untuk diuji.
+- Branch **`production`** = produksi: Netlify (`padangjambu.netlify.app`)
+  hanya membangun branch ini — push ke `main` tidak memakai jatah build Netlify.
+- Rilis ke produksi setelah staging oke:
+
+  ```bash
+  git push origin main:production
+  ```
+
+Setelan Netlify (satu kali): Site configuration → Build & deploy → Branches →
+Production branch: `production`; Branch deploys: hanya production; Deploy
+Previews: Off.
+
 ## Mengubah isi situs
 
 Semua konten masih ditulis langsung di `index.html`:
