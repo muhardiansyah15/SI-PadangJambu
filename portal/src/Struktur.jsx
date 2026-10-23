@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiGet, apiPost, unggahCloudinary, urlTransform } from './api.js'
 
-const FORM_KOSONG = { nama: '', jabatan: '', induk: '' }
+const FORM_KOSONG = { nama: '', jabatan: '', induk: '', urut: '10' }
+
+/** Saudara sekandung diurutkan nomor urut dulu, lalu nama — hierarki tetap utama. */
+const urutkan = list => [...list].sort((a, b) =>
+  ((a.urut || 0) - (b.urut || 0)) || String(a.nama).localeCompare(String(b.nama)))
 
 function Cabang({ item, semua, onHapus, onEdit }) {
-  const anak = semua.filter(s => s.induk === item.id)
+  const anak = urutkan(semua.filter(s => s.induk === item.id))
   return (
     <div>
       <div className="str-item">
@@ -13,7 +17,7 @@ function Cabang({ item, semua, onHapus, onEdit }) {
             ? <img className="str-foto" src={urlTransform(item.foto, 'w_80,h_80,c_fill,q_auto,f_auto')} alt="" />
             : <div className="str-foto str-foto-kosong">👤</div>}
           <div>
-            <div className="str-jabatan">{item.jabatan}</div>
+            <div className="str-jabatan">{item.jabatan} <span className="ket-kecil">#{item.urut || 0}</span></div>
             <div className="str-nama">{item.nama}</div>
           </div>
         </div>
@@ -89,7 +93,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
   function mulaiEdit(item) {
     setEditId(item.id)
     setEditFoto(item.foto || '')
-    setForm({ nama: item.nama, jabatan: item.jabatan, induk: item.induk || '' })
+    setForm({ nama: item.nama, jabatan: item.jabatan, induk: item.induk || '', urut: String(item.urut || 10) })
     setFile(null)
     if (fileRef.current) fileRef.current.value = ''
     setFormTampil(true)
@@ -129,7 +133,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
   }
 
   // puncak = induk kosong atau atasannya sudah tidak ada
-  const puncak = (data || []).filter(s => !s.induk || !(data || []).some(x => x.id === s.induk))
+  const puncak = urutkan((data || []).filter(s => !s.induk || !(data || []).some(x => x.id === s.induk)))
 
   return (
     <div className="kartu">
@@ -158,6 +162,11 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
           </label>
           <input id="sFoto" type="file" accept="image/*" className="form-input" ref={fileRef}
             onChange={e => setFile(e.target.files[0] || null)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="sUrut">Nomor urut (antar rekan setingkat; kecil = lebih dulu)</label>
+          <input id="sUrut" name="urut" type="number" min="0" max="999" className="form-input"
+            value={form.urut} onChange={ubah} />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="sInduk">Atasan langsung</label>

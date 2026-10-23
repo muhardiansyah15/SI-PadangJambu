@@ -38,9 +38,10 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
   // form edit kas
   const [editKas, setEditKas] = useState(null) // baris kas yang diedit
   const [fEdit, setFEdit] = useState({ pelanggan: '', bulan: '', jumlah: '', keterangan: '' })
-  // form pelanggan
+  // form pelanggan (tambah / edit)
   const [fPel, setFPel] = useState({ nama: '', rw: '' })
   const [formPel, setFormPel] = useState(false)
+  const [editPel, setEditPel] = useState(null)
 
   const muat = useCallback(async () => {
     setPelanggan(null)
@@ -405,9 +406,12 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           {formPel && (
             <form onSubmit={ev => {
               ev.preventDefault()
-              kirim({ aksi: 'pam-pelanggan', ...fPel }, () => {
-                setFPel({ nama: '', rw: '' }); setFormPel(false)
-                setStatus({ ok: true, teks: 'Pelanggan ditambahkan. ✅' })
+              const payload = editPel
+                ? { aksi: 'pam-pelanggan-edit', id: editPel.id, aktif: editPel.aktif, ...fPel }
+                : { aksi: 'pam-pelanggan', ...fPel }
+              kirim(payload, () => {
+                setFPel({ nama: '', rw: '' }); setFormPel(false); setEditPel(null)
+                setStatus({ ok: true, teks: editPel ? 'Pelanggan diperbarui. ✅' : 'Pelanggan ditambahkan. ✅' })
               })
             }}>
               <div className="form-baris">
@@ -422,9 +426,11 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                     value={fPel.rw} onChange={e => setFPel(f => ({ ...f, rw: e.target.value }))} />
                 </div>
               </div>
-              <button className="btn" type="submit" disabled={sibuk}>{sibuk ? 'Menyimpan…' : 'Tambah Pelanggan 👥'}</button>
+              <button className="btn" type="submit" disabled={sibuk}>
+                {sibuk ? 'Menyimpan…' : editPel ? 'Simpan Perubahan ✏️' : 'Tambah Pelanggan 👥'}
+              </button>
               <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }}
-                onClick={() => setFormPel(false)}>Batal</button>
+                onClick={() => { setFormPel(false); setEditPel(null) }}>Batal</button>
             </form>
           )}
           {!formPel && (
@@ -441,6 +447,15 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                       {adaAksi && (
                         <td className="sel-aksi">
                           {bolehW && <><button className="btn btn-kecil btn-polos"
+                            onClick={() => {
+                              setEditPel(pl)
+                              setFPel({ nama: pl.nama, rw: pl.rw })
+                              setFormPel(true)
+                              setStatus(null)
+                            }}>
+                            Edit ✏️
+                          </button>{' '}
+                          <button className="btn btn-kecil btn-polos"
                             onClick={() => kirim({ aksi: 'pam-pelanggan-edit', id: pl.id, nama: pl.nama, rw: pl.rw, aktif: !pl.aktif })}>
                             {pl.aktif ? 'Nonaktifkan' : 'Aktifkan'}
                           </button>{' '}</>}

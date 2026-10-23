@@ -37,7 +37,9 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
     try {
       let j
       if (editId) {
-        j = await apiPost({ aksi: 'galeri-edit', token: sesi.token, id: editId, judul, album })
+        // foto baru dipilih saat edit → unggah dan ganti sekalian
+        const urlBaru = file ? await unggahCloudinary(file, 1600, 'padang-jambu/galeri') : ''
+        j = await apiPost({ aksi: 'galeri-edit', token: sesi.token, id: editId, judul, album, url: urlBaru })
       } else {
         const urlFoto = await unggahCloudinary(file, 1600, 'padang-jambu/galeri')
         j = await apiPost({ aksi: 'galeri', token: sesi.token, url: urlFoto, judul, album })
@@ -124,13 +126,13 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
         Jangan unggah foto close-up anak-anak tanpa izin orang tuanya.
       </p>
       <form onSubmit={unggah}>
-        {!editId && (
-          <div className="form-group">
-            <label className="form-label" htmlFor="gFile">Foto</label>
-            <input id="gFile" type="file" accept="image/*" className="form-input"
-              onChange={e => setFile(e.target.files[0] || null)} />
-          </div>
-        )}
+        <div className="form-group">
+          <label className="form-label" htmlFor="gFile">
+            {editId ? 'Ganti foto (opsional — kosongkan untuk mempertahankan foto lama)' : 'Foto'}
+          </label>
+          <input id="gFile" type="file" accept="image/*" className="form-input"
+            onChange={e => setFile(e.target.files[0] || null)} />
+        </div>
         <div className="form-baris">
           <div className="form-group">
             <label className="form-label" htmlFor="gJudul">Keterangan foto</label>

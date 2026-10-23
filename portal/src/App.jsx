@@ -107,7 +107,11 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <div className="sisi-bawah">
+      </aside>
+
+      <main className="isi">
+        <div className="bar-pengguna">
+          <span className="salam-atas">Masuk sebagai <b>{sesi.nama}</b></span>
           {CLOUDINARY.cloud && (
             <>
               <button className="avatar-sisi" title="Ganti foto profil" onClick={() => fotoRef.current.click()}>
@@ -118,12 +122,8 @@ export default function App() {
               <input type="file" accept="image/*" hidden ref={fotoRef} onChange={gantiFotoProfil} />
             </>
           )}
-          <div className="salam-sisi">Masuk sebagai<br /><b>{sesi.nama}</b></div>
           <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
         </div>
-      </aside>
-
-      <main className="isi">
         {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'surat' && <Surat sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}

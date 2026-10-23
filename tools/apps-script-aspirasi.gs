@@ -280,7 +280,7 @@ function lembarStruktur_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_STRUKTUR) || ss.insertSheet(SHEET_STRUKTUR);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan", "Foto"].concat(KOLOM_JEJAK));
+    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan", "Foto"].concat(KOLOM_JEJAK).concat(["Urut"]));
   }
   return sh;
 }
@@ -547,7 +547,8 @@ function doGet(e) {
         nama: String(rowsS[s][1]),
         jabatan: String(rowsS[s][2] || ""),
         induk: String(rowsS[s][3] || ""),
-        foto: String(rowsS[s][4] || "")
+        foto: String(rowsS[s][4] || ""),
+        urut: parseInt(rowsS[s][9], 10) || 0
       });
     }
     return json_({ ok: true, data: struktur });
@@ -848,8 +849,10 @@ function doPost(e) {
       var lockS = LockService.getScriptLock();
       lockS.waitLock(5000);
       try {
+        var urutS = parseInt(p.urut, 10);
+        if (!isFinite(urutS) || urutS < 0 || urutS > 999) urutS = 10;
         shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk, fotoS]
-          .concat(jejak_(akunSt.user)));
+          .concat(jejak_(akunSt.user)).concat([urutS]));
       } finally {
         lockS.releaseLock();
       }
@@ -888,6 +891,8 @@ function doPost(e) {
       }
       var fotoE = urlFotoSah_(p.foto);
       shSe.getRange(rSe, 2, 1, 4).setValues([[teks_(namaE2), teks_(jabatanE), indukE, fotoE]]);
+      var urutE = parseInt(p.urut, 10);
+      if (isFinite(urutE) && urutE >= 0 && urutE <= 999) shSe.getRange(rSe, 10).setValue(urutE);
       tulisJejak_(shSe, rSe, 8, akunSe.user);
       return json_({ ok: true });
     }
@@ -940,6 +945,9 @@ function doPost(e) {
       var shGe = lembarGaleri_();
       var rGe = barisDariId_(shGe.getDataRange().getValues(), p.id);
       if (!rGe) return json_({ ok: false, pesan: "Foto tidak ditemukan." });
+      // foto pengganti (opsional) — hanya URL Cloudinary yang diterima
+      var urlGantiG = urlFotoSah_(p.url);
+      if (urlGantiG) shGe.getRange(rGe, 3).setValue(urlGantiG);
       shGe.getRange(rGe, 4, 1, 2).setValues([[
         teks_(String(p.judul || "").trim().slice(0, 120)),
         teks_(String(p.album || "").trim().slice(0, 60))]]);

@@ -94,6 +94,13 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 }
 .menu-item:hover { background: rgba(248, 243, 232, 0.12); }
 .menu-item.aktif { background: var(--emas); color: var(--hijau-tua); }
+.bar-pengguna {
+  display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.salam-atas { color: rgba(248,243,232,0.85); font-size: 0.9rem; }
+.salam-atas b { color: var(--krem); }
+
 .sisi-bawah {
   border-top: 1px solid rgba(201, 168, 76, 0.3);
   padding-top: 1rem; display: flex; align-items: center;
