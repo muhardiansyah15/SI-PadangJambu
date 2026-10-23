@@ -383,6 +383,15 @@
     font-family: 'Source Sans 3', sans-serif; font-style: normal;
     font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: var(--abu);
   }
+  .profil-fakta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2.2rem; }
+  .fakta-item {
+    background: var(--krem); border: 1px solid rgba(45,106,79,0.1);
+    border-top: 3px solid var(--emas); border-radius: 12px;
+    padding: 1.1rem 1rem; text-align: center;
+  }
+  .fakta-nilai { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--hijau); }
+  .fakta-label { font-size: 0.75rem; color: var(--abu); margin-top: 0.3rem; line-height: 1.45; }
+  @media (max-width: 700px) { .profil-fakta { grid-template-columns: 1fr 1fr; } }
   .sub-heading { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin: 3.5rem 0 1.25rem; color: var(--hijau-tua); }
   .struktur-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
   .struktur-card {
@@ -650,12 +659,32 @@
     <div class="profil-grid fade-in">
       <div class="profil-text">
         <h3>Selayang Pandang</h3>
-        <p>Korong Padang Jambu adalah salah satu korong di Nagari Guguak Kuranji Hilir, Kecamatan Sungai Limau, Kabupaten Padang Pariaman, Provinsi Sumatera Barat. Warganya hidup berdampingan dengan alam dan menjaga tatanan adat Minangkabau dalam keseharian.</p>
+        <p>Korong Padang Jambu adalah satu dari enam korong di Nagari Guguak Kuranji Hilir, Kecamatan Sungai Limau, Kabupaten Padang Pariaman, Provinsi Sumatera Barat — nagari hasil pemekaran yang dibentuk melalui Peraturan Daerah Kabupaten Padang Pariaman Nomor 13 Tahun 2010. Warganya hidup berdampingan dengan alam dan menjaga tatanan adat Minangkabau dalam keseharian.</p>
         <p>Sebagian besar warga menggantungkan penghidupan pada pertanian, perkebunan, dan perikanan darat. Semangat gotong royong menjadi fondasi dalam setiap pembangunan dan kegiatan kemasyarakatan di korong.</p>
+        <p>Nagari Guguak Kuranji Hilir sendiri dikenal luas sebagai Desa Wisata <em>“Guranjhil”</em> dengan Pantai Paingan dan kebun bunga matahari yang menjadi ikonnya, serta pernah meraih peringkat ke-4 nasional program Desa BRILian tahun 2022. Korong Padang Jambu turut menjadi bagian dari denyut kemajuan nagari ini.</p>
         <blockquote class="minang-quote">
           “Adat basandi syarak, syarak basandi Kitabullah.”
           <cite>Falsafah hidup masyarakat Minangkabau</cite>
         </blockquote>
+      </div>
+
+      <div class="profil-fakta fade-in">
+        <div class="fakta-item">
+          <div class="fakta-nilai">1 / 6</div>
+          <div class="fakta-label">Korong di Nagari<br>Guguak Kuranji Hilir</div>
+        </div>
+        <div class="fakta-item">
+          <div class="fakta-nilai">2010</div>
+          <div class="fakta-label">Nagari dibentuk<br>(Perda No. 13/2010)</div>
+        </div>
+        <div class="fakta-item">
+          <div class="fakta-nilai">±78 km</div>
+          <div class="fakta-label">Dari Kota Padang<br>±24 km dari ibu kota kabupaten</div>
+        </div>
+        <div class="fakta-item">
+          <div class="fakta-nilai">25561</div>
+          <div class="fakta-label">Kode Pos<br>Wilayah 13.05.08.2003</div>
+        </div>
       </div>
     </div>
 
