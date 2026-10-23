@@ -105,6 +105,14 @@ export function simpanSesi(sesi) {
   }
 }
 
+/** Tautan chat WhatsApp: nomor lokal 08xx dinormalkan ke 628xx. */
+export function linkWA(kontak, teks) {
+  let n = String(kontak || '').replace(/[^0-9]/g, '')
+  if (!n) return ''
+  if (n.startsWith('0')) n = '62' + n.slice(1)
+  return `https://wa.me/${n}?text=${encodeURIComponent(teks)}`
+}
+
 export const fmtWaktu = iso =>
   iso ? new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : ''
 

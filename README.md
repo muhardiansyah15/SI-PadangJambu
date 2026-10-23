@@ -101,6 +101,20 @@ Portal mengecilkan foto ke maks. 1600px sebelum unggah. Menghapus foto dari
 portal hanya menghapus catatannya; file di Cloudinary dihapus manual dari
 dashboard bila perlu. Jangan unggah foto close-up anak tanpa izin orang tua.
 
+## Backup Otomatis
+
+Pasang `tools/apps-script-backup.gs` sebagai project Apps Script **terpisah**
+(standalone di script.google.com, bukan di dalam spreadsheet) — petunjuk
+lengkap ada di komentar file itu. Trigger mingguan menyalin spreadsheet ke
+folder "Backup SI Padang Jambu" di Drive dan menghapus salinan > 90 hari.
+Dibuat terpisah agar skrip utama tetap `@OnlyCurrentDoc`.
+
+## Keamanan Password
+
+Password admin disimpan ter-hash (`sha256$salt$hash`) sejak versi ini.
+Akun lama berpassword teks biasa tetap bisa login dan otomatis ter-upgrade
+menjadi hash saat login pertama yang berhasil — tidak perlu migrasi manual.
+
 ## Data Penduduk (sheet `PENDUDUK`)
 
 Data penduduk **tidak diinput lewat portal web** — perangkat korong mengisinya

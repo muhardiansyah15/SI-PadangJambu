@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet, apiPost, fmtWaktu } from './api.js'
+import { apiGet, apiPost, fmtWaktu, linkWA } from './api.js'
 
 const LABEL_JENIS = {
   pengantar: 'Pengantar Umum',
@@ -95,6 +95,17 @@ export default function Surat({ sesi, onSesiBerakhir }) {
           {s.keperluan && <div className="aspirasi-pesan">{s.keperluan}</div>}
           <div className="aspirasi-kontak">📱 {s.kontak}</div>
           <div className="baris-hapus baris-status">
+            {linkWA(s.kontak, '') && (
+              <a className="btn-ubah" target="_blank" rel="noopener noreferrer"
+                href={linkWA(s.kontak,
+                  `Assalamualaikum ${s.nama}, kami dari Korong Padang Jambu. ` +
+                  `Permohonan ${LABEL_JENIS[s.jenis] || s.jenis} Anda ` +
+                  (s.status === 'selesai'
+                    ? 'sudah SELESAI dan siap diambil. Terima kasih.'
+                    : `saat ini berstatus: ${LABEL_STATUS[s.status]}.`))}>
+                💬 Balas WA
+              </a>
+            )}
             <select className="form-input pilih-status" value={s.status}
               onChange={e => ubahStatus(s.id, e.target.value)}>
               <option value="baru">Baru</option>

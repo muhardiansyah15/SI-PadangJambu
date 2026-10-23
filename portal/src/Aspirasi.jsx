@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet, apiPost, fmtWaktu } from './api.js'
+import { apiGet, apiPost, fmtWaktu, linkWA } from './api.js'
 
 export default function Aspirasi({ sesi, onSesiBerakhir }) {
   const [data, setData] = useState(null) // null = memuat, [] = kosong
@@ -71,6 +71,13 @@ export default function Aspirasi({ sesi, onSesiBerakhir }) {
           <div className="aspirasi-pesan">{a.pesan}</div>
           {a.kontak && a.kontak !== '-' && <div className="aspirasi-kontak">📱 {a.kontak}</div>}
           <div className="baris-hapus baris-status">
+            {linkWA(a.kontak, '') && (
+              <a className="btn-ubah" target="_blank" rel="noopener noreferrer"
+                href={linkWA(a.kontak,
+                  `Assalamualaikum ${a.nama}, terima kasih atas aspirasi Anda kepada Korong Padang Jambu. `)}>
+                💬 Balas WA
+              </a>
+            )}
             <select className="form-input pilih-status" value={a.status}
               onChange={e => ubahStatus(a, e.target.value)}>
               <option value="baru">Baru</option>

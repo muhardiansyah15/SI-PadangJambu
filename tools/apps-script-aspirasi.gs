@@ -446,6 +446,36 @@ function hitungStatistik_() {
 
 /* ---------- Login & token (pola sama dengan skrip RSVP) ---------- */
 
+/**
+ * Password disimpan ter-hash: "sha256$<salt>$<hex>".
+ * Baris lama berisi teks biasa tetap diterima dan otomatis
+ * di-upgrade menjadi hash saat login pertama yang berhasil.
+ */
+function hashSandi_(pass, salt) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,
+    salt + "|" + pass, Utilities.Charset.UTF_8);
+  var hex = "";
+  for (var i = 0; i < bytes.length; i++) {
+    var v = (bytes[i] < 0 ? bytes[i] + 256 : bytes[i]).toString(16);
+    hex += v.length < 2 ? "0" + v : v;
+  }
+  return "sha256$" + salt + "$" + hex;
+}
+
+function sandiBaru_(pass) {
+  return hashSandi_(pass, Utilities.getUuid().slice(0, 8));
+}
+
+function cocokSandi_(tersimpan, pass) {
+  tersimpan = String(tersimpan || "");
+  if (!pass) return false;
+  if (tersimpan.indexOf("sha256$") === 0) {
+    var bag = tersimpan.split("$");
+    return hashSandi_(pass, bag[1]) === tersimpan;
+  }
+  return tersimpan === pass; // warisan teks biasa
+}
+
 function login_(user, pass) {
   user = String(user || "").trim().toLowerCase().slice(0, 40);
   pass = String(pass || "").slice(0, 80);
@@ -456,10 +486,15 @@ function login_(user, pass) {
   var gagal = parseInt(cache.get("gagal_" + user), 10) || 0;
   if (gagal >= 5) return { ok: false, pesan: "Terlalu banyak percobaan. Coba lagi 10 menit." };
 
-  var rows = lembarUser_().getDataRange().getValues();
+  var shLogin = lembarUser_();
+  var rows = shLogin.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     if (String(rows[i][0]).trim().toLowerCase() === user &&
-        String(rows[i][1]) === pass && pass !== "") {
+        cocokSandi_(rows[i][1], pass)) {
+      // upgrade otomatis: password teks biasa diganti hash saat login sukses
+      if (String(rows[i][1]).indexOf("sha256$") !== 0) {
+        shLogin.getRange(i + 1, 2).setValue(sandiBaru_(pass));
+      }
       var token = Utilities.getUuid();
       var peran = String(rows[i][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin";
       var akses = bacaAksesUser_(user);
@@ -1284,7 +1319,7 @@ function doPost(e) {
       var lockU = LockService.getScriptLock();
       lockU.waitLock(5000);
       try {
-        shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru, ""]
+        shU.appendRow([userBaru, sandiBaru_(passBaru), teks_(namaBaru || userBaru), peranBaru, ""]
           .concat(jejak_(pemilikT.user)).concat([Utilities.getUuid()]));
       } finally {
         lockU.releaseLock();
@@ -1318,7 +1353,7 @@ function doPost(e) {
       if (!rUe) return json_({ ok: false, pesan: "Pengguna tidak ditemukan." });
       var aksesLamaR = ringkasAkses_(bacaAksesUser_(targetE));
       shUe.getRange(rUe, 3, 1, 2).setValues([[teks_(namaU || targetE), peranU]]);
-      if (passU) shUe.getRange(rUe, 2).setValue(teks_(passU));
+      if (passU) shUe.getRange(rUe, 2).setValue(sandiBaru_(passU));
       // pastikan record punya ID (kolom 10); isi bila kosong/bukan uuid
       if (!/^[0-9a-f-]{36}$/.test(String(rowsUe[rUe - 1][9] || ""))) {
         shUe.getRange(rUe, 10).setValue(Utilities.getUuid());
