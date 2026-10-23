@@ -661,8 +661,10 @@
   <div class="pengumuman-label">📢 Pengumuman</div>
   <div class="marquee-wrap">
     <div class="marquee">
-      <span>Musyawarah Desa Tahun 2025 — Sabtu, 15 Maret 2025 pukul 09.00 WIB di Balai Korong</span>
-      <span>Program Posyandu rutin setiap Rabu minggu pertama</span>
+      <span>Selamat datang di website resmi Korong Padang Jambu</span>
+      <span>Nagari Guguak Kuranji Hilir · Kecamatan Sungai Limau · Padang Pariaman</span>
+      <span>Selamat datang di website resmi Korong Padang Jambu</span>
+      <span>Nagari Guguak Kuranji Hilir · Kecamatan Sungai Limau · Padang Pariaman</span>
     </div>
   </div>
 </div>
@@ -692,7 +694,7 @@
       <div class="hero-stat-label">Tahun Aktif</div>
     </div>
   </div>
-  <div class="stat-info mt-2" id="statInfoHero" style="display:none">
+  <div class="stat-info mt-2" id="statInfoHero">
     ⏳ Pendataan penduduk masih berlangsung — angka di atas belum mencakup seluruh warga.
   </div>
   <div class="hero-scroll">
@@ -741,29 +743,9 @@
       </div>
     </div>
 
-    <h3 class="sub-heading">Struktur Pemerintahan Korong</h3>
-    <div class="struktur-grid fade-in">
-      <div class="struktur-card utama">
-        <div class="struktur-avatar">👤</div>
-        <div class="struktur-role">Kepala Korong</div>
-        <div class="struktur-name">Nama Lengkap</div>
-      </div>
-      <div class="struktur-card">
-        <div class="struktur-avatar">👤</div>
-        <div class="struktur-role">Sekretaris Korong</div>
-        <div class="struktur-name">Nama Lengkap</div>
-      </div>
-      <div class="struktur-card">
-        <div class="struktur-avatar">👤</div>
-        <div class="struktur-role">Kaur Keuangan</div>
-        <div class="struktur-name">Nama Lengkap</div>
-      </div>
-      <div class="struktur-card">
-        <div class="struktur-avatar">👤</div>
-        <div class="struktur-role">Kaur Pembangunan</div>
-        <div class="struktur-name">Nama Lengkap</div>
-      </div>
-    </div>
+    <!-- Struktur diisi dari portal; muncul bila sheet STRUKTUR berisi data -->
+    <h3 class="sub-heading" id="strukturJudul" style="display:none">Struktur Pemerintahan Korong</h3>
+    <div class="struktur-grid fade-in" id="strukturGrid" style="display:none"></div>
   </div>
 </section>
 
@@ -774,7 +756,7 @@
     <h2 class="section-title">Statistik <em>Korong Padang Jambu</em></h2>
     
     <div class="title-bar"></div>
-    <div class="stat-info" id="statInfo" style="display:none">
+    <div class="stat-info" id="statInfo">
       ⏳ Pendataan penduduk masih berlangsung — angka di bawah belum mencakup seluruh warga.
     </div>
 
@@ -840,49 +822,12 @@
     </div>
 
     <div class="peng-list fade-in">
-      <article class="peng-item" data-kat="kegiatan">
-        <div class="peng-date"><b>23</b><span>Mar</span></div>
+      <!-- Fallback netral — tergantikan otomatis oleh pengumuman dari portal -->
+      <article class="peng-item">
+        <div class="peng-date"><b>·</b><span></span></div>
         <div class="peng-body">
-          <span class="peng-tag kegiatan">Kegiatan</span>
-          <h3>Gotong Royong Membersihkan Lingkungan dan Saluran Irigasi</h3>
-          <p>Seluruh warga diharapkan hadir dan membawa peralatan masing-masing seperti cangkul, parang, dan keranjang.</p>
-          <div class="peng-meta"><span>🕖 07.30 WIB</span><span>📍 Titik kumpul Balai Korong</span></div>
-        </div>
-      </article>
-      <article class="peng-item" data-kat="kegiatan">
-        <div class="peng-date"><b>15</b><span>Mar</span></div>
-        <div class="peng-body">
-          <span class="peng-tag kegiatan">Kegiatan</span>
-          <h3>Musyawarah Korong Tahun 2025</h3>
-          <p>Seluruh warga diundang menghadiri musyawarah penyusunan rencana kerja dan pembahasan program prioritas tahun 2025.</p>
-          <div class="peng-meta"><span>🕘 09.00 WIB</span><span>📍 Balai Korong</span></div>
-        </div>
-      </article>
-      <article class="peng-item" data-kat="penting">
-        <div class="peng-date"><b>10</b><span>Mar</span></div>
-        <div class="peng-body">
-          <span class="peng-tag penting">Penting</span>
-          <h3>Laporan APBDes 2024 Telah Diterbitkan</h3>
-          <p>Laporan pertanggungjawaban realisasi APBDes 2024 dapat diunduh pada menu Keuangan dan dilihat di papan informasi korong.</p>
-          <div class="peng-meta"><span>📁 Menu Keuangan</span></div>
-        </div>
-      </article>
-      <article class="peng-item" data-kat="layanan">
-        <div class="peng-date"><b>05</b><span>Mar</span></div>
-        <div class="peng-body">
-          <span class="peng-tag layanan">Layanan</span>
-          <h3>Jadwal Posyandu Balita dan Lansia</h3>
-          <p>Posyandu dilaksanakan setiap hari Rabu pada minggu pertama setiap bulan. Mohon membawa buku KIA atau KMS.</p>
-          <div class="peng-meta"><span>🕘 08.30 WIB</span><span>📍 Posyandu</span></div>
-        </div>
-      </article>
-      <article class="peng-item" data-kat="penting">
-        <div class="peng-date"><b>10</b><span>Feb</span></div>
-        <div class="peng-body">
-          <span class="peng-tag penting">Penting</span>
-          <h3>Pendaftaran Calon Penerima BLT Dana Desa 2025</h3>
-          <p>Warga yang merasa memenuhi syarat dapat mendaftar melalui Kepala Korong dengan membawa KTP dan Kartu Keluarga.</p>
-          <div class="peng-meta"><span>⏳ Batas pendaftaran 28 Februari 2025</span></div>
+          <h3>Belum ada pengumuman</h3>
+          <p>Pengumuman resmi Korong Padang Jambu akan ditampilkan di halaman ini.</p>
         </div>
       </article>
     </div>
@@ -1181,13 +1126,14 @@
   document.querySelectorAll('.anggaran-card').forEach(el => progObserver.observe(el));
 
   // ===== DATA STATISTIK (ubah angka di sini) =====
+  // Fallback nol — angka sesungguhnya dimuat dari sheet PENDUDUK via server
   const STATISTIK = {
-    tahun: 2025,
-    penduduk: { laki: 618, perempuan: 622, kk: 312 },
-    umur: [['0–14 tahun', 298], ['15–24 tahun', 211], ['25–44 tahun', 360], ['45–59 tahun', 223], ['60 tahun ke atas', 148]],
-    pekerjaan: [['Petani / Pekebun', 245], ['Pedagang', 90], ['Buruh', 77], ['Wiraswasta', 64], ['PNS / TNI / Polri', 38], ['Lainnya', 126]],
-    pendidikan: [['Belum / tidak sekolah', 150], ['SD / sederajat', 380], ['SMP / sederajat', 290], ['SMA / SMK', 320], ['Diploma / Sarjana', 100]],
-    wilayah: [['RW 01', 78, 312], ['RW 02', 74, 298], ['RW 03', 85, 335], ['RW 04', 75, 295]]
+    tahun: new Date().getFullYear(),
+    penduduk: { laki: 0, perempuan: 0, kk: 0 },
+    umur: [['0–14 tahun', 0], ['15–24 tahun', 0], ['25–44 tahun', 0], ['45–59 tahun', 0], ['60 tahun ke atas', 0]],
+    pekerjaan: [],
+    pendidikan: [],
+    wilayah: []
   };
 
   const fmt = n => n.toLocaleString('id-ID');
@@ -1231,9 +1177,10 @@
     const sumKK = S.wilayah.reduce((a, r) => a + r[1], 0);
     const sumJ = S.wilayah.reduce((a, r) => a + r[2], 0);
     document.getElementById('rwFoot').innerHTML = `<tr><td>Total</td><td>${fmt(sumKK)}</td><td>${fmt(sumJ)}</td></tr>`;
-    document.getElementById('statNote').textContent =
-      `Data kependudukan Korong Padang Jambu tahun ${S.tahun}.` +
-      (dariServer ? ' Dihitung otomatis dari pendataan korong.' : '');
+    document.getElementById('statNote').textContent = total === 0
+      ? 'Data kependudukan Korong Padang Jambu sedang dalam proses pendataan.'
+      : `Data kependudukan Korong Padang Jambu tahun ${S.tahun}.` +
+        (dariServer ? ' Dihitung otomatis dari pendataan korong.' : '');
 
     // data server datang setelah bagian ini terlihat → jalankan animasinya langsung
     if (statTampil) {
@@ -1334,9 +1281,11 @@
       return `<li>${kartu(s, utama)}${anak.length ? `<ul>${anak.map(a => simpul(a, false)).join('')}</ul>` : ''}</li>`;
     };
     const puncak = list.filter(s => !s.induk || !adaInduk(s.induk));
-    const grid = document.querySelector('.struktur-grid');
+    const grid = document.getElementById('strukturGrid');
     grid.classList.add('as-pohon');
     grid.innerHTML = `<div class="pohon-wrap"><ul class="pohon">${puncak.map(p => simpul(p, true)).join('')}</ul></div>`;
+    grid.style.display = '';
+    document.getElementById('strukturJudul').style.display = '';
   }
 
   // ===== GALERI =====
