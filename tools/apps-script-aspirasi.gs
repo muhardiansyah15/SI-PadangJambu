@@ -81,7 +81,7 @@ function lembarStruktur_() {
   return sh;
 }
 
-var KOLOM_JEJAK = ["Create UID", "Create Date", "Write UID", "Write Date"];
+var KOLOM_JEJAK = ["create_uid", "create_date", "write_uid", "write_date"];
 
 /**
  * Jejak audit ala Odoo, ditaruh di ujung tiap baris data:
