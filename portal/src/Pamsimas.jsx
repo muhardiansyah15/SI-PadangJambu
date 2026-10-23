@@ -24,6 +24,9 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
   const [fUraian, setFUraian] = useState('')
   const [fKeluar, setFKeluar] = useState('')
   const [formKeluar, setFormKeluar] = useState(false)
+  // form saldo awal
+  const [fSaldo, setFSaldo] = useState('')
+  const [formSaldo, setFormSaldo] = useState(false)
   // form pelanggan
   const [fNamaP, setFNamaP] = useState('')
   const [fRw, setFRw] = useState('')
@@ -67,7 +70,8 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
   const masukBulan = kas.filter(k => k.jenis === 'masuk' && k.bulan === bulan)
   const sudahBayar = new Set(masukBulan.map(k => k.pelanggan))
   const totalMasukBulan = masukBulan.reduce((a, k) => a + k.jumlah, 0)
-  const saldo = kas.reduce((a, k) => a + (k.jenis === 'masuk' ? k.jumlah : -k.jumlah), 0)
+  const saldo = kas.reduce((a, k) => a + (k.jenis === 'keluar' ? -k.jumlah : k.jumlah), 0)
+  const adaSaldoAwal = kas.some(k => k.jenis === 'saldo')
 
   return (
     <div className="kartu">
@@ -173,13 +177,42 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
 
       {pelanggan !== null && !gagal && sub === 'kas' && (
         <>
-          {!formKeluar && (
+          {!formKeluar && !formSaldo && (
             <div className="bar-atas">
               <div className="sub-judul" style={{ margin: 0 }}>Riwayat Kas</div>
-              <button className="btn btn-kecil" onClick={() => { setFormKeluar(true); setStatus(null) }}>
-                + Catat Pengeluaran
-              </button>
+              <div className="aksi">
+                {!adaSaldoAwal && (
+                  <button className="btn btn-kecil btn-polos" onClick={() => { setFormSaldo(true); setStatus(null) }}>
+                    + Saldo Awal
+                  </button>
+                )}
+                <button className="btn btn-kecil" onClick={() => { setFormKeluar(true); setStatus(null) }}>
+                  + Catat Pengeluaran
+                </button>
+              </div>
             </div>
+          )}
+          {formSaldo && (
+            <form onSubmit={ev => {
+              ev.preventDefault()
+              kirim({ aksi: 'pam-saldo', jumlah: fSaldo }, () => {
+                setFSaldo(''); setFormSaldo(false)
+                setStatus({ ok: true, teks: 'Saldo awal tercatat. ✅' })
+              })
+            }}>
+              <div className="form-group">
+                <label className="form-label">
+                  Saldo awal pembukuan (Rp) — total kas yang dipindahkan dari buku lama
+                </label>
+                <input type="number" min="1" className="form-input" required
+                  value={fSaldo} onChange={e => setFSaldo(e.target.value)} />
+              </div>
+              <button className="btn" type="submit" disabled={sibuk}>
+                {sibuk ? 'Menyimpan…' : 'Catat Saldo Awal 💰'}
+              </button>
+              <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }}
+                onClick={() => setFormSaldo(false)}>Batal</button>
+            </form>
           )}
           {formKeluar && (
             <form onSubmit={ev => {
@@ -207,19 +240,19 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                 onClick={() => setFormKeluar(false)}>Batal</button>
             </form>
           )}
-          {!formKeluar && kas.length === 0 && <div className="kosong">Buku kas masih kosong.</div>}
-          {!formKeluar && kas.map(k => (
+          {!formKeluar && !formSaldo && kas.length === 0 && <div className="kosong">Buku kas masih kosong.</div>}
+          {!formKeluar && !formSaldo && kas.map(k => (
             <div className="aspirasi-item" key={k.id}>
               <div className="aspirasi-meta">
                 <b>
-                  <span className={'status-tag ' + (k.jenis === 'masuk' ? 'selesai' : 'baru')}>
-                    {k.jenis === 'masuk' ? 'Masuk' : 'Keluar'}
+                  <span className={'status-tag ' + (k.jenis === 'keluar' ? 'baru' : k.jenis === 'saldo' ? 'diproses' : 'selesai')}>
+                    {k.jenis === 'keluar' ? 'Keluar' : k.jenis === 'saldo' ? 'Saldo Awal' : 'Masuk'}
                   </span>
                   {k.jenis === 'masuk'
                     ? `Iuran ${namaPelanggan(k.pelanggan)} — ${fmtBulan(k.bulan)}`
                     : k.uraian}
                 </b>
-                <span>{(k.jenis === 'masuk' ? '+' : '−') + fmtRp(k.jumlah)}</span>
+                <span>{(k.jenis === 'keluar' ? '−' : '+') + fmtRp(k.jumlah)}</span>
               </div>
               <div className="aspirasi-kontak">{fmtWaktu(k.waktu)}</div>
               <div className="baris-hapus">

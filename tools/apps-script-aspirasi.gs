@@ -429,7 +429,8 @@ function doGet(e) {
       kas.push({
         id: String(rowsKs[ks][0]),
         waktu: rowsKs[ks][1] ? new Date(rowsKs[ks][1]).toISOString() : "",
-        jenis: String(rowsKs[ks][2]) === "keluar" ? "keluar" : "masuk",
+        jenis: String(rowsKs[ks][2]) === "keluar" ? "keluar"
+          : String(rowsKs[ks][2]) === "saldo" ? "saldo" : "masuk",
         pelanggan: String(rowsKs[ks][3] || ""),
         bulan: String(rowsKs[ks][4] || ""),
         uraian: String(rowsKs[ks][5] || ""),
@@ -917,6 +918,30 @@ function doPost(e) {
           "", "", teks_(uraianKe), jumlahKe].concat(jejak_(akunKe.user)));
       } finally {
         lockKe.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    // Saldo awal pembukuan — hanya boleh satu entri; hapus dulu untuk mengganti
+    if (p.aksi === "pam-saldo") {
+      var akunSa = adminDariToken_(p.token);
+      if (!akunSa) return json_({ ok: false, butuhLogin: true });
+      var jumlahSa = jumlahSah_(p.jumlah);
+      if (!jumlahSa) return json_({ ok: false, pesan: "Jumlah saldo awal tidak valid." });
+      var rowsSa = lembarPamKas_().getDataRange().getValues();
+      for (var sa = 1; sa < rowsSa.length; sa++) {
+        if (String(rowsSa[sa][2]) === "saldo") {
+          return json_({ ok: false, pesan: "Saldo awal sudah tercatat — hapus entri lamanya dulu untuk mengganti." });
+        }
+      }
+      var lockSa = LockService.getScriptLock();
+      lockSa.waitLock(5000);
+      try {
+        lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "saldo",
+          "", "", "Saldo awal pembukuan (pindahan dari buku)", jumlahSa]
+          .concat(jejak_(akunSa.user)));
+      } finally {
+        lockSa.releaseLock();
       }
       return json_({ ok: true });
     }
