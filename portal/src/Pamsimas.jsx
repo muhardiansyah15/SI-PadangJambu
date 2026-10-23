@@ -111,7 +111,12 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
     <div className="kartu">
       <div className="bar-atas">
         <h2>💧 Pamsimas — Kas KPSPAMS</h2>
-        <button className="btn btn-kecil btn-polos" onClick={muat}>Muat Ulang ↻</button>
+        <div className="aksi">
+          <input type="month" className="form-input pilih-status" value={bulan}
+            title="Bulan rekap iuran"
+            onChange={e => setBulan(e.target.value || bulanKini())} />
+          <button className="btn btn-kecil btn-polos" onClick={muat}>Muat Ulang ↻</button>
+        </div>
       </div>
 
       <div className="ringkas-grid">
@@ -206,8 +211,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
       {pelanggan !== null && !gagal && sub === 'rekap' && !editKas && (
         <>
           <div className="bar-atas">
-            <input type="month" className="form-input pilih-status" value={bulan}
-              onChange={e => setBulan(e.target.value || bulanKini())} />
+            <div className="sub-judul" style={{ margin: 0 }}>Status Iuran {fmtBulan(bulan)}</div>
             {!formIuran && bolehC && (
               <button className="btn btn-kecil" onClick={() => { setFIuran(f => ({ ...f, bulan })); setFormIuran(true); setStatus(null) }}>
                 + Catat Iuran
