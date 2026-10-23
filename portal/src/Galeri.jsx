@@ -5,6 +5,7 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
   const [file, setFile] = useState(null)
   const [judul, setJudul] = useState('')
   const [album, setAlbum] = useState('')
+  const [editId, setEditId] = useState(null)
   const [status, setStatus] = useState(null)
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
@@ -29,27 +30,46 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
 
   async function unggah(ev) {
     ev.preventDefault()
-    if (!file) { setStatus({ ok: false, teks: 'Pilih foto dulu.' }); return }
+    if (!editId && !file) { setStatus({ ok: false, teks: 'Pilih foto dulu.' }); return }
     setSibuk(true)
     setStatus(null)
     try {
-      const urlFoto = await unggahCloudinary(file)
-      const j = await apiPost({
-        aksi: 'galeri', token: sesi.token,
-        url: urlFoto, judul, album,
-      })
+      let j
+      if (editId) {
+        j = await apiPost({ aksi: 'galeri-edit', token: sesi.token, id: editId, judul, album })
+      } else {
+        const urlFoto = await unggahCloudinary(file)
+        j = await apiPost({ aksi: 'galeri', token: sesi.token, url: urlFoto, judul, album })
+      }
       if (j.butuhLogin) { onSesiBerakhir(); return }
-      if (!j.ok) { setStatus({ ok: false, teks: j.pesan || 'Gagal mencatat foto.' }); return }
+      if (!j.ok) { setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan.' }); return }
       setFile(null)
       setJudul('')
+      setEditId(null)
       ev.target.reset?.()
-      setStatus({ ok: true, teks: 'Foto tayang di galeri website. ✅' })
+      setStatus({ ok: true, teks: editId ? 'Keterangan foto diperbarui. ✅' : 'Foto tayang di galeri website. ✅' })
       muat()
     } catch {
       setStatus({ ok: false, teks: 'Gagal mengunggah. Periksa koneksi internet.' })
     } finally {
       setSibuk(false)
     }
+  }
+
+  function mulaiEdit(f) {
+    setEditId(f.id)
+    setJudul(f.judul)
+    setAlbum(f.album)
+    setFile(null)
+    setStatus(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function batalEdit() {
+    setEditId(null)
+    setJudul('')
+    setFile(null)
+    setStatus(null)
   }
 
   async function hapus(id) {
@@ -86,11 +106,13 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
         Jangan unggah foto close-up anak-anak tanpa izin orang tuanya.
       </p>
       <form onSubmit={unggah}>
-        <div className="form-group">
-          <label className="form-label" htmlFor="gFile">Foto</label>
-          <input id="gFile" type="file" accept="image/*" className="form-input"
-            onChange={e => setFile(e.target.files[0] || null)} />
-        </div>
+        {!editId && (
+          <div className="form-group">
+            <label className="form-label" htmlFor="gFile">Foto</label>
+            <input id="gFile" type="file" accept="image/*" className="form-input"
+              onChange={e => setFile(e.target.files[0] || null)} />
+          </div>
+        )}
         <div className="form-baris">
           <div className="form-group">
             <label className="form-label" htmlFor="gJudul">Keterangan foto</label>
@@ -107,8 +129,13 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
           </div>
         </div>
         <button className="btn" type="submit" disabled={sibuk}>
-          {sibuk ? 'Mengunggah…' : 'Unggah ke Galeri 🖼'}
+          {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Unggah ke Galeri 🖼'}
         </button>
+        {editId && (
+          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+            Batal Edit
+          </button>
+        )}
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
 
@@ -126,7 +153,10 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
               <div><b>{f.judul || 'Tanpa keterangan'}</b></div>
               <div className="galeri-sub">{f.album && <span>{f.album} · </span>}{fmtWaktu(f.waktu)}</div>
             </div>
-            <button className="btn-hapus" onClick={() => hapus(f.id)}>Hapus</button>
+            <div className="baris-hapus" style={{ margin: '0 0.75rem 0.7rem' }}>
+              <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(f)}>Edit ✏️</button>{' '}
+              <button className="btn-hapus" onClick={() => hapus(f.id)}>Hapus</button>
+            </div>
           </div>
         ))}
       </div>

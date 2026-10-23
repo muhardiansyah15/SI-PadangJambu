@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet, fmtWaktu } from './api.js'
+import { apiGet, apiPost, fmtWaktu } from './api.js'
 
 export default function Aspirasi({ sesi, onSesiBerakhir }) {
   const [data, setData] = useState(null) // null = memuat, [] = kosong
@@ -22,6 +22,18 @@ export default function Aspirasi({ sesi, onSesiBerakhir }) {
 
   useEffect(() => { muat() }, [muat])
 
+  async function hapus(a) {
+    if (!confirm(`Hapus aspirasi dari "${a.nama}"? Tindakan ini tidak bisa dibatalkan.`)) return
+    try {
+      const j = await apiPost({ aksi: 'aspirasi-hapus', token: sesi.token, baris: a.baris, pesan: a.pesan })
+      if (j.butuhLogin) { onSesiBerakhir(); return }
+      if (!j.ok && j.pesan) { alert(j.pesan) }
+      muat()
+    } catch {
+      alert('Gagal menghapus. Periksa koneksi internet.')
+    }
+  }
+
   return (
     <div className="kartu">
       <div className="bar-atas">
@@ -42,6 +54,9 @@ export default function Aspirasi({ sesi, onSesiBerakhir }) {
           </div>
           <div className="aspirasi-pesan">{a.pesan}</div>
           {a.kontak && a.kontak !== '-' && <div className="aspirasi-kontak">📱 {a.kontak}</div>}
+          <div className="baris-hapus">
+            <button className="btn-hapus" onClick={() => hapus(a)}>Hapus</button>
+          </div>
         </div>
       ))}
     </div>

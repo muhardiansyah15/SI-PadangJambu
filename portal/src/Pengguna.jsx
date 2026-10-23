@@ -5,6 +5,7 @@ const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin' }
 
 export default function Pengguna({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
+  const [editUser, setEditUser] = useState(null)
   const [status, setStatus] = useState(null)
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
@@ -33,20 +34,41 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
     setSibuk(true)
     setStatus(null)
     try {
-      const j = await apiPost({ aksi: 'user-tambah', token: sesi.token, ...form })
+      const j = editUser
+        ? await apiPost({ aksi: 'user-edit', token: sesi.token, ...form, user: editUser })
+        : await apiPost({ aksi: 'user-tambah', token: sesi.token, ...form })
       if (j.butuhLogin) { onSesiBerakhir(); return }
       if (!j.ok) {
-        setStatus({ ok: false, teks: j.pesan || 'Gagal membuat akun.' })
+        setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan akun.' })
         return
       }
       setForm(FORM_KOSONG)
-      setStatus({ ok: true, teks: 'Akun dibuat. Sampaikan username & password-nya secara langsung. ✅' })
+      setEditUser(null)
+      setStatus({
+        ok: true,
+        teks: editUser
+          ? 'Akun diperbarui. Perubahan peran/password membuat pemiliknya harus login ulang. ✅'
+          : 'Akun dibuat. Sampaikan username & password-nya secara langsung. ✅',
+      })
       muat()
     } catch {
       setStatus({ ok: false, teks: 'Gagal terhubung. Periksa koneksi internet.' })
     } finally {
       setSibuk(false)
     }
+  }
+
+  function mulaiEdit(u) {
+    setEditUser(u.user)
+    setForm({ user: u.user, pass: '', nama: u.nama, peran: u.peran })
+    setStatus(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function batalEdit() {
+    setEditUser(null)
+    setForm(FORM_KOSONG)
+    setStatus(null)
   }
 
   async function hapus(user) {
@@ -73,12 +95,14 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
         <div className="form-baris">
           <div className="form-group">
             <label className="form-label" htmlFor="uUser">Username</label>
-            <input id="uUser" name="user" className="form-input" maxLength={40} required
+            <input id="uUser" name="user" className="form-input" maxLength={40} required disabled={!!editUser}
               placeholder="huruf/angka/titik/strip" value={form.user} onChange={ubah} />
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="uPass">Password (min. 8 karakter)</label>
-            <input id="uPass" name="pass" className="form-input" maxLength={80} required
+            <label className="form-label" htmlFor="uPass">
+              {editUser ? 'Password baru (kosongkan jika tidak diganti)' : 'Password (min. 8 karakter)'}
+            </label>
+            <input id="uPass" name="pass" className="form-input" maxLength={80} required={!editUser}
               value={form.pass} onChange={ubah} />
           </div>
         </div>
@@ -97,8 +121,13 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
           </div>
         </div>
         <button className="btn" type="submit" disabled={sibuk}>
-          {sibuk ? 'Membuat…' : 'Buat Akun 👥'}
+          {sibuk ? 'Menyimpan…' : editUser ? 'Simpan Perubahan ✏️' : 'Buat Akun 👥'}
         </button>
+        {editUser && (
+          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+            Batal Edit
+          </button>
+        )}
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
 
@@ -122,11 +151,12 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
             </b>
             <span>@{u.user}{u.user === sesi.user ? ' (Anda)' : ''}</span>
           </div>
-          {u.user !== sesi.user && (
-            <div className="baris-hapus">
+          <div className="baris-hapus">
+            <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(u)}>Edit ✏️</button>{' '}
+            {u.user !== sesi.user && (
               <button className="btn-hapus" onClick={() => hapus(u.user)}>Hapus</button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       ))}
     </div>

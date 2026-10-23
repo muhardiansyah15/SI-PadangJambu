@@ -14,6 +14,7 @@ function metaAcara(pg) {
 
 export default function Pengumuman({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
+  const [editId, setEditId] = useState(null)
   const [status, setStatus] = useState(null) // {ok, teks}
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
@@ -42,20 +43,36 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
     setSibuk(true)
     setStatus(null)
     try {
-      const j = await apiPost({ aksi: 'pengumuman', token: sesi.token, ...form })
+      const j = editId
+        ? await apiPost({ aksi: 'pengumuman-edit', token: sesi.token, id: editId, ...form })
+        : await apiPost({ aksi: 'pengumuman', token: sesi.token, ...form })
       if (j.butuhLogin) { onSesiBerakhir(); return }
       if (!j.ok) {
-        setStatus({ ok: false, teks: j.pesan || 'Gagal menerbitkan.' })
+        setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan.' })
         return
       }
       setForm(FORM_KOSONG)
-      setStatus({ ok: true, teks: 'Pengumuman tayang di website. ✅' })
+      setEditId(null)
+      setStatus({ ok: true, teks: editId ? 'Perubahan tersimpan. ✅' : 'Pengumuman tayang di website. ✅' })
       muat()
     } catch {
       setStatus({ ok: false, teks: 'Gagal terhubung. Periksa koneksi internet.' })
     } finally {
       setSibuk(false)
     }
+  }
+
+  function mulaiEdit(pg) {
+    setEditId(pg.id)
+    setForm({ judul: pg.judul, kategori: pg.kategori, isi: pg.isi, tgl: pg.tgl, jam: pg.jam, tempat: pg.tempat })
+    setStatus(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function batalEdit() {
+    setEditId(null)
+    setForm(FORM_KOSONG)
+    setStatus(null)
   }
 
   async function hapus(id) {
@@ -107,8 +124,13 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
             placeholder="mis. Balai Korong" value={form.tempat} onChange={ubah} />
         </div>
         <button className="btn" type="submit" disabled={sibuk}>
-          {sibuk ? 'Menerbitkan…' : 'Terbitkan ke Website 📢'}
+          {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Terbitkan ke Website 📢'}
         </button>
+        {editId && (
+          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+            Batal Edit
+          </button>
+        )}
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
 
@@ -130,6 +152,7 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
           <div className="aspirasi-pesan">{pg.isi}</div>
           {metaAcara(pg) && <div className="aspirasi-kontak">{metaAcara(pg)}</div>}
           <div className="baris-hapus">
+            <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(pg)}>Edit ✏️</button>{' '}
             <button className="btn-hapus" onClick={() => hapus(pg.id)}>Hapus</button>
           </div>
         </div>

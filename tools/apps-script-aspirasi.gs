@@ -94,6 +94,19 @@ function jejak_(user) {
   return [u, kini, u, kini];
 }
 
+/** Perbarui Write UID + Write Date pada satu baris (kolomWrite = kolom Write UID). */
+function tulisJejak_(sh, baris, kolomWrite, user) {
+  sh.getRange(baris, kolomWrite, 1, 2).setValues([[String(user || "publik"), new Date()]]);
+}
+
+/** Cari nomor baris (1-based) berdasarkan ID di kolom pertama; 0 = tidak ketemu. */
+function barisDariId_(rows, id) {
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (String(rows[i][0]) === String(id)) return i + 1;
+  }
+  return 0;
+}
+
 /** Cegah formula injection: teks berawalan = + - @ disimpan sebagai teks biasa. */
 function teks_(v) {
   v = String(v);
@@ -357,6 +370,7 @@ function doGet(e) {
     for (var i = rows.length - 1; i >= 1 && data.length < 500; i--) {
       if (!rows[i][3]) continue;
       data.push({
+        baris: i + 1,
         waktu: rows[i][0] ? new Date(rows[i][0]).toISOString() : "",
         nama: String(rows[i][1] || ""),
         kontak: String(rows[i][2] || ""),
@@ -421,6 +435,41 @@ function doPost(e) {
       return json_({ ok: true });
     }
 
+    if (p.aksi === "aspirasi-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var barisA = parseInt(p.baris, 10) || 0;
+      var shA = lembar_();
+      var rowsA = shA.getDataRange().getValues();
+      // cocokkan isi pesan dulu — kalau baris bergeser, tolak daripada salah hapus
+      if (barisA >= 2 && barisA <= rowsA.length &&
+          String(rowsA[barisA - 1][3]) === String(p.pesan || "")) {
+        shA.deleteRow(barisA);
+        ok = true;
+      } else {
+        return json_({ ok: false, pesan: "Data sudah berubah. Muat ulang lalu coba lagi." });
+      }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "pengumuman-edit") {
+      var akunPe = adminDariToken_(p.token);
+      if (!akunPe) return json_({ ok: false, butuhLogin: true });
+      var judulE = String(p.judul || "").trim().slice(0, 120);
+      var kategoriE = KATEGORI_SAH.indexOf(p.kategori) >= 0 ? p.kategori : "kegiatan";
+      var isiE = String(p.isi || "").trim().slice(0, 1000);
+      var tglE = /^\d{4}-\d{2}-\d{2}$/.test(p.tgl) ? p.tgl : "";
+      var jamE = /^\d{2}:\d{2}$/.test(p.jam) ? p.jam : "";
+      var tempatE = String(p.tempat || "").trim().slice(0, 100);
+      if (!judulE || !isiE) return json_({ ok: false, pesan: "Judul dan isi wajib diisi." });
+      var shPe = lembarPengumuman_();
+      var rPe = barisDariId_(shPe.getDataRange().getValues(), p.id);
+      if (!rPe) return json_({ ok: false, pesan: "Pengumuman tidak ditemukan." });
+      shPe.getRange(rPe, 3, 1, 6).setValues([[teks_(judulE), kategoriE, teks_(isiE),
+        "'" + tglE, "'" + jamE, teks_(tempatE)]]);
+      tulisJejak_(shPe, rPe, 11, akunPe.user);
+      return json_({ ok: true });
+    }
+
     if (p.aksi === "pengumuman-hapus") {
       if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
       var id = String(p.id || "");
@@ -468,6 +517,42 @@ function doPost(e) {
       return json_({ ok: true });
     }
 
+    if (p.aksi === "struktur-edit") {
+      var akunSe = adminDariToken_(p.token);
+      if (!akunSe) return json_({ ok: false, butuhLogin: true });
+      var idE = String(p.id || "");
+      var namaE2 = String(p.nama || "").trim().slice(0, 80);
+      var jabatanE = String(p.jabatan || "").trim().slice(0, 80);
+      var indukE = String(p.induk || "").trim().slice(0, 64);
+      if (!namaE2 || !jabatanE) return json_({ ok: false, pesan: "Nama dan jabatan wajib diisi." });
+      var shSe = lembarStruktur_();
+      var rowsSe = shSe.getDataRange().getValues();
+      var rSe = barisDariId_(rowsSe, idE);
+      if (!rSe) return json_({ ok: false, pesan: "Pengurus tidak ditemukan." });
+      if (indukE === idE) indukE = "";
+      if (indukE) {
+        // peta id -> induk untuk cek siklus (atasan baru tak boleh bawahannya sendiri)
+        var petaInduk = {};
+        var adaE = false;
+        for (var ie = 1; ie < rowsSe.length; ie++) {
+          petaInduk[String(rowsSe[ie][0])] = String(rowsSe[ie][3] || "");
+          if (String(rowsSe[ie][0]) === indukE) adaE = true;
+        }
+        if (!adaE) indukE = "";
+        var jalan = indukE, langkah = 0;
+        while (jalan && langkah++ < 100) {
+          if (jalan === idE) {
+            return json_({ ok: false, pesan: "Atasan tidak boleh diambil dari bawahannya sendiri." });
+          }
+          jalan = petaInduk[jalan] || "";
+        }
+      }
+      var fotoE = urlFotoSah_(p.foto);
+      shSe.getRange(rSe, 2, 1, 4).setValues([[teks_(namaE2), teks_(jabatanE), indukE, fotoE]]);
+      tulisJejak_(shSe, rSe, 8, akunSe.user);
+      return json_({ ok: true });
+    }
+
     if (p.aksi === "struktur-hapus") {
       if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
       var idS = String(p.id || "");
@@ -507,6 +592,19 @@ function doPost(e) {
       } finally {
         lockG.releaseLock();
       }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "galeri-edit") {
+      var akunGe = adminDariToken_(p.token);
+      if (!akunGe) return json_({ ok: false, butuhLogin: true });
+      var shGe = lembarGaleri_();
+      var rGe = barisDariId_(shGe.getDataRange().getValues(), p.id);
+      if (!rGe) return json_({ ok: false, pesan: "Foto tidak ditemukan." });
+      shGe.getRange(rGe, 4, 1, 2).setValues([[
+        teks_(String(p.judul || "").trim().slice(0, 120)),
+        teks_(String(p.album || "").trim().slice(0, 60))]]);
+      tulisJejak_(shGe, rGe, 8, akunGe.user);
       return json_({ ok: true });
     }
 
@@ -571,6 +669,46 @@ function doPost(e) {
           .concat(jejak_(pemilikT.user)));
       } finally {
         lockU.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "user-edit") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var pemilikE = adminPemilik_(p.token);
+      if (!pemilikE) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengelola pengguna." });
+      var targetE = String(p.user || "").trim().toLowerCase();
+      var namaU = String(p.nama || "").trim().slice(0, 80);
+      var peranU = p.peran === "pemilik" ? "pemilik" : "admin";
+      var passU = String(p.pass || "");
+      if (targetE === pemilikE.user && peranU !== "pemilik") {
+        return json_({ ok: false, pesan: "Tidak bisa menurunkan peran akun sendiri." });
+      }
+      if (passU && passU.length < 8) return json_({ ok: false, pesan: "Password minimal 8 karakter." });
+      var shUe = lembarUser_();
+      var rowsUe = shUe.getDataRange().getValues();
+      var rUe = 0, peranLama = "";
+      for (var ue = 1; ue < rowsUe.length; ue++) {
+        if (String(rowsUe[ue][0]).trim().toLowerCase() === targetE) {
+          rUe = ue + 1;
+          peranLama = String(rowsUe[ue][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin";
+          break;
+        }
+      }
+      if (!rUe) return json_({ ok: false, pesan: "Pengguna tidak ditemukan." });
+      shUe.getRange(rUe, 3, 1, 2).setValues([[teks_(namaU || targetE), peranU]]);
+      if (passU) shUe.getRange(rUe, 2).setValue(teks_(passU));
+      tulisJejak_(shUe, rUe, 8, pemilikE.user);
+      // peran berubah / password di-reset → cabut sesi target (kecuali akun sendiri)
+      if (targetE !== pemilikE.user && (peranU !== peranLama || passU)) {
+        var propsUe = PropertiesService.getScriptProperties();
+        var semuaUe = propsUe.getProperties();
+        for (var kUe in semuaUe) {
+          if (kUe.indexOf("tok_") !== 0) continue;
+          try {
+            if (JSON.parse(semuaUe[kUe]).user === targetE) propsUe.deleteProperty(kUe);
+          } catch (err) {}
+        }
       }
       return json_({ ok: true });
     }

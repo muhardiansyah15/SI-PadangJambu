@@ -3,7 +3,7 @@ import { apiGet, apiPost, unggahCloudinary, urlTransform } from './api.js'
 
 const FORM_KOSONG = { nama: '', jabatan: '', induk: '' }
 
-function Cabang({ item, semua, onHapus }) {
+function Cabang({ item, semua, onHapus, onEdit }) {
   const anak = semua.filter(s => s.induk === item.id)
   return (
     <div>
@@ -17,11 +17,14 @@ function Cabang({ item, semua, onHapus }) {
             <div className="str-nama">{item.nama}</div>
           </div>
         </div>
-        <button className="btn-hapus" onClick={() => onHapus(item.id)}>Hapus</button>
+        <div>
+          <button className="btn btn-kecil btn-polos" onClick={() => onEdit(item)}>Edit ✏️</button>{' '}
+          <button className="btn-hapus" onClick={() => onHapus(item.id)}>Hapus</button>
+        </div>
       </div>
       {anak.length > 0 && (
         <div className="str-anak">
-          {anak.map(a => <Cabang key={a.id} item={a} semua={semua} onHapus={onHapus} />)}
+          {anak.map(a => <Cabang key={a.id} item={a} semua={semua} onHapus={onHapus} onEdit={onEdit} />)}
         </div>
       )}
     </div>
@@ -35,6 +38,8 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
   const [data, setData] = useState(null)
   const [gagal, setGagal] = useState(false)
   const [file, setFile] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [editFoto, setEditFoto] = useState('') // foto lama saat mode edit
   const fileRef = useRef(null)
 
   const ubah = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -59,24 +64,42 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
     setSibuk(true)
     setStatus(null)
     try {
-      let foto = ''
+      let foto = editId ? editFoto : ''
       if (file) foto = await unggahCloudinary(file, 800)
-      const j = await apiPost({ aksi: 'struktur', token: sesi.token, ...form, foto })
+      const j = editId
+        ? await apiPost({ aksi: 'struktur-edit', token: sesi.token, id: editId, ...form, foto })
+        : await apiPost({ aksi: 'struktur', token: sesi.token, ...form, foto })
       if (j.butuhLogin) { onSesiBerakhir(); return }
       if (!j.ok) {
         setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan.' })
         return
       }
-      setForm(FORM_KOSONG)
-      setFile(null)
-      if (fileRef.current) fileRef.current.value = ''
-      setStatus({ ok: true, teks: 'Pengurus tersimpan. ✅' })
+      batalEdit()
+      setStatus({ ok: true, teks: editId ? 'Perubahan tersimpan. ✅' : 'Pengurus tersimpan. ✅' })
       muat()
     } catch {
       setStatus({ ok: false, teks: 'Gagal terhubung. Periksa koneksi internet.' })
     } finally {
       setSibuk(false)
     }
+  }
+
+  function mulaiEdit(item) {
+    setEditId(item.id)
+    setEditFoto(item.foto || '')
+    setForm({ nama: item.nama, jabatan: item.jabatan, induk: item.induk || '' })
+    setFile(null)
+    if (fileRef.current) fileRef.current.value = ''
+    setStatus(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function batalEdit() {
+    setEditId(null)
+    setEditFoto('')
+    setForm(FORM_KOSONG)
+    setFile(null)
+    if (fileRef.current) fileRef.current.value = ''
   }
 
   async function hapus(id) {
@@ -111,7 +134,9 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
           </div>
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="sFoto">Foto (opsional)</label>
+          <label className="form-label" htmlFor="sFoto">
+            Foto (opsional{editId && editFoto ? ' — kosongkan untuk mempertahankan foto lama' : ''})
+          </label>
           <input id="sFoto" type="file" accept="image/*" className="form-input" ref={fileRef}
             onChange={e => setFile(e.target.files[0] || null)} />
         </div>
@@ -119,14 +144,19 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
           <label className="form-label" htmlFor="sInduk">Atasan langsung</label>
           <select id="sInduk" name="induk" className="form-input" value={form.induk} onChange={ubah}>
             <option value="">— Puncak struktur (tanpa atasan) —</option>
-            {(data || []).map(s => (
+            {(data || []).filter(s => s.id !== editId).map(s => (
               <option key={s.id} value={s.id}>{s.jabatan} — {s.nama}</option>
             ))}
           </select>
         </div>
         <button className="btn" type="submit" disabled={sibuk}>
-          {sibuk ? 'Menyimpan…' : 'Tambahkan ke Struktur 🏛'}
+          {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Tambahkan ke Struktur 🏛'}
         </button>
+        {editId && (
+          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+            Batal Edit
+          </button>
+        )}
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
 
@@ -137,7 +167,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
         <div className="kosong">Belum ada pengurus. Mulai dari jabatan puncak, mis. Wali Korong.</div>
       )}
       {data !== null && puncak.map(p => (
-        <Cabang key={p.id} item={p} semua={data} onHapus={hapus} />
+        <Cabang key={p.id} item={p} semua={data} onHapus={hapus} onEdit={mulaiEdit} />
       ))}
     </div>
   )
