@@ -4,6 +4,7 @@ import Login from './Login.jsx'
 import Aspirasi from './Aspirasi.jsx'
 import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
+import Galeri from './Galeri.jsx'
 import Pengguna from './Pengguna.jsx'
 import Footer from './Footer.jsx'
 
@@ -11,6 +12,7 @@ const MENU = [
   { id: 'aspirasi', label: '💬 Aspirasi' },
   { id: 'pengumuman', label: '📢 Pengumuman' },
   { id: 'struktur', label: '🏛 Struktur' },
+  { id: 'galeri', label: '🖼 Galeri' },
   { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
 ]
 
@@ -80,6 +82,7 @@ export default function App() {
         {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'galeri' && <Galeri sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengguna' && sesi.peran === 'pemilik' && <Pengguna sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />
       </main>

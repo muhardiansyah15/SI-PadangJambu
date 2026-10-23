@@ -69,6 +69,22 @@ dan form kelola pengumuman tanpa perlu membuka spreadsheet.
 - Login menghasilkan token (berlaku 7 hari, tersimpan di browser); salah password
   5× mengunci username 10 menit.
 
+## Galeri Foto (Cloudinary)
+
+Foto galeri disimpan di Cloudinary (gratis, CDN + kompresi otomatis); sheet
+`GALERI` hanya mencatat URL + keterangan + album. Setup satu kali:
+
+1. Buat akun gratis di [cloudinary.com](https://cloudinary.com).
+2. Dashboard → Settings → Upload → **Upload presets** → Add upload preset →
+   Signing mode: **Unsigned** (catat nama preset-nya).
+3. Isi **cloud name** dan **nama preset** ke konstanta `CLOUDINARY` di
+   `portal/src/api.js` (atau env `VITE_CLOUDINARY_CLOUD` / `VITE_CLOUDINARY_PRESET`),
+   lalu push.
+
+Portal mengecilkan foto ke maks. 1600px sebelum unggah. Menghapus foto dari
+portal hanya menghapus catatannya; file di Cloudinary dihapus manual dari
+dashboard bila perlu. Jangan unggah foto close-up anak tanpa izin orang tua.
+
 ## Data Penduduk (sheet `PENDUDUK`)
 
 Data penduduk **tidak diinput lewat portal web** — perangkat korong mengisinya

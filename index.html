@@ -439,6 +439,23 @@
   .pohon .struktur-avatar { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 0.6rem; }
   .pohon .struktur-role { font-size: 0.85rem; }
 
+  /* ===== GALERI ===== */
+  .galeri-section { background: var(--krem); }
+  .galeri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+  .galeri-item { border-radius: 12px; overflow: hidden; cursor: pointer; position: relative; background: var(--putih); box-shadow: 0 2px 12px rgba(26,58,42,0.08); transition: transform 0.25s; }
+  .galeri-item:hover { transform: translateY(-4px); }
+  .galeri-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .galeri-item .galeri-ket { padding: 0.6rem 0.9rem; font-size: 0.85rem; }
+  .galeri-item .galeri-album { color: var(--hijau); font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .lightbox {
+    position: fixed; inset: 0; z-index: 300; display: none;
+    background: rgba(26,58,42,0.93); cursor: zoom-out;
+    flex-direction: column; align-items: center; justify-content: center; padding: 2rem;
+  }
+  .lightbox.buka { display: flex; }
+  .lightbox img { max-width: 92vw; max-height: 80vh; border-radius: 10px; }
+  .lightbox-ket { color: var(--krem); margin-top: 1rem; font-size: 0.95rem; text-align: center; }
+
   .stat-info {
     max-width: 640px; margin: 0 auto 2rem;
     background: rgba(201,168,76,0.14); border: 1px solid var(--emas);
@@ -600,6 +617,7 @@
     <!-- Keuangan disembunyikan sementara sampai datanya siap
     <li><a href="#keuangan">Keuangan</a></li> -->
     <li><a href="#potensi">Potensi</a></li>
+    <li><a href="#galeri" id="menuGaleri" style="display:none">Galeri</a></li>
     <li><a href="#peta">Lokasi</a></li>
     <li><a href="#kontak">Kontak</a></li>
     <li><a href="portal/" class="nav-portal">Portal 🔐</a></li>
@@ -977,6 +995,20 @@
 </section>
 
 <!-- PETA -->
+<!-- GALERI (diisi dari portal; tersembunyi bila kosong) -->
+<section class="section galeri-section" id="galeri" style="display:none">
+  <div class="section-inner">
+    <div class="section-label">🖼 Dokumentasi</div>
+    <h2 class="section-title">Galeri <em>Kegiatan Korong</em></h2>
+    <div class="title-bar"></div>
+    <div class="galeri-grid" id="galeriGrid"></div>
+  </div>
+</section>
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('buka')">
+  <img id="lightboxImg" alt="">
+  <div class="lightbox-ket" id="lightboxKet"></div>
+</div>
+
 <section class="section peta-section" id="peta">
   <div class="section-inner">
     <div class="section-label">📍 Lokasi</div>
@@ -1282,6 +1314,39 @@
     grid.innerHTML = `<div class="pohon-wrap"><ul class="pohon">${puncak.map(p => simpul(p, true)).join('')}</ul></div>`;
   }
 
+  // ===== GALERI =====
+  // Foto diunggah admin lewat portal ke Cloudinary; section tampil bila ada data.
+  const urlTransform = (url, t) => url.replace('/upload/', '/upload/' + t + '/');
+
+  function bukaLightbox(url, ket) {
+    document.getElementById('lightboxImg').src = urlTransform(url, 'w_1600,q_auto,f_auto');
+    document.getElementById('lightboxKet').textContent = ket;
+    document.getElementById('lightbox').classList.add('buka');
+  }
+
+  function renderGaleri(list) {
+    const grid = document.getElementById('galeriGrid');
+    grid.innerHTML = list.map(f => `
+      <div class="galeri-item" data-url="${esc(f.url)}" data-ket="${esc([f.judul, f.album].filter(Boolean).join(' — '))}">
+        <img src="${esc(urlTransform(f.url, 'w_500,h_375,c_fill,q_auto,f_auto'))}" alt="${esc(f.judul)}" loading="lazy">
+        <div class="galeri-ket">
+          ${f.album ? `<div class="galeri-album">${esc(f.album)}</div>` : ''}
+          <div>${esc(f.judul || '')}</div>
+        </div>
+      </div>`).join('');
+    grid.querySelectorAll('.galeri-item').forEach(el =>
+      el.addEventListener('click', () => bukaLightbox(el.dataset.url, el.dataset.ket)));
+    document.getElementById('galeri').style.display = '';
+    document.getElementById('menuGaleri').style.display = '';
+  }
+
+  if (ASPIRASI_URL) {
+    fetch(ASPIRASI_URL + '?daftar=galeri')
+      .then(r => r.json())
+      .then(j => { if (j.ok && Array.isArray(j.data) && j.data.length) renderGaleri(j.data); })
+      .catch(() => {}); // gagal memuat → section tetap tersembunyi
+  }
+
   if (ASPIRASI_URL) {
     fetch(ASPIRASI_URL + '?daftar=struktur')
       .then(r => r.json())
@@ -1378,7 +1443,7 @@
   }));
 
   // ===== MENU AKTIF SAAT SCROLL =====
-  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'potensi', 'peta', 'kontak'];
+  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'potensi', 'galeri', 'peta', 'kontak'];
   const targets = ids.map(id => ({ id, el: id === 'home' ? document.querySelector('.hero') : document.getElementById(id) }));
   function setActive() {
     const y = window.scrollY + 120;

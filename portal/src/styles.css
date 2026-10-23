@@ -152,6 +152,16 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .peng-tag-mini.layanan { background: var(--emas); color: var(--hijau-tua); }
 .baris-hapus { margin-top: 0.6rem; text-align: right; }
 
+.galeri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
+.galeri-item {
+  background: var(--krem); border: 1px solid #e7e1d3; border-radius: 10px;
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.galeri-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.galeri-ket { padding: 0.6rem 0.75rem; font-size: 0.85rem; flex: 1; }
+.galeri-sub { color: var(--abu); font-size: 0.75rem; margin-top: 2px; }
+.galeri-item .btn-hapus { margin: 0 0.75rem 0.7rem; align-self: flex-end; }
+
 footer {
   margin-top: 2.5rem; padding-top: 1.5rem;
   border-top: 1px solid rgba(201,168,76,0.35);

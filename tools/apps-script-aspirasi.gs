@@ -20,6 +20,7 @@ var SHEET_USER = "ADMIN";
 var SHEET_PENDUDUK = "PENDUDUK";
 var SHEET_PENGUMUMAN = "PENGUMUMAN";
 var SHEET_STRUKTUR = "STRUKTUR";
+var SHEET_GALERI = "GALERI";
 var TOKEN_HARI = 7; // token login berlaku 7 hari
 var KATEGORI_SAH = ["penting", "kegiatan", "layanan"];
 
@@ -51,6 +52,16 @@ function lembarPengumuman_() {
   var sh = ss.getSheetByName(SHEET_PENGUMUMAN) || ss.insertSheet(SHEET_PENGUMUMAN);
   if (sh.getLastRow() === 0) {
     sh.appendRow(["ID", "Waktu Terbit", "Judul", "Kategori", "Isi", "Tanggal Acara", "Jam", "Tempat"]);
+  }
+  return sh;
+}
+
+/** Foto disimpan di Cloudinary; sheet ini hanya mencatat URL + keterangan. */
+function lembarGaleri_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_GALERI) || ss.insertSheet(SHEET_GALERI);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Waktu", "URL", "Judul", "Album"]);
   }
   return sh;
 }
@@ -245,6 +256,7 @@ function bersihkanTokenKadaluarsa_() {
  *   tidak pernah data per orang).
  * GET ?daftar=pengumuman: daftar pengumuman (publik, maks. 50 terbaru).
  * GET ?daftar=struktur: struktur pemerintahan korong (publik).
+ * GET ?daftar=galeri: foto galeri (publik, maks. 100 terbaru).
  * GET ?daftar=aspirasi&token=…: daftar aspirasi (hanya admin login,
  *   maks. 500 terbaru).
  * GET ?daftar=user&token=…: daftar pengguna TANPA password (hanya pemilik).
@@ -270,6 +282,21 @@ function doGet(e) {
       });
     }
     return json_({ ok: true, data: peng });
+  }
+  if (e && e.parameter && e.parameter.daftar === "galeri") {
+    var rowsG = lembarGaleri_().getDataRange().getValues();
+    var galeri = [];
+    for (var g = rowsG.length - 1; g >= 1 && galeri.length < 100; g--) {
+      if (!rowsG[g][2]) continue;
+      galeri.push({
+        id: String(rowsG[g][0]),
+        waktu: rowsG[g][1] ? new Date(rowsG[g][1]).toISOString() : "",
+        url: String(rowsG[g][2]),
+        judul: String(rowsG[g][3] || ""),
+        album: String(rowsG[g][4] || "")
+      });
+    }
+    return json_({ ok: true, data: galeri });
   }
   if (e && e.parameter && e.parameter.daftar === "struktur") {
     var rowsS = lembarStruktur_().getDataRange().getValues();
@@ -328,6 +355,10 @@ function doGet(e) {
  *   (wajib login; induk = ID atasan, kosong = puncak).
  * POST {aksi:"struktur-hapus", token, id}: hapus pengurus (wajib login;
  *   ditolak bila masih punya bawahan).
+ * POST {aksi:"galeri", token, url, judul, album}: catat foto Cloudinary
+ *   (wajib login; URL harus res.cloudinary.com).
+ * POST {aksi:"galeri-hapus", token, id}: hapus catatan foto (wajib login;
+ *   file di Cloudinary tidak ikut terhapus).
  * POST {aksi:"user-tambah", token, user, pass, nama, peran}: buat akun
  *   (hanya pemilik).
  * POST {aksi:"user-hapus", token, user}: hapus akun + semua tokennya
@@ -424,6 +455,42 @@ function doPost(e) {
         for (var c = rowsH.length - 1; c >= 1; c--) {
           if (String(rowsH[c][0]) === idS) {
             shH.deleteRow(c + 1);
+            ok = true;
+            break;
+          }
+        }
+      }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "galeri") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var urlFoto = String(p.url || "").trim().slice(0, 500);
+      if (!/^https:\/\/res\.cloudinary\.com\//.test(urlFoto)) {
+        return json_({ ok: false, pesan: "URL foto tidak dikenal (harus Cloudinary)." });
+      }
+      var judulF = String(p.judul || "").trim().slice(0, 120);
+      var albumF = String(p.album || "").trim().slice(0, 60);
+      var lockG = LockService.getScriptLock();
+      lockG.waitLock(5000);
+      try {
+        lembarGaleri_().appendRow([Utilities.getUuid(), new Date(),
+          urlFoto, teks_(judulF), teks_(albumF)]);
+      } finally {
+        lockG.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "galeri-hapus") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var idG = String(p.id || "");
+      if (idG) {
+        var shG = lembarGaleri_();
+        var rowsGh = shG.getDataRange().getValues();
+        for (var gh = rowsGh.length - 1; gh >= 1; gh--) {
+          if (String(rowsGh[gh][0]) === idG) {
+            shG.deleteRow(gh + 1);
             ok = true;
             break;
           }
