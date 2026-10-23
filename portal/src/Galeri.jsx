@@ -6,6 +6,7 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
   const [judul, setJudul] = useState('')
   const [album, setAlbum] = useState('')
   const [editId, setEditId] = useState(null)
+  const [formTampil, setFormTampil] = useState(false)
   const [status, setStatus] = useState(null)
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
@@ -46,6 +47,7 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
       setFile(null)
       setJudul('')
       setEditId(null)
+      setFormTampil(false)
       ev.target.reset?.()
       setStatus({ ok: true, teks: editId ? 'Keterangan foto diperbarui. ✅' : 'Foto tayang di galeri website. ✅' })
       muat()
@@ -61,14 +63,24 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
     setJudul(f.judul)
     setAlbum(f.album)
     setFile(null)
+    setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function mulaiTambah() {
+    setEditId(null)
+    setJudul('')
+    setFile(null)
+    setFormTampil(true)
+    setStatus(null)
   }
 
   function batalEdit() {
     setEditId(null)
     setJudul('')
     setFile(null)
+    setFormTampil(false)
     setStatus(null)
   }
 
@@ -100,7 +112,13 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
 
   return (
     <div className="kartu">
-      <h2>Galeri Foto</h2>
+      <div className="bar-atas">
+        <h2>Galeri Foto</h2>
+        {!formTampil && <button className="btn btn-kecil" onClick={mulaiTambah}>+ Unggah Foto</button>}
+      </div>
+      {status && !formTampil && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
+      {formTampil && (
+      <>
       <p className="keterangan-kartu">
         Foto dikecilkan otomatis (maks. 1600px) sebelum diunggah ke Cloudinary.
         Jangan unggah foto close-up anak-anak tanpa izin orang tuanya.
@@ -131,13 +149,13 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Unggah ke Galeri 🖼'}
         </button>
-        {editId && (
-          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
-            Batal Edit
-          </button>
-        )}
+        <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+          Batal
+        </button>
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
+      </>
+      )}
 
       <div className="sub-judul">Foto Tayang</div>
       {data === null && <div className="kosong">Memuat…</div>}

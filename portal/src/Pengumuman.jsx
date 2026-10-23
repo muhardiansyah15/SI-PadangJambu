@@ -14,6 +14,7 @@ function metaAcara(pg) {
 
 export default function Pengumuman({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
+  const [formTampil, setFormTampil] = useState(false)
   const [editId, setEditId] = useState(null)
   const [status, setStatus] = useState(null) // {ok, teks}
   const [sibuk, setSibuk] = useState(false)
@@ -53,6 +54,7 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
       }
       setForm(FORM_KOSONG)
       setEditId(null)
+      setFormTampil(false)
       setStatus({ ok: true, teks: editId ? 'Perubahan tersimpan. ✅' : 'Pengumuman tayang di website. ✅' })
       muat()
     } catch {
@@ -65,13 +67,22 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
   function mulaiEdit(pg) {
     setEditId(pg.id)
     setForm({ judul: pg.judul, kategori: pg.kategori, isi: pg.isi, tgl: pg.tgl, jam: pg.jam, tempat: pg.tempat })
+    setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function mulaiTambah() {
+    setEditId(null)
+    setForm(FORM_KOSONG)
+    setFormTampil(true)
+    setStatus(null)
   }
 
   function batalEdit() {
     setEditId(null)
     setForm(FORM_KOSONG)
+    setFormTampil(false)
     setStatus(null)
   }
 
@@ -88,7 +99,12 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
 
   return (
     <div className="kartu">
-      <h2>Kelola Pengumuman</h2>
+      <div className="bar-atas">
+        <h2>Kelola Pengumuman</h2>
+        {!formTampil && <button className="btn btn-kecil" onClick={mulaiTambah}>+ Tambah Pengumuman</button>}
+      </div>
+      {status && !formTampil && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
+      {formTampil && (
       <form onSubmit={terbitkan}>
         <div className="form-group">
           <label className="form-label" htmlFor="pJudul">Judul</label>
@@ -126,13 +142,12 @@ export default function Pengumuman({ sesi, onSesiBerakhir }) {
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Terbitkan ke Website 📢'}
         </button>
-        {editId && (
-          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
-            Batal Edit
-          </button>
-        )}
+        <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+          Batal
+        </button>
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
+      )}
 
       <div className="sub-judul">Pengumuman Tayang</div>
       {data === null && <div className="kosong">Memuat…</div>}

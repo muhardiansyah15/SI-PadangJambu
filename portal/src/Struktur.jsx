@@ -40,6 +40,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
   const [file, setFile] = useState(null)
   const [editId, setEditId] = useState(null)
   const [editFoto, setEditFoto] = useState('') // foto lama saat mode edit
+  const [formTampil, setFormTampil] = useState(false)
   const fileRef = useRef(null)
 
   const ubah = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -74,8 +75,9 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
         setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan.' })
         return
       }
+      const tadiEdit = editId
       batalEdit()
-      setStatus({ ok: true, teks: editId ? 'Perubahan tersimpan. ✅' : 'Pengurus tersimpan. ✅' })
+      setStatus({ ok: true, teks: tadiEdit ? 'Perubahan tersimpan. ✅' : 'Pengurus tersimpan. ✅' })
       muat()
     } catch {
       setStatus({ ok: false, teks: 'Gagal terhubung. Periksa koneksi internet.' })
@@ -90,8 +92,19 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
     setForm({ nama: item.nama, jabatan: item.jabatan, induk: item.induk || '' })
     setFile(null)
     if (fileRef.current) fileRef.current.value = ''
+    setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function mulaiTambah() {
+    setEditId(null)
+    setEditFoto('')
+    setForm(FORM_KOSONG)
+    setFile(null)
+    if (fileRef.current) fileRef.current.value = ''
+    setFormTampil(true)
+    setStatus(null)
   }
 
   function batalEdit() {
@@ -100,6 +113,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
     setForm(FORM_KOSONG)
     setFile(null)
     if (fileRef.current) fileRef.current.value = ''
+    setFormTampil(false)
   }
 
   async function hapus(id) {
@@ -119,7 +133,12 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
 
   return (
     <div className="kartu">
-      <h2>Struktur Pemerintahan Korong</h2>
+      <div className="bar-atas">
+        <h2>Struktur Pemerintahan Korong</h2>
+        {!formTampil && <button className="btn btn-kecil" onClick={mulaiTambah}>+ Tambah Pengurus</button>}
+      </div>
+      {status && !formTampil && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
+      {formTampil && (
       <form onSubmit={tambah}>
         <div className="form-baris">
           <div className="form-group">
@@ -152,13 +171,12 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editId ? 'Simpan Perubahan ✏️' : 'Tambahkan ke Struktur 🏛'}
         </button>
-        {editId && (
-          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
-            Batal Edit
-          </button>
-        )}
+        <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+          Batal
+        </button>
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
+      )}
 
       <div className="sub-judul">Bagan Saat Ini</div>
       {data === null && <div className="kosong">Memuat…</div>}

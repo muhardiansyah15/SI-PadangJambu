@@ -6,6 +6,7 @@ const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin' }
 export default function Pengguna({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
   const [editUser, setEditUser] = useState(null)
+  const [formTampil, setFormTampil] = useState(false)
   const [status, setStatus] = useState(null)
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
@@ -44,6 +45,7 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
       }
       setForm(FORM_KOSONG)
       setEditUser(null)
+      setFormTampil(false)
       setStatus({
         ok: true,
         teks: editUser
@@ -61,13 +63,22 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
   function mulaiEdit(u) {
     setEditUser(u.user)
     setForm({ user: u.user, pass: '', nama: u.nama, peran: u.peran })
+    setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function mulaiTambah() {
+    setEditUser(null)
+    setForm(FORM_KOSONG)
+    setFormTampil(true)
+    setStatus(null)
   }
 
   function batalEdit() {
     setEditUser(null)
     setForm(FORM_KOSONG)
+    setFormTampil(false)
     setStatus(null)
   }
 
@@ -85,7 +96,13 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
 
   return (
     <div className="kartu">
-      <h2>Kelola Pengguna</h2>
+      <div className="bar-atas">
+        <h2>Kelola Pengguna</h2>
+        {!formTampil && <button className="btn btn-kecil" onClick={mulaiTambah}>+ Tambah Akun</button>}
+      </div>
+      {status && !formTampil && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
+      {formTampil && (
+      <>
       <p className="keterangan-kartu">
         Akun tersimpan di sheet <b>ADMIN</b>. Gunakan password karangan — jangan
         password asli akun lain. Hanya akun berperan <b>pemilik</b> yang bisa
@@ -123,13 +140,13 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editUser ? 'Simpan Perubahan ✏️' : 'Buat Akun 👥'}
         </button>
-        {editUser && (
-          <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
-            Batal Edit
-          </button>
-        )}
+        <button type="button" className="btn btn-polos" style={{ marginTop: '0.6rem' }} onClick={batalEdit}>
+          Batal
+        </button>
         {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
       </form>
+      </>
+      )}
 
       <div className="sub-judul">Daftar Pengguna</div>
       {data === null && <div className="kosong">Memuat…</div>}
