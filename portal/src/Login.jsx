@@ -16,7 +16,7 @@ export default function Login({ onMasuk, pesanAwal }) {
         setPesan(j.pesan || 'Gagal masuk.')
         return
       }
-      onMasuk({ token: j.token, nama: j.nama, user: j.user, peran: j.peran || 'admin', foto: j.foto || '', akses: j.akses || '' })
+      onMasuk({ token: j.token, nama: j.nama, user: j.user, peran: j.peran || 'admin', foto: j.foto || '', akses: j.akses || {} })
     } catch {
       setPesan('Gagal terhubung. Periksa koneksi internet.')
     } finally {

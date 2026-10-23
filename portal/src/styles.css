@@ -182,6 +182,8 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .rp-keluar { color: var(--merah-accent); font-weight: 600; white-space: nowrap; }
 .ket-kecil { color: var(--abu); font-size: 0.82rem; }
 .cek-akses { font-size: 0.9rem; color: var(--hijau-tua); display: flex; align-items: center; gap: 4px; }
+.tabel-akses .sel-cek { text-align: center; }
+.tabel-akses input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--hijau); }
 .ringkas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.1rem; }
 @media (max-width: 480px) { .ringkas-grid { grid-template-columns: 1fr; } }
 .ringkas-item {

@@ -30,23 +30,83 @@ var SHEET_KONFIG = "KONFIG";
 var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder", "pamsimas_publik"];
 var SHEET_PAM_PELANGGAN = "PAMSIMAS_PELANGGAN";
 var SHEET_PAM_KAS = "PAMSIMAS_KAS";
-// Hak akses tambahan per akun (kolom Akses di sheet ADMIN, dipisah koma).
-// Pemilik otomatis memiliki semuanya.
-var AKSES_SAH = ["pamsimas_edit"];
+/**
+ * Hak akses ala ir.model.access Odoo: sheet AKSES berisi satu baris per
+ * (Username, Model) dengan flag Read/Write/Create/Unlink ("Y" = boleh).
+ * Peran "pemilik" (Super User) melewati semua pemeriksaan.
+ * Tanpa baris = tanpa akses (semantik Odoo).
+ */
+var SHEET_AKSES = "AKSES";
+var MODEL_SAH = ["pamsimas"];
 
-function aksesSah_(v) {
-  var hasil = [];
-  String(v || "").split(",").forEach(function (a) {
-    a = a.trim();
-    if (AKSES_SAH.indexOf(a) >= 0 && hasil.indexOf(a) < 0) hasil.push(a);
-  });
-  return hasil.join(",");
+function lembarAkses_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_AKSES) || ss.insertSheet(SHEET_AKSES);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["ID", "Username", "Model", "Read", "Write", "Create", "Unlink"].concat(KOLOM_JEJAK));
+  }
+  return sh;
 }
 
-function punyaAkses_(akun, kode) {
+/** Peta akses semua user: {username: {model: {r,w,c,u}}} */
+function petaAkses_() {
+  var rows = lembarAkses_().getDataRange().getValues();
+  var peta = {};
+  for (var i = 1; i < rows.length; i++) {
+    var u = String(rows[i][1] || "").trim().toLowerCase();
+    var m = String(rows[i][2] || "").trim().toLowerCase();
+    if (!u || MODEL_SAH.indexOf(m) < 0) continue;
+    if (!peta[u]) peta[u] = {};
+    peta[u][m] = {
+      r: String(rows[i][3]).trim() !== "",
+      w: String(rows[i][4]).trim() !== "",
+      c: String(rows[i][5]).trim() !== "",
+      u: String(rows[i][6]).trim() !== ""
+    };
+  }
+  return peta;
+}
+
+function bacaAksesUser_(user) {
+  return petaAkses_()[String(user || "").toLowerCase()] || {};
+}
+
+/** Upsert baris AKSES seorang user untuk semua model yang dikirim portal. */
+function simpanAksesUser_(user, akses, aktor) {
+  var sh = lembarAkses_();
+  var rows = sh.getDataRange().getValues();
+  MODEL_SAH.forEach(function (model) {
+    var a = (akses && akses[model]) || {};
+    var vals = [a.r ? "Y" : "", a.w ? "Y" : "", a.c ? "Y" : "", a.u ? "Y" : ""];
+    var r = 0;
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][1]).trim().toLowerCase() === user && String(rows[i][2]) === model) {
+        r = i + 1;
+        break;
+      }
+    }
+    if (r) {
+      sh.getRange(r, 4, 1, 4).setValues([vals]);
+      tulisJejak_(sh, r, 10, aktor);
+    } else {
+      sh.appendRow([Utilities.getUuid(), user, model].concat(vals).concat(jejak_(aktor)));
+    }
+  });
+}
+
+/** Ringkas akses jadi string untuk perbandingan (deteksi perubahan). */
+function ringkasAkses_(a) {
+  return MODEL_SAH.map(function (m) {
+    var x = (a && a[m]) || {};
+    return (x.r ? "r" : "") + (x.w ? "w" : "") + (x.c ? "c" : "") + (x.u ? "u" : "");
+  }).join("|");
+}
+
+function punyaAkses_(akun, model, op) {
   if (!akun) return false;
   if (akun.peran === "pemilik") return true;
-  return String(akun.akses || "").split(",").indexOf(kode) >= 0;
+  var a = akun.akses && akun.akses[model];
+  return !!(a && a[op]);
 }
 
 function lembar_() {
@@ -186,7 +246,7 @@ function lembarUser_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"].concat(KOLOM_JEJAK).concat(["Akses"]));
+    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"].concat(KOLOM_JEJAK).concat(["ID"]));
   }
   return sh;
 }
@@ -373,7 +433,7 @@ function login_(user, pass) {
         String(rows[i][1]) === pass && pass !== "") {
       var token = Utilities.getUuid();
       var peran = String(rows[i][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin";
-      var akses = aksesSah_(rows[i][9]);
+      var akses = bacaAksesUser_(user);
       // PropertiesService: tahan lama (CacheService bisa terhapus sewaktu-waktu)
       bersihkanTokenKadaluarsa_();
       PropertiesService.getScriptProperties().setProperty("tok_" + token,
@@ -498,7 +558,11 @@ function doGet(e) {
     return json_(hp);
   }
   if (e && e.parameter && e.parameter.daftar === "pamsimas") {
-    if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
+    var akunPm = adminDariToken_(e.parameter.token);
+    if (!akunPm) return json_({ ok: false, butuhLogin: true });
+    if (!punyaAkses_(akunPm, "pamsimas", "r")) {
+      return json_({ ok: false, pesan: "Anda tidak punya akses baca Pamsimas." });
+    }
     var rowsPl = lembarPamPelanggan_().getDataRange().getValues();
     var pelanggan = [];
     for (var pl = 1; pl < rowsPl.length; pl++) {
@@ -557,15 +621,19 @@ function doGet(e) {
     if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
     if (!adminPemilik_(e.parameter.token)) return json_({ ok: false, pesan: "Khusus pemilik." });
     var rowsU = lembarUser_().getDataRange().getValues();
+    var semuaAkses = petaAkses_();
     var daftarU = [];
     for (var u = 1; u < rowsU.length; u++) {
       if (!rowsU[u][0]) continue;
+      var unameU = String(rowsU[u][0]).trim().toLowerCase();
+      var idU = String(rowsU[u][9] || "");
       daftarU.push({
-        user: String(rowsU[u][0]).trim().toLowerCase(),
+        id: /^[0-9a-f-]{36}$/.test(idU) ? idU : "",
+        user: unameU,
         nama: String(rowsU[u][2] || rowsU[u][0]),
         peran: String(rowsU[u][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin",
         foto: String(rowsU[u][4] || ""),
-        akses: aksesSah_(rowsU[u][9])
+        akses: semuaAkses[unameU] || {}
       });
     }
     return json_({ ok: true, data: daftarU });
@@ -921,6 +989,7 @@ function doPost(e) {
     if (p.aksi === "pam-pelanggan") {
       var akunPl = adminDariToken_(p.token);
       if (!akunPl) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunPl, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
       var namaPl = String(p.nama || "").trim().slice(0, 80);
       var rwPl = String(p.rw || "").trim().slice(0, 20);
       if (!namaPl) return json_({ ok: false, pesan: "Nama pelanggan wajib diisi." });
@@ -938,6 +1007,7 @@ function doPost(e) {
     if (p.aksi === "pam-pelanggan-edit") {
       var akunPle = adminDariToken_(p.token);
       if (!akunPle) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunPle, "pamsimas", "w")) return json_({ ok: false, pesan: "Anda tidak punya akses ubah (write) Pamsimas." });
       var shPle = lembarPamPelanggan_();
       var rPle = barisDariId_(shPle.getDataRange().getValues(), p.id);
       if (!rPle) return json_({ ok: false, pesan: "Pelanggan tidak ditemukan." });
@@ -952,6 +1022,7 @@ function doPost(e) {
     if (p.aksi === "pam-pelanggan-hapus") {
       var akunPlh = adminDariToken_(p.token);
       if (!akunPlh) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunPlh, "pamsimas", "u")) return json_({ ok: false, pesan: "Anda tidak punya akses hapus (unlink) Pamsimas." });
       var idPlh = String(p.id || "");
       var rowsKasH = lembarPamKas_().getDataRange().getValues();
       for (var kh = 1; kh < rowsKasH.length; kh++) {
@@ -968,6 +1039,7 @@ function doPost(e) {
     if (p.aksi === "pam-iuran") {
       var akunIu = adminDariToken_(p.token);
       if (!akunIu) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunIu, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
       var idIu = String(p.pelanggan || "");
       var bulanIu = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : "";
       var jumlahIu = jumlahSah_(p.jumlah);
@@ -996,6 +1068,7 @@ function doPost(e) {
     if (p.aksi === "pam-keluar") {
       var akunKe = adminDariToken_(p.token);
       if (!akunKe) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunKe, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
       var uraianKe = String(p.uraian || "").trim().slice(0, 200);
       var jumlahKe = jumlahSah_(p.jumlah);
       if (!uraianKe || !jumlahKe) {
@@ -1016,6 +1089,7 @@ function doPost(e) {
     if (p.aksi === "pam-saldo") {
       var akunSa = adminDariToken_(p.token);
       if (!akunSa) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunSa, "pamsimas", "c")) return json_({ ok: false, pesan: "Anda tidak punya akses tambah (create) Pamsimas." });
       var jumlahSa = jumlahSah_(p.jumlah);
       if (!jumlahSa) return json_({ ok: false, pesan: "Jumlah saldo awal tidak valid." });
       var rowsSa = lembarPamKas_().getDataRange().getValues();
@@ -1040,8 +1114,8 @@ function doPost(e) {
     if (p.aksi === "pam-kas-edit") {
       var akunKd = adminDariToken_(p.token);
       if (!akunKd) return json_({ ok: false, butuhLogin: true });
-      if (!punyaAkses_(akunKd, "pamsimas_edit")) {
-        return json_({ ok: false, pesan: "Anda tidak punya akses edit Pamsimas. Minta pemilik mengaktifkannya di menu Pengguna." });
+      if (!punyaAkses_(akunKd, "pamsimas", "w")) {
+        return json_({ ok: false, pesan: "Anda tidak punya akses ubah (write) Pamsimas. Minta Super User mengaturnya di menu Pengguna." });
       }
       var shKd = lembarPamKas_();
       var rowsKd = shKd.getDataRange().getValues();
@@ -1074,8 +1148,8 @@ function doPost(e) {
     if (p.aksi === "pam-hapus") {
       var akunPh = adminDariToken_(p.token);
       if (!akunPh) return json_({ ok: false, butuhLogin: true });
-      if (!punyaAkses_(akunPh, "pamsimas_edit")) {
-        return json_({ ok: false, pesan: "Anda tidak punya akses edit Pamsimas. Minta pemilik mengaktifkannya di menu Pengguna." });
+      if (!punyaAkses_(akunPh, "pamsimas", "u")) {
+        return json_({ ok: false, pesan: "Anda tidak punya akses hapus (unlink) Pamsimas. Minta Super User mengaturnya di menu Pengguna." });
       }
       var shKh = lembarPamKas_();
       var rKh = barisDariId_(shKh.getDataRange().getValues(), p.id);
@@ -1138,10 +1212,11 @@ function doPost(e) {
       lockU.waitLock(5000);
       try {
         shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru, ""]
-          .concat(jejak_(pemilikT.user)).concat([aksesSah_(p.akses)]));
+          .concat(jejak_(pemilikT.user)).concat([Utilities.getUuid()]));
       } finally {
         lockU.releaseLock();
       }
+      simpanAksesUser_(userBaru, p.akses, pemilikT.user);
       return json_({ ok: true });
     }
 
@@ -1168,14 +1243,18 @@ function doPost(e) {
         }
       }
       if (!rUe) return json_({ ok: false, pesan: "Pengguna tidak ditemukan." });
-      var aksesU = aksesSah_(p.akses);
-      var aksesLama = aksesSah_(rowsUe[rUe - 1][9]);
+      var aksesLamaR = ringkasAkses_(bacaAksesUser_(targetE));
       shUe.getRange(rUe, 3, 1, 2).setValues([[teks_(namaU || targetE), peranU]]);
       if (passU) shUe.getRange(rUe, 2).setValue(teks_(passU));
-      shUe.getRange(rUe, 10).setValue(aksesU);
+      // pastikan record punya ID (kolom 10); isi bila kosong/bukan uuid
+      if (!/^[0-9a-f-]{36}$/.test(String(rowsUe[rUe - 1][9] || ""))) {
+        shUe.getRange(rUe, 10).setValue(Utilities.getUuid());
+      }
       tulisJejak_(shUe, rUe, 8, pemilikE.user);
+      simpanAksesUser_(targetE, p.akses, pemilikE.user);
+      var aksesBaruR = ringkasAkses_(bacaAksesUser_(targetE));
       // peran/akses berubah / password di-reset → cabut sesi target (kecuali akun sendiri)
-      if (targetE !== pemilikE.user && (peranU !== peranLama || passU || aksesU !== aksesLama)) {
+      if (targetE !== pemilikE.user && (peranU !== peranLama || passU || aksesBaruR !== aksesLamaR)) {
         var propsUe = PropertiesService.getScriptProperties();
         var semuaUe = propsUe.getProperties();
         for (var kUe in semuaUe) {
@@ -1205,6 +1284,12 @@ function doPost(e) {
         }
       }
       if (ok) {
+        // hapus juga baris AKSES milik akun itu
+        var shAkH = lembarAkses_();
+        var rowsAkH = shAkH.getDataRange().getValues();
+        for (var akh = rowsAkH.length - 1; akh >= 1; akh--) {
+          if (String(rowsAkH[akh][1]).trim().toLowerCase() === target) shAkH.deleteRow(akh + 1);
+        }
         // cabut semua sesi aktif milik akun yang dihapus
         var propsHu = PropertiesService.getScriptProperties();
         var semuaHu = propsHu.getProperties();

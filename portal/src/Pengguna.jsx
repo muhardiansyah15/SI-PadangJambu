@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost, urlTransform } from './api.js'
 
-const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin', akses: '' }
+const AKSES_KOSONG = { pamsimas: { r: false, w: false, c: false, u: false } }
+const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin', akses: AKSES_KOSONG }
+const MODEL_LABEL = { pamsimas: '💧 Pamsimas (kas KPSPAMS)' }
 
 export default function Pengguna({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
@@ -62,7 +64,10 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
 
   function mulaiEdit(u) {
     setEditUser(u.user)
-    setForm({ user: u.user, pass: '', nama: u.nama, peran: u.peran, akses: u.akses || '' })
+    setForm({
+      user: u.user, pass: '', nama: u.nama, peran: u.peran,
+      akses: { pamsimas: { ...AKSES_KOSONG.pamsimas, ...(u.akses?.pamsimas || {}) } },
+    })
     setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -133,19 +138,38 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
             <label className="form-label" htmlFor="uPeran">Peran</label>
             <select id="uPeran" name="peran" className="form-input" value={form.peran} onChange={ubah}>
               <option value="admin">Admin — kelola konten</option>
-              <option value="pemilik">Pemilik — konten + kelola pengguna</option>
+              <option value="pemilik">Super User</option>
             </select>
           </div>
         </div>
-        <div className="form-group">
-          <label className="form-label">Hak akses tambahan</label>
-          <label className="cek-akses">
-            <input type="checkbox"
-              checked={form.akses.includes('pamsimas_edit')}
-              onChange={e => setForm(f => ({ ...f, akses: e.target.checked ? 'pamsimas_edit' : '' }))} />
-            {' '}💧 Boleh edit & hapus catatan kas Pamsimas
-          </label>
-        </div>
+        {form.peran !== 'pemilik' && (
+          <div className="form-group">
+            <label className="form-label">Hak akses modul (Super User otomatis penuh)</label>
+            <div className="tabel-gulir">
+              <table className="tabel-kas tabel-akses">
+                <thead>
+                  <tr><th>Model</th><th>Read</th><th>Write</th><th>Create</th><th>Delete</th></tr>
+                </thead>
+                <tbody>
+                  {Object.keys(AKSES_KOSONG).map(model => (
+                    <tr key={model}>
+                      <td>{MODEL_LABEL[model] || model}</td>
+                      {['r', 'w', 'c', 'u'].map(op => (
+                        <td key={op} className="sel-cek">
+                          <input type="checkbox" checked={!!form.akses[model]?.[op]}
+                            onChange={e => setForm(f => ({
+                              ...f,
+                              akses: { ...f.akses, [model]: { ...f.akses[model], [op]: e.target.checked } },
+                            }))} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editUser ? 'Simpan Perubahan ✏️' : 'Buat Akun 👥'}
         </button>
@@ -173,14 +197,18 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
                 ? <img className="str-foto" src={urlTransform(u.foto, 'w_80,h_80,c_fill,q_auto,f_auto')} alt="" />
                 : <div className="str-foto str-foto-kosong">👤</div>}
               <span className={'peng-tag-mini' + (u.peran === 'pemilik' ? ' penting' : '')}>
-                {u.peran}
+                {u.peran === 'pemilik' ? 'Super User' : 'admin'}
               </span>
-              {(u.akses || '').includes('pamsimas_edit') && u.peran !== 'pemilik' && (
-                <span className="peng-tag-mini layanan">💧 edit</span>
-              )}
+              {u.peran !== 'pemilik' && (() => {
+                const huruf = ['r', 'w', 'c', 'u'].filter(op => u.akses?.pamsimas?.[op]).join('')
+                return huruf ? <span className="peng-tag-mini layanan">💧 {huruf}</span> : null
+              })()}
               {u.nama}
             </b>
-            <span>@{u.user}{u.user === sesi.user ? ' (Anda)' : ''}</span>
+            <span>
+              @{u.user}{u.user === sesi.user ? ' (Anda)' : ''}
+              {u.id && <span className="ket-kecil"> · #{u.id.slice(0, 8)}</span>}
+            </span>
           </div>
           <div className="baris-hapus">
             <button className="btn btn-kecil btn-polos" onClick={() => mulaiEdit(u)}>Edit ✏️</button>{' '}

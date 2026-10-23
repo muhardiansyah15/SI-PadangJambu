@@ -9,7 +9,12 @@ const fmtBulan = b => /^\d{4}-\d{2}$/.test(b)
 const bulanDariWaktu = iso => (iso || '').slice(0, 7)
 
 export default function Pamsimas({ sesi, onSesiBerakhir }) {
-  const bolehEdit = sesi.peran === 'pemilik' || (sesi.akses || '').includes('pamsimas_edit')
+  const su = sesi.peran === 'pemilik'
+  const az = (sesi.akses && sesi.akses.pamsimas) || {}
+  const bolehC = su || !!az.c
+  const bolehW = su || !!az.w
+  const bolehU = su || !!az.u
+  const adaAksi = bolehW || bolehU
 
   const [pelanggan, setPelanggan] = useState(null)
   const [kas, setKas] = useState([])
@@ -195,7 +200,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           <div className="bar-atas">
             <input type="month" className="form-input pilih-status" value={bulan}
               onChange={e => setBulan(e.target.value || bulanKini())} />
-            {!formIuran && (
+            {!formIuran && bolehC && (
               <button className="btn btn-kecil" onClick={() => { setFormIuran(true); setStatus(null) }}>
                 + Catat Iuran
               </button>
@@ -282,14 +287,16 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                   onChange={e => setFltBulan(e.target.value)} title="Saring bulan (kosongkan = semua)" />
               </div>
               <div className="aksi">
-                {!adaSaldoAwal && bolehEdit && (
+                {!adaSaldoAwal && bolehC && (
                   <button className="btn btn-kecil btn-polos" onClick={() => { setFormSaldo(true); setStatus(null) }}>
                     + Saldo Awal
                   </button>
                 )}
-                <button className="btn btn-kecil" onClick={() => { setFormKeluar(true); setStatus(null) }}>
-                  + Catat Pengeluaran
-                </button>
+                {bolehC && (
+                  <button className="btn btn-kecil" onClick={() => { setFormKeluar(true); setStatus(null) }}>
+                    + Catat Pengeluaran
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -340,10 +347,10 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           {!formKeluar && !formSaldo && (
             <div className="tabel-gulir">
               <table className="tabel-kas">
-                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Uraian</th><th>Bulan Iuran</th><th>Jumlah</th>{bolehEdit && <th>Aksi</th>}</tr></thead>
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Uraian</th><th>Bulan Iuran</th><th>Jumlah</th>{adaAksi && <th>Aksi</th>}</tr></thead>
                 <tbody>
                   {kasTersaring.length === 0 && (
-                    <tr><td colSpan={bolehEdit ? 6 : 5} className="kosong">Tidak ada catatan sesuai filter.</td></tr>
+                    <tr><td colSpan={adaAksi ? 6 : 5} className="kosong">Tidak ada catatan sesuai filter.</td></tr>
                   )}
                   {kasTersaring.map(k => (
                     <tr key={k.id}>
@@ -362,13 +369,15 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                       <td className={k.jenis === 'keluar' ? 'rp-keluar' : 'rp-masuk'}>
                         {(k.jenis === 'keluar' ? '−' : '+') + fmtRp(k.jumlah)}
                       </td>
-                      {bolehEdit && (
+                      {adaAksi && (
                         <td className="sel-aksi">
-                          <button className="btn btn-kecil btn-polos" onClick={() => mulaiEditKas(k)}>Edit</button>{' '}
-                          <button className="btn-hapus"
-                            onClick={() => confirm('Hapus catatan kas ini?') && kirim({ aksi: 'pam-hapus', id: k.id })}>
-                            Hapus
-                          </button>
+                          {bolehW && <><button className="btn btn-kecil btn-polos" onClick={() => mulaiEditKas(k)}>Edit</button>{' '}</>}
+                          {bolehU && (
+                            <button className="btn-hapus"
+                              onClick={() => confirm('Hapus catatan kas ini?') && kirim({ aksi: 'pam-hapus', id: k.id })}>
+                              Hapus
+                            </button>
+                          )}
                         </td>
                       )}
                     </tr>
@@ -386,9 +395,11 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           {!formPel && (
             <div className="bar-atas">
               <div className="sub-judul" style={{ margin: 0 }}>Daftar Pelanggan</div>
-              <button className="btn btn-kecil" onClick={() => { setFormPel(true); setStatus(null) }}>
-                + Tambah Pelanggan
-              </button>
+              {bolehC && (
+                <button className="btn btn-kecil" onClick={() => { setFormPel(true); setStatus(null) }}>
+                  + Tambah Pelanggan
+                </button>
+              )}
             </div>
           )}
           {formPel && (
@@ -419,24 +430,28 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           {!formPel && (
             <div className="tabel-gulir">
               <table className="tabel-kas">
-                <thead><tr><th>Nama</th><th>RW</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Nama</th><th>RW</th><th>Status</th>{adaAksi && <th>Aksi</th>}</tr></thead>
                 <tbody>
-                  {(pelanggan || []).length === 0 && <tr><td colSpan="4" className="kosong">Belum ada pelanggan.</td></tr>}
+                  {(pelanggan || []).length === 0 && <tr><td colSpan={adaAksi ? 4 : 3} className="kosong">Belum ada pelanggan.</td></tr>}
                   {(pelanggan || []).map(pl => (
                     <tr key={pl.id}>
                       <td>{pl.nama}</td>
                       <td>{pl.rw || '—'}</td>
                       <td><span className={'status-tag ' + (pl.aktif ? 'selesai' : 'diproses')}>{pl.aktif ? 'Aktif' : 'Nonaktif'}</span></td>
-                      <td className="sel-aksi">
-                        <button className="btn btn-kecil btn-polos"
-                          onClick={() => kirim({ aksi: 'pam-pelanggan-edit', id: pl.id, nama: pl.nama, rw: pl.rw, aktif: !pl.aktif })}>
-                          {pl.aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>{' '}
-                        <button className="btn-hapus"
-                          onClick={() => confirm(`Hapus pelanggan "${pl.nama}"?`) && kirim({ aksi: 'pam-pelanggan-hapus', id: pl.id })}>
-                          Hapus
-                        </button>
-                      </td>
+                      {adaAksi && (
+                        <td className="sel-aksi">
+                          {bolehW && <><button className="btn btn-kecil btn-polos"
+                            onClick={() => kirim({ aksi: 'pam-pelanggan-edit', id: pl.id, nama: pl.nama, rw: pl.rw, aktif: !pl.aktif })}>
+                            {pl.aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                          </button>{' '}</>}
+                          {bolehU && (
+                            <button className="btn-hapus"
+                              onClick={() => confirm(`Hapus pelanggan "${pl.nama}"?`) && kirim({ aksi: 'pam-pelanggan-hapus', id: pl.id })}>
+                              Hapus
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

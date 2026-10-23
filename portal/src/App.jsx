@@ -17,7 +17,7 @@ const MENU = [
   { id: 'pengumuman', label: '📢 Pengumuman' },
   { id: 'struktur', label: '🏛 Struktur' },
   { id: 'galeri', label: '🖼 Galeri' },
-  { id: 'pamsimas', label: '💧 Pamsimas' },
+  { id: 'pamsimas', label: '💧 Pamsimas', butuhBaca: 'pamsimas' },
   { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
   { id: 'konfig', label: '⚙️ Konfigurasi', khususPemilik: true },
 ]
@@ -94,7 +94,10 @@ export default function App() {
           </h1>
         </div>
         <nav className="menu-sisi">
-          {MENU.filter(m => !m.khususPemilik || sesi.peran === 'pemilik').map(m => (
+          {MENU.filter(m =>
+            (!m.khususPemilik || sesi.peran === 'pemilik') &&
+            (!m.butuhBaca || sesi.peran === 'pemilik' || sesi.akses?.[m.butuhBaca]?.r)
+          ).map(m => (
             <button
               key={m.id}
               className={'menu-item' + (tab === m.id ? ' aktif' : '')}
