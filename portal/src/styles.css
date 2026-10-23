@@ -74,9 +74,22 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 }
 .btn-ubah:hover { background: var(--hijau); color: var(--putih); }
 
-/* ===== Tata letak sidebar (setelah login) ===== */
+/* ===== Tata letak setelah login: header atas + sidebar kiri ===== */
+.portal-wrap { max-width: 1600px; margin: 0 auto; }
+.bar-atas-portal {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 14px; padding: 0.7rem 1.4rem; margin-bottom: 1.5rem;
+}
+.brand-atas { margin-bottom: 0; justify-content: flex-start; }
+.brand-atas img { width: 42px; height: 42px; }
+.brand-atas h1 { font-size: 1.05rem; }
+.bar-pengguna { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0; }
+@media (max-width: 600px) { .bar-atas-portal { flex-direction: column; align-items: stretch; } .bar-pengguna { justify-content: flex-end; } }
+
 .tataletak {
-  max-width: 1600px; margin: 0 auto;
+  margin: 0 auto;
   display: grid; grid-template-columns: 260px 1fr; gap: 1.8rem;
   align-items: start;
 }

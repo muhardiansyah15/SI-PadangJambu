@@ -84,15 +84,33 @@ export default function App() {
   }
 
   return (
-    <div className="tataletak">
-      <aside className="sisi">
-        <div className="brand brand-sisi">
+    <div className="portal-wrap">
+      <header className="bar-atas-portal">
+        <div className="brand brand-atas">
           <img src="./logo.svg" alt="" />
           <h1>
             Portal Admin
             <span>Korong Padang Jambu</span>
           </h1>
         </div>
+        <div className="bar-pengguna">
+          <span className="salam-atas">Masuk sebagai <b>{sesi.nama}</b></span>
+          {CLOUDINARY.cloud && (
+            <>
+              <button className="avatar-sisi" title="Ganti foto profil" onClick={() => fotoRef.current.click()}>
+                {sesi.foto
+                  ? <img src={urlTransform(sesi.foto, 'w_120,h_120,c_fill,q_auto,f_auto')} alt="" />
+                  : '👤'}
+              </button>
+              <input type="file" accept="image/*" hidden ref={fotoRef} onChange={gantiFotoProfil} />
+            </>
+          )}
+          <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
+        </div>
+      </header>
+
+      <div className="tataletak">
+      <aside className="sisi">
         <nav className="menu-sisi">
           {MENU.filter(m =>
             (!m.khususPemilik || sesi.peran === 'pemilik') &&
@@ -107,20 +125,6 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <div className="sisi-bawah">
-          {CLOUDINARY.cloud && (
-            <>
-              <button className="avatar-sisi" title="Ganti foto profil" onClick={() => fotoRef.current.click()}>
-                {sesi.foto
-                  ? <img src={urlTransform(sesi.foto, 'w_120,h_120,c_fill,q_auto,f_auto')} alt="" />
-                  : '👤'}
-              </button>
-              <input type="file" accept="image/*" hidden ref={fotoRef} onChange={gantiFotoProfil} />
-            </>
-          )}
-          <div className="salam-sisi">Masuk sebagai<br /><b>{sesi.nama}</b></div>
-          <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
-        </div>
       </aside>
 
       <main className="isi">
@@ -134,6 +138,7 @@ export default function App() {
         {tab === 'konfig' && sesi.peran === 'pemilik' && <Konfig sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />
       </main>
+      </div>
     </div>
   )
 }
