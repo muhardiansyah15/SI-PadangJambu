@@ -1385,11 +1385,31 @@
     document.getElementById('galeriGrid').scrollBy({ left: arah * 552, behavior: 'smooth' });
   }
 
+  // Auto-geser strip: satu kartu tiap 4 detik, kembali ke awal saat mentok.
+  // Berhenti saat disentuh/di-hover, saat mode grid lengkap, atau tab tak aktif.
+  let galeriJeda = false;
+  function mulaiAutoGeser() {
+    const grid = document.getElementById('galeriGrid');
+    grid.addEventListener('pointerenter', () => { galeriJeda = true; });
+    grid.addEventListener('pointerleave', () => { galeriJeda = false; });
+    grid.addEventListener('touchstart', () => { galeriJeda = true; }, { passive: true });
+    grid.addEventListener('touchend', () => { setTimeout(() => { galeriJeda = false; }, 6000); }, { passive: true });
+    setInterval(() => {
+      if (!galeriRingkas || galeriJeda || document.hidden) return;
+      const maks = grid.scrollWidth - grid.clientWidth;
+      if (maks <= 0) return;
+      if (grid.scrollLeft >= maks - 10) grid.scrollTo({ left: 0, behavior: 'smooth' });
+      else grid.scrollBy({ left: 276, behavior: 'smooth' });
+    }, 4000);
+  }
+
+  let autoGeserSiap = false;
   function renderGaleri(list) {
     galeriSemua = list;
     tampilkanGaleri();
     document.getElementById('galeri').style.display = '';
     document.getElementById('menuGaleri').style.display = '';
+    if (!autoGeserSiap) { autoGeserSiap = true; mulaiAutoGeser(); }
   }
 
   // ===== HERO SLIDESHOW =====
