@@ -1,22 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet, apiPost, CLOUDINARY, urlTransform, fmtWaktu } from './api.js'
-
-/** Kecilkan foto di browser (maks. 1600px, JPEG 85%) sebelum diunggah. */
-function kecilkan(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      const skala = Math.min(1, 1600 / Math.max(img.width, img.height))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.round(img.width * skala)
-      canvas.height = Math.round(img.height * skala)
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(b => (b ? resolve(b) : reject(new Error())), 'image/jpeg', 0.85)
-    }
-    img.onerror = reject
-    img.src = URL.createObjectURL(file)
-  })
-}
+import { apiGet, apiPost, CLOUDINARY, urlTransform, unggahCloudinary, fmtWaktu } from './api.js'
 
 export default function Galeri({ sesi, onSesiBerakhir }) {
   const [file, setFile] = useState(null)
@@ -50,21 +33,10 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
     setSibuk(true)
     setStatus(null)
     try {
-      const blob = await kecilkan(file)
-      const fd = new FormData()
-      fd.append('file', blob, 'foto.jpg')
-      fd.append('upload_preset', CLOUDINARY.preset)
-      const up = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloud}/image/upload`, {
-        method: 'POST', body: fd,
-      })
-      const hasil = await up.json()
-      if (!hasil.secure_url) {
-        setStatus({ ok: false, teks: hasil.error?.message || 'Upload ke Cloudinary gagal.' })
-        return
-      }
+      const urlFoto = await unggahCloudinary(file)
       const j = await apiPost({
         aksi: 'galeri', token: sesi.token,
-        url: hasil.secure_url, judul, album,
+        url: urlFoto, judul, album,
       })
       if (j.butuhLogin) { onSesiBerakhir(); return }
       if (!j.ok) { setStatus({ ok: false, teks: j.pesan || 'Gagal mencatat foto.' }); return }

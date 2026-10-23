@@ -17,6 +17,37 @@ export function urlTransform(url, trans) {
   return url.replace('/upload/', '/upload/' + trans + '/')
 }
 
+/** Kecilkan foto di browser (JPEG 85%) sebelum diunggah. */
+export function kecilkan(file, maxDim = 1600) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const skala = Math.min(1, maxDim / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * skala)
+      canvas.height = Math.round(img.height * skala)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(b => (b ? resolve(b) : reject(new Error())), 'image/jpeg', 0.85)
+    }
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+/** Kecilkan lalu unggah ke Cloudinary; mengembalikan secure_url. */
+export async function unggahCloudinary(file, maxDim = 1600) {
+  const blob = await kecilkan(file, maxDim)
+  const fd = new FormData()
+  fd.append('file', blob, 'foto.jpg')
+  fd.append('upload_preset', CLOUDINARY.preset)
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloud}/image/upload`, {
+    method: 'POST', body: fd,
+  })
+  const j = await res.json()
+  if (!j.secure_url) throw new Error(j.error?.message || 'Upload ke Cloudinary gagal.')
+  return j.secure_url
+}
+
 export async function apiGet(params) {
   const res = await fetch(ASPIRASI_URL + '?' + new URLSearchParams(params))
   return res.json()

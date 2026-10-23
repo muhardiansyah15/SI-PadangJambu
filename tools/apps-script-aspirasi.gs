@@ -42,9 +42,15 @@ function lembarUser_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Username", "Password", "Nama", "Peran"]);
+    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"]);
   }
   return sh;
+}
+
+/** URL foto hanya diterima dari Cloudinary. */
+function urlFotoSah_(u) {
+  u = String(u || "").trim().slice(0, 500);
+  return /^https:\/\/res\.cloudinary\.com\//.test(u) ? u : "";
 }
 
 function lembarPengumuman_() {
@@ -70,7 +76,7 @@ function lembarStruktur_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_STRUKTUR) || ss.insertSheet(SHEET_STRUKTUR);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan"]);
+    sh.appendRow(["ID", "Nama", "Jabatan", "ID Atasan", "Foto"]);
   }
   return sh;
 }
@@ -207,7 +213,8 @@ function login_(user, pass) {
           exp: Date.now() + TOKEN_HARI * 86400000
         }));
       cache.remove("gagal_" + user);
-      return { ok: true, token: token, nama: String(rows[i][2] || user), user: user, peran: peran };
+      return { ok: true, token: token, nama: String(rows[i][2] || user), user: user,
+        peran: peran, foto: String(rows[i][4] || "") };
     }
   }
   cache.put("gagal_" + user, String(gagal + 1), 600);
@@ -307,7 +314,8 @@ function doGet(e) {
         id: String(rowsS[s][0]),
         nama: String(rowsS[s][1]),
         jabatan: String(rowsS[s][2] || ""),
-        induk: String(rowsS[s][3] || "")
+        induk: String(rowsS[s][3] || ""),
+        foto: String(rowsS[s][4] || "")
       });
     }
     return json_({ ok: true, data: struktur });
@@ -322,7 +330,8 @@ function doGet(e) {
       daftarU.push({
         user: String(rowsU[u][0]).trim().toLowerCase(),
         nama: String(rowsU[u][2] || rowsU[u][0]),
-        peran: String(rowsU[u][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin"
+        peran: String(rowsU[u][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin",
+        foto: String(rowsU[u][4] || "")
       });
     }
     return json_({ ok: true, data: daftarU });
@@ -420,6 +429,7 @@ function doPost(e) {
       var jabatan = String(p.jabatan || "").trim().slice(0, 80);
       var induk = String(p.induk || "").trim().slice(0, 64);
       if (!namaS || !jabatan) return json_({ ok: false, pesan: "Nama dan jabatan wajib diisi." });
+      var fotoS = urlFotoSah_(p.foto);
       var shS = lembarStruktur_();
       var rowsS = shS.getDataRange().getValues();
       // induk harus ID yang ada (atau kosong = puncak)
@@ -434,7 +444,7 @@ function doPost(e) {
       var lockS = LockService.getScriptLock();
       lockS.waitLock(5000);
       try {
-        shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk]);
+        shS.appendRow([Utilities.getUuid(), teks_(namaS), teks_(jabatan), induk, fotoS]);
       } finally {
         lockS.releaseLock();
       }
@@ -494,6 +504,24 @@ function doPost(e) {
             ok = true;
             break;
           }
+        }
+      }
+      return json_({ ok: ok });
+    }
+
+    // Tiap admin boleh mengganti foto profil AKUNNYA SENDIRI
+    if (p.aksi === "profil-foto") {
+      var akun = adminDariToken_(p.token);
+      if (!akun) return json_({ ok: false, butuhLogin: true });
+      var fotoP = urlFotoSah_(p.url);
+      if (!fotoP) return json_({ ok: false, pesan: "URL foto tidak dikenal (harus Cloudinary)." });
+      var shP = lembarUser_();
+      var rowsP2 = shP.getDataRange().getValues();
+      for (var fp = 1; fp < rowsP2.length; fp++) {
+        if (String(rowsP2[fp][0]).trim().toLowerCase() === akun.user) {
+          shP.getRange(fp + 1, 5).setValue(fotoP);
+          ok = true;
+          break;
         }
       }
       return json_({ ok: ok });

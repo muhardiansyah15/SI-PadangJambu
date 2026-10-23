@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet, apiPost } from './api.js'
+import { apiGet, apiPost, urlTransform } from './api.js'
 
 const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin' }
 
@@ -111,7 +111,10 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
       {data !== null && data.map(u => (
         <div className="aspirasi-item" key={u.user}>
           <div className="aspirasi-meta">
-            <b>
+            <b className="str-kiri">
+              {u.foto
+                ? <img className="str-foto" src={urlTransform(u.foto, 'w_80,h_80,c_fill,q_auto,f_auto')} alt="" />
+                : <div className="str-foto str-foto-kosong">👤</div>}
               <span className={'peng-tag-mini' + (u.peran === 'pemilik' ? ' penting' : '')}>
                 {u.peran}
               </span>

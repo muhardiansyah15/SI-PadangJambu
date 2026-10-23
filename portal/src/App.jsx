@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { bacaSesi, simpanSesi } from './api.js'
+import { useRef, useState } from 'react'
+import { apiPost, bacaSesi, simpanSesi, unggahCloudinary, urlTransform, CLOUDINARY } from './api.js'
 import Login from './Login.jsx'
 import Aspirasi from './Aspirasi.jsx'
 import Pengumuman from './Pengumuman.jsx'
@@ -20,6 +20,24 @@ export default function App() {
   const [sesi, setSesi] = useState(bacaSesi)
   const [pesanLogin, setPesanLogin] = useState('')
   const [tab, setTab] = useState('aspirasi')
+  const fotoRef = useRef(null)
+
+  async function gantiFotoProfil(e) {
+    const f = e.target.files[0]
+    e.target.value = ''
+    if (!f) return
+    try {
+      const url = await unggahCloudinary(f, 600)
+      const j = await apiPost({ aksi: 'profil-foto', token: sesi.token, url })
+      if (j.butuhLogin) { sesiBerakhir(); return }
+      if (!j.ok) { alert(j.pesan || 'Gagal menyimpan foto profil.'); return }
+      const baru = { ...sesi, foto: url }
+      simpanSesi(baru)
+      setSesi(baru)
+    } catch {
+      alert('Gagal mengunggah foto profil.')
+    }
+  }
 
   function masuk(sesiBaru) {
     simpanSesi(sesiBaru)
@@ -73,6 +91,16 @@ export default function App() {
           ))}
         </nav>
         <div className="sisi-bawah">
+          {CLOUDINARY.cloud && (
+            <>
+              <button className="avatar-sisi" title="Ganti foto profil" onClick={() => fotoRef.current.click()}>
+                {sesi.foto
+                  ? <img src={urlTransform(sesi.foto, 'w_120,h_120,c_fill,q_auto,f_auto')} alt="" />
+                  : '👤'}
+              </button>
+              <input type="file" accept="image/*" hidden ref={fotoRef} onChange={gantiFotoProfil} />
+            </>
+          )}
           <div className="salam-sisi">Masuk sebagai<br /><b>{sesi.nama}</b></div>
           <button className="btn btn-kecil" onClick={() => keluar()}>Keluar</button>
         </div>

@@ -432,7 +432,9 @@
     width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 0.9rem;
     display: flex; align-items: center; justify-content: center; font-size: 2rem;
     background: rgba(82,183,136,0.18); border: 2px solid var(--emas);
+    overflow: hidden;
   }
+  .struktur-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .struktur-role { font-family: 'Lora', serif; font-weight: 600; font-size: 0.95rem; }
   .struktur-name { font-size: 0.8rem; color: var(--abu); margin-top: 4px; font-style: italic; }
   .struktur-card.utama .struktur-name { color: rgba(248,243,232,0.65); }
@@ -1321,7 +1323,9 @@
     const anakDari = id => list.filter(s => s.induk === id);
     const kartu = (s, utama) => `
       <div class="struktur-card${utama ? ' utama' : ''}">
-        <div class="struktur-avatar">👤</div>
+        <div class="struktur-avatar">${s.foto
+          ? `<img src="${esc(urlTransform(s.foto, 'w_144,h_144,c_fill,q_auto,f_auto'))}" alt="${esc(s.nama)}" loading="lazy">`
+          : '👤'}</div>
         <div class="struktur-role">${esc(s.jabatan)}</div>
         <div class="struktur-name">${esc(s.nama)}</div>
       </div>`;

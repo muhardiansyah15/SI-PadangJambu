@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { apiGet, apiPost } from './api.js'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { apiGet, apiPost, unggahCloudinary, urlTransform } from './api.js'
 
 const FORM_KOSONG = { nama: '', jabatan: '', induk: '' }
 
@@ -8,9 +8,14 @@ function Cabang({ item, semua, onHapus }) {
   return (
     <div>
       <div className="str-item">
-        <div>
-          <div className="str-jabatan">{item.jabatan}</div>
-          <div className="str-nama">{item.nama}</div>
+        <div className="str-kiri">
+          {item.foto
+            ? <img className="str-foto" src={urlTransform(item.foto, 'w_80,h_80,c_fill,q_auto,f_auto')} alt="" />
+            : <div className="str-foto str-foto-kosong">👤</div>}
+          <div>
+            <div className="str-jabatan">{item.jabatan}</div>
+            <div className="str-nama">{item.nama}</div>
+          </div>
         </div>
         <button className="btn-hapus" onClick={() => onHapus(item.id)}>Hapus</button>
       </div>
@@ -29,6 +34,8 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
   const [sibuk, setSibuk] = useState(false)
   const [data, setData] = useState(null)
   const [gagal, setGagal] = useState(false)
+  const [file, setFile] = useState(null)
+  const fileRef = useRef(null)
 
   const ubah = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
@@ -52,13 +59,17 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
     setSibuk(true)
     setStatus(null)
     try {
-      const j = await apiPost({ aksi: 'struktur', token: sesi.token, ...form })
+      let foto = ''
+      if (file) foto = await unggahCloudinary(file, 800)
+      const j = await apiPost({ aksi: 'struktur', token: sesi.token, ...form, foto })
       if (j.butuhLogin) { onSesiBerakhir(); return }
       if (!j.ok) {
         setStatus({ ok: false, teks: j.pesan || 'Gagal menyimpan.' })
         return
       }
       setForm(FORM_KOSONG)
+      setFile(null)
+      if (fileRef.current) fileRef.current.value = ''
       setStatus({ ok: true, teks: 'Pengurus tersimpan. ✅' })
       muat()
     } catch {
@@ -98,6 +109,11 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
             <input id="sJabatan" name="jabatan" className="form-input" maxLength={80} required
               placeholder="mis. Wali Korong" value={form.jabatan} onChange={ubah} />
           </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="sFoto">Foto (opsional)</label>
+          <input id="sFoto" type="file" accept="image/*" className="form-input" ref={fileRef}
+            onChange={e => setFile(e.target.files[0] || null)} />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="sInduk">Atasan langsung</label>
