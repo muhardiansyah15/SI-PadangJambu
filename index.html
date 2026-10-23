@@ -468,8 +468,46 @@
   .pohon .struktur-avatar { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 0.6rem; }
   .pohon .struktur-role { font-size: 0.85rem; }
 
+  /* ===== HERO SLIDESHOW ===== */
+  .hero-slides { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+  .hero-slide {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity 1.8s ease;
+  }
+  .hero-slide.aktif { opacity: 1; }
+  .hero-gradasi {
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(26,58,42,0.88) 0%, rgba(45,106,79,0.75) 50%, rgba(26,58,42,0.92) 100%);
+  }
+  .hero > :not(.hero-slides):not(.hero-ornament):not(.hero-scroll) { position: relative; z-index: 1; }
+  .hero-ornament, .hero-scroll { z-index: 1; }
+  .hero::before { z-index: 1; pointer-events: none; }
+
   /* ===== GALERI ===== */
   .galeri-section { background: var(--krem); }
+  .galeri-strip-wrap { position: relative; }
+  .galeri-grid.strip {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+    gap: 1rem; padding-bottom: 0.6rem;
+  }
+  .galeri-grid.strip .galeri-item { flex: 0 0 260px; scroll-snap-align: start; }
+  .galeri-panah {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--hijau); color: var(--krem); font-size: 1.4rem; line-height: 1;
+    opacity: 0.85; display: none;
+  }
+  .galeri-panah:hover { opacity: 1; }
+  #gKiri { left: -8px; }
+  #gKanan { right: -8px; }
+  @media (max-width: 700px) { .galeri-panah { display: none !important; } }
+  .btn-galeri-semua {
+    background: transparent; border: 1.5px solid var(--hijau); color: var(--hijau);
+    border-radius: 24px; padding: 0.55rem 1.4rem; font: inherit; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-galeri-semua:hover { background: var(--hijau); color: var(--krem); }
   .galeri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
   .galeri-item { border-radius: 12px; overflow: hidden; cursor: pointer; position: relative; background: var(--putih); box-shadow: 0 2px 12px rgba(26,58,42,0.08); transition: transform 0.25s; }
   .galeri-item:hover { transform: translateY(-4px); }
@@ -671,6 +709,8 @@
 
 <!-- HERO -->
 <section class="hero">
+  <!-- Slideshow latar: otomatis diisi foto galeri ber-album "Beranda" -->
+  <div class="hero-slides" id="heroSlides" aria-hidden="true"></div>
   <div class="hero-ornament"></div>
   <div class="hero-badge">🏔 Sumatera Barat · Padang Pariaman</div>
   <h1>Korong <em>Padang Jambu</em></h1>
@@ -976,7 +1016,14 @@
     <div class="section-label">🖼 Dokumentasi</div>
     <h2 class="section-title">Galeri <em>Kegiatan Korong</em></h2>
     <div class="title-bar"></div>
-    <div class="galeri-grid" id="galeriGrid"></div>
+    <div class="galeri-strip-wrap">
+      <button class="galeri-panah" id="gKiri" aria-label="Geser kiri" onclick="geserGaleri(-1)">‹</button>
+      <div class="galeri-grid" id="galeriGrid"></div>
+      <button class="galeri-panah" id="gKanan" aria-label="Geser kanan" onclick="geserGaleri(1)">›</button>
+    </div>
+    <div style="text-align:center;margin-top:1.2rem;">
+      <button class="btn-galeri-semua" id="galeriSemuaBtn" style="display:none" onclick="toggleGaleri()"></button>
+    </div>
   </div>
 </section>
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('buka')">
@@ -1298,7 +1345,10 @@
     document.getElementById('lightbox').classList.add('buka');
   }
 
-  function renderGaleri(list) {
+  let galeriSemua = [];
+  let galeriRingkas = true; // strip geser (10 terbaru) vs grid lengkap
+
+  function isiGaleriGrid(list) {
     const grid = document.getElementById('galeriGrid');
     grid.innerHTML = list.map(f => `
       <div class="galeri-item" data-url="${esc(f.url)}" data-ket="${esc([f.judul, f.album].filter(Boolean).join(' — '))}">
@@ -1310,15 +1360,70 @@
       </div>`).join('');
     grid.querySelectorAll('.galeri-item').forEach(el =>
       el.addEventListener('click', () => bukaLightbox(el.dataset.url, el.dataset.ket)));
+  }
+
+  function tampilkanGaleri() {
+    const grid = document.getElementById('galeriGrid');
+    const tombol = document.getElementById('galeriSemuaBtn');
+    grid.classList.toggle('strip', galeriRingkas);
+    document.querySelectorAll('.galeri-panah').forEach(b => b.style.display = galeriRingkas ? 'block' : 'none');
+    isiGaleriGrid(galeriRingkas ? galeriSemua.slice(0, 10) : galeriSemua);
+    if (galeriSemua.length > 10) {
+      tombol.style.display = '';
+      tombol.textContent = galeriRingkas ? `Lihat Semua ${galeriSemua.length} Foto ↓` : 'Tampilkan Ringkas ↑';
+    } else {
+      tombol.style.display = 'none';
+    }
+  }
+
+  function toggleGaleri() {
+    galeriRingkas = !galeriRingkas;
+    tampilkanGaleri();
+  }
+
+  function geserGaleri(arah) {
+    document.getElementById('galeriGrid').scrollBy({ left: arah * 552, behavior: 'smooth' });
+  }
+
+  function renderGaleri(list) {
+    galeriSemua = list;
+    tampilkanGaleri();
     document.getElementById('galeri').style.display = '';
     document.getElementById('menuGaleri').style.display = '';
+  }
+
+  // ===== HERO SLIDESHOW =====
+  // Diisi foto galeri ber-album "Beranda" (maks. 5); crossfade tiap 6 detik,
+  // berhenti saat kursor/jari berada di atas hero.
+  function mulaiHeroSlideshow(fotos) {
+    const wadah = document.getElementById('heroSlides');
+    wadah.innerHTML = fotos.map((f, i) =>
+      `<div class="hero-slide${i === 0 ? ' aktif' : ''}" style="background-image:url('${esc(urlTransform(f.url, 'w_1920,q_auto,f_auto'))}')"></div>`
+    ).join('') + '<div class="hero-gradasi"></div>';
+    if (fotos.length < 2) return;
+    let idx = 0, jeda = false;
+    const hero = document.querySelector('.hero');
+    hero.addEventListener('pointerenter', () => { jeda = true; });
+    hero.addEventListener('pointerleave', () => { jeda = false; });
+    setInterval(() => {
+      if (jeda || document.hidden) return;
+      const slides = wadah.querySelectorAll('.hero-slide');
+      slides[idx].classList.remove('aktif');
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add('aktif');
+    }, 6000);
   }
 
   if (ASPIRASI_URL) {
     fetch(ASPIRASI_URL + '?daftar=galeri')
       .then(r => r.json())
-      .then(j => { if (j.ok && Array.isArray(j.data) && j.data.length) renderGaleri(j.data); })
-      .catch(() => {}); // gagal memuat → section tetap tersembunyi
+      .then(j => {
+        if (!j.ok || !Array.isArray(j.data) || !j.data.length) return;
+        renderGaleri(j.data);
+        const beranda = j.data.filter(f => (f.album || '').trim().toLowerCase() === 'beranda').slice(0, 5);
+        if (beranda.length) mulaiHeroSlideshow(beranda);
+      })
+      .catch(() => {}); // gagal memuat → section tetap tersembunyi, hero pakai banner statis
   }
 
   if (ASPIRASI_URL) {
