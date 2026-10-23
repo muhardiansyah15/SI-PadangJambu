@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiPost, bacaSesi, simpanSesi, terapkanKonfig, unggahCloudinary, urlTransform, CLOUDINARY } from './api.js'
 import Login from './Login.jsx'
+import Beranda from './Beranda.jsx'
 import Aspirasi from './Aspirasi.jsx'
 import Surat from './Surat.jsx'
 import Pengumuman from './Pengumuman.jsx'
@@ -12,6 +13,7 @@ import Konfig from './Konfig.jsx'
 import Footer from './Footer.jsx'
 
 const MENU = [
+  { id: 'beranda', label: '🏠 Beranda' },
   { id: 'aspirasi', label: '💬 Aspirasi' },
   { id: 'surat', label: '📄 Surat' },
   { id: 'pengumuman', label: '📢 Pengumuman' },
@@ -25,7 +27,7 @@ const MENU = [
 export default function App() {
   const [sesi, setSesi] = useState(bacaSesi)
   const [pesanLogin, setPesanLogin] = useState('')
-  const [tab, setTab] = useState('aspirasi')
+  const [tab, setTab] = useState('beranda')
   const fotoRef = useRef(null)
 
   // terapkan konfigurasi server (Cloudinary dsb.) begitu ada sesi
@@ -128,6 +130,7 @@ export default function App() {
       </aside>
 
       <main className="isi">
+        {tab === 'beranda' && <Beranda sesi={sesi} onSesiBerakhir={sesiBerakhir} onBuka={setTab} />}
         {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'surat' && <Surat sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}

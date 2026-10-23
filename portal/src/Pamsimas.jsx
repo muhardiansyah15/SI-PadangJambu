@@ -108,6 +108,88 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
 
   const formAktif = formIuran || formKeluar || formSaldo || !!editKas
 
+  /* ---- Tunggakan: bulan tak terbayar dalam jendela sejak iuran pertama (maks. 6 bulan) ---- */
+  const keIndeks = b => { const [y, m] = b.split('-').map(Number); return y * 12 + (m - 1) }
+  const keBulan = i => `${Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`
+  const bulanIuranTercatat = kas
+    .filter(k => k.jenis === 'masuk' && k.pelanggan && /^\d{4}-\d{2}$/.test(k.bulan))
+    .map(k => keIndeks(k.bulan))
+  const akhirJendela = keIndeks(bulan)
+  const awalJendela = bulanIuranTercatat.length
+    ? Math.max(Math.min(...bulanIuranTercatat), akhirJendela - 5)
+    : akhirJendela
+  const jendelaBulan = []
+  for (let i = awalJendela; i <= akhirJendela; i++) jendelaBulan.push(keBulan(i))
+  const daftarTunggakan = aktif
+    .map(pl => ({
+      ...pl,
+      nunggak: jendelaBulan.filter(b =>
+        !kas.some(k => k.jenis === 'masuk' && k.pelanggan === pl.id && k.bulan === b)),
+    }))
+    .filter(pl => pl.nunggak.length > 0)
+    .sort((a, b) => b.nunggak.length - a.nunggak.length)
+
+  /* ---- Laporan bulanan untuk dicetak ---- */
+  function cetakLaporan() {
+    const rp = n => 'Rp' + (Number(n) || 0).toLocaleString('id-ID')
+    const bulanEff = k => /^\d{4}-\d{2}$/.test(k.bulan) ? k.bulan : bulanDariWaktu(k.waktu)
+    const iuranBln = kas.filter(k => k.jenis === 'masuk' && k.pelanggan && k.bulan === bulan)
+    const masukLain = kas.filter(k => k.jenis === 'masuk' && !k.pelanggan && bulanEff(k) === bulan)
+    const keluarBln = kas.filter(k => k.jenis === 'keluar' && bulanEff(k) === bulan)
+    const totalIuran = iuranBln.reduce((t, k) => t + k.jumlah, 0)
+    const totalLain = masukLain.reduce((t, k) => t + k.jumlah, 0)
+    const totalKeluar = keluarBln.reduce((t, k) => t + k.jumlah, 0)
+    const barisIuran = aktif.map(pl => {
+      const b = iuranBln.find(k => k.pelanggan === pl.id)
+      return `<tr><td>${pl.nama}</td><td>${pl.rw || '—'}</td>` +
+        `<td>${b ? 'Lunas' : 'Belum'}</td><td style="text-align:right">${b ? rp(b.jumlah) : '—'}</td></tr>`
+    }).join('')
+    const barisLain = masukLain.map(k =>
+      `<tr><td colspan="3">${k.uraian}</td><td style="text-align:right">${rp(k.jumlah)}</td></tr>`).join('')
+    const barisKeluar = keluarBln.map(k =>
+      `<tr><td colspan="3">${k.uraian}</td><td style="text-align:right">${rp(k.jumlah)}</td></tr>`).join('')
+    const w = window.open('', '_blank')
+    w.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8">
+<title>Laporan Kas Pamsimas ${fmtBulan(bulan)}</title>
+<style>
+  body { font-family: Georgia, serif; color: #1a2a20; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 18px; text-align: center; margin: 0; }
+  h2 { font-size: 14px; text-align: center; font-weight: normal; margin: 4px 0 20px; }
+  h3 { font-size: 13px; margin: 18px 0 6px; border-bottom: 1px solid #999; padding-bottom: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #777; padding: 4px 8px; text-align: left; }
+  th { background: #eee; }
+  .ringkas td { font-weight: bold; }
+  .ttd { display: flex; justify-content: space-between; margin-top: 48px; text-align: center; font-size: 12px; }
+  .ttd div { width: 40%; }
+  .ttd .garis { margin-top: 64px; border-top: 1px solid #333; }
+  .kaki { margin-top: 32px; font-size: 10px; color: #666; text-align: center; }
+  @media print { body { margin: 0 auto; } }
+</style></head><body>
+<h1>LAPORAN KAS PAMSIMAS (KPSPAMS)</h1>
+<h2>Korong Padang Jambu — Periode ${fmtBulan(bulan)}</h2>
+<h3>Ringkasan</h3>
+<table class="ringkas">
+  <tr><td>Iuran pelanggan masuk</td><td style="text-align:right">${rp(totalIuran)}</td></tr>
+  <tr><td>Kas masuk lain</td><td style="text-align:right">${rp(totalLain)}</td></tr>
+  <tr><td>Pengeluaran</td><td style="text-align:right">(${rp(totalKeluar)})</td></tr>
+  <tr><td>Saldo kas berjalan (seluruh periode)</td><td style="text-align:right">${rp(saldo)}</td></tr>
+</table>
+<h3>Iuran Pelanggan (${iuranBln.length} dari ${aktif.length} pelanggan aktif)</h3>
+<table><tr><th>Pelanggan</th><th>RW</th><th>Status</th><th>Jumlah</th></tr>${barisIuran}</table>
+${barisLain ? `<h3>Kas Masuk Lain</h3><table>${barisLain}</table>` : ''}
+${barisKeluar ? `<h3>Pengeluaran</h3><table>${barisKeluar}</table>` : ''}
+<div class="ttd">
+  <div>Bendahara KPSPAMS<div class="garis"></div></div>
+  <div>Ketua KPSPAMS / Wali Korong<div class="garis"></div></div>
+</div>
+<div class="kaki">Dicetak dari SI Padang Jambu oleh ${sesi.nama} pada ${new Date().toLocaleString('id-ID')}</div>
+</body></html>`)
+    w.document.close()
+    w.focus()
+    w.print()
+  }
+
   return (
     <div className="kartu">
       <div className="bar-atas">
@@ -116,6 +198,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
           <input type="month" className="form-input pilih-status" value={bulan}
             title="Bulan rekap iuran"
             onChange={e => setBulan(e.target.value || bulanKini())} />
+          <button className="btn btn-kecil btn-polos" onClick={cetakLaporan}>🖨 Cetak</button>
           <button className="btn btn-kecil btn-polos" onClick={muat}>Muat Ulang ↻</button>
         </div>
       </div>
@@ -136,7 +219,7 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
       </div>
 
       <div className="saring-status">
-        {[['rekap', 'Rekap Iuran'], ['kas', 'Buku Kas'], ['pelanggan', 'Pelanggan']].map(([id, label]) => (
+        {[['rekap', 'Rekap Iuran'], ['kas', 'Buku Kas'], ['tunggakan', 'Tunggakan'], ['pelanggan', 'Pelanggan']].map(([id, label]) => (
           <button key={id} className={'menu-item saring' + (sub === id ? ' aktif' : '')}
             onClick={() => { setSub(id); setStatus(null); setEditKas(null) }}>
             {label}
@@ -482,6 +565,41 @@ export default function Pamsimas({ sesi, onSesiBerakhir }) {
                           )}
                         </td>
                       )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ===== TUNGGAKAN ===== */}
+      {pelanggan !== null && !gagal && sub === 'tunggakan' && !editKas && (
+        <>
+          <p className="keterangan-kartu">
+            Bulan tak terbayar dihitung sejak bulan iuran pertama tercatat
+            (maksimal 6 bulan ke belakang) sampai {fmtBulan(bulan)}.
+            Daftar ini hanya untuk penagihan internal — tidak pernah tampil di website.
+          </p>
+          {daftarTunggakan.length === 0 && (
+            <div className="kosong">Tidak ada tunggakan — semua pelanggan aktif lunas. 🎉</div>
+          )}
+          {daftarTunggakan.length > 0 && (
+            <div className="tabel-gulir">
+              <table className="tabel-kas">
+                <thead><tr><th>Pelanggan</th><th>RW</th><th>Menunggak</th><th>Bulan</th></tr></thead>
+                <tbody>
+                  {daftarTunggakan.map(pl => (
+                    <tr key={pl.id}>
+                      <td>{pl.nama}</td>
+                      <td>{pl.rw || '—'}</td>
+                      <td>
+                        <span className={'status-tag ' + (pl.nunggak.length >= 2 ? 'baru' : 'diproses')}>
+                          {pl.nunggak.length} bulan
+                        </span>
+                      </td>
+                      <td className="ket-kecil">{pl.nunggak.map(fmtBulan).join(', ')}</td>
                     </tr>
                   ))}
                 </tbody>

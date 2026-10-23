@@ -220,6 +220,10 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
   background: var(--krem); border: 1px solid #e7e1d3; border-top: 3px solid var(--emas);
   border-radius: 10px; padding: 0.8rem; text-align: center;
 }
+.ringkas-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 700px) { .ringkas-4 { grid-template-columns: 1fr 1fr; } }
+.ringkas-klik { cursor: pointer; font: inherit; transition: transform 0.15s, box-shadow 0.15s; }
+.ringkas-klik:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(26,58,42,0.12); }
 .ringkas-nilai { font-weight: 700; font-size: 1.1rem; color: var(--hijau); }
 .ringkas-label { font-size: 0.72rem; color: var(--abu); margin-top: 2px; }
 .menu-item.saring {
