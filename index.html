@@ -456,6 +456,7 @@
   .lightbox img { max-width: 92vw; max-height: 80vh; border-radius: 10px; }
   .lightbox-ket { color: var(--krem); margin-top: 1rem; font-size: 0.95rem; text-align: center; }
 
+  .mt-2 { margin-top: 2rem; }
   .stat-info {
     max-width: 640px; margin: 0 auto 2rem;
     background: rgba(201,168,76,0.14); border: 1px solid var(--emas);
@@ -632,13 +633,7 @@
   <div class="marquee-wrap">
     <div class="marquee">
       <span>Musyawarah Desa Tahun 2025 — Sabtu, 15 Maret 2025 pukul 09.00 WIB di Balai Korong</span>
-      <span>Laporan APBDes 2024 telah diterbitkan — unduh di menu Keuangan</span>
       <span>Program Posyandu rutin setiap Rabu minggu pertama</span>
-      <span>Pendaftaran BLT Desa 2025 dibuka s/d 28 Februari 2025</span>
-      <span>Musyawarah Desa Tahun 2025 — Sabtu, 15 Maret 2025 pukul 09.00 WIB di Balai Desa</span>
-      <span>Laporan APBDes 2024 telah diterbitkan — unduh di menu Keuangan</span>
-      <span>Program Posyandu rutin setiap Rabu minggu pertama</span>
-      <span>Pendaftaran BLT Desa 2025 dibuka s/d 28 Februari 2025</span>
     </div>
   </div>
 </div>
@@ -667,6 +662,9 @@
       <div class="hero-stat-num" id="heroTahun">2025</div>
       <div class="hero-stat-label">Tahun Aktif</div>
     </div>
+  </div>
+  <div class="stat-info mt-2" id="statInfoHero" style="display:none">
+    ⏳ Pendataan penduduk masih berlangsung — angka di atas belum mencakup seluruh warga.
   </div>
   <div class="hero-scroll">
     <svg viewBox="0 0 24 24" fill="none" stroke="rgba(248,243,232,0.7)" stroke-width="2">
@@ -745,10 +743,11 @@
   <div class="section-inner">
     <div class="section-label">📊 Data Kependudukan</div>
     <h2 class="section-title">Statistik <em>Korong Padang Jambu</em></h2>
+    
+    <div class="title-bar"></div>
     <div class="stat-info" id="statInfo" style="display:none">
       ⏳ Pendataan penduduk masih berlangsung — angka di bawah belum mencakup seluruh warga.
     </div>
-    <div class="title-bar"></div>
 
     <div class="stat-big-grid stat-reveal">
       <div class="stat-big"><div class="big-num" id="numJiwa" data-count="0">0</div><div class="big-label">Total Penduduk (Jiwa)</div></div>
@@ -1240,7 +1239,9 @@
           document.getElementById('heroRW').textContent = fmt(j.data.wilayah.length);
         }
         // pendataan dianggap belum rampung selama di bawah 100 jiwa
-        document.getElementById('statInfo').style.display = total < 100 ? '' : 'none';
+        const tampilInfo = total < 100 ? '' : 'none';
+        document.getElementById('statInfo').style.display = tampilInfo;
+        document.getElementById('statInfoHero').style.display = tampilInfo;
       })
       .catch(() => {}); // gagal memuat → angka statis tetap tampil
   }
