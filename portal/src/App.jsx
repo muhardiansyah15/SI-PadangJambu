@@ -27,7 +27,7 @@ export default function App() {
     e.target.value = ''
     if (!f) return
     try {
-      const url = await unggahCloudinary(f, 600)
+      const url = await unggahCloudinary(f, 600, 'padang-jambu/profil')
       const j = await apiPost({ aksi: 'profil-foto', token: sesi.token, url })
       if (j.butuhLogin) { sesiBerakhir(); return }
       if (!j.ok) { alert(j.pesan || 'Gagal menyimpan foto profil.'); return }

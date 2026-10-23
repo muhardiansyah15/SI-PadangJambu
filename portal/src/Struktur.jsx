@@ -65,7 +65,7 @@ export default function Struktur({ sesi, onSesiBerakhir }) {
     setStatus(null)
     try {
       let foto = editId ? editFoto : ''
-      if (file) foto = await unggahCloudinary(file, 800)
+      if (file) foto = await unggahCloudinary(file, 800, 'padang-jambu/struktur')
       const j = editId
         ? await apiPost({ aksi: 'struktur-edit', token: sesi.token, id: editId, ...form, foto })
         : await apiPost({ aksi: 'struktur', token: sesi.token, ...form, foto })

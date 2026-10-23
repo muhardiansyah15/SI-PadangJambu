@@ -34,12 +34,17 @@ export function kecilkan(file, maxDim = 1600) {
   })
 }
 
-/** Kecilkan lalu unggah ke Cloudinary; mengembalikan secure_url. */
-export async function unggahCloudinary(file, maxDim = 1600) {
+/**
+ * Kecilkan lalu unggah ke Cloudinary; mengembalikan secure_url.
+ * `folder` memecah aset per jenis konten (galeri/struktur/profil) —
+ * agar berfungsi, field Asset folder pada upload preset harus KOSONG.
+ */
+export async function unggahCloudinary(file, maxDim = 1600, folder = 'padang-jambu/lainnya') {
   const blob = await kecilkan(file, maxDim)
   const fd = new FormData()
   fd.append('file', blob, 'foto.jpg')
   fd.append('upload_preset', CLOUDINARY.preset)
+  fd.append('folder', folder)
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloud}/image/upload`, {
     method: 'POST', body: fd,
   })

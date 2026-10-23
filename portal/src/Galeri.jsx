@@ -38,7 +38,7 @@ export default function Galeri({ sesi, onSesiBerakhir }) {
       if (editId) {
         j = await apiPost({ aksi: 'galeri-edit', token: sesi.token, id: editId, judul, album })
       } else {
-        const urlFoto = await unggahCloudinary(file)
+        const urlFoto = await unggahCloudinary(file, 1600, 'padang-jambu/galeri')
         j = await apiPost({ aksi: 'galeri', token: sesi.token, url: urlFoto, judul, album })
       }
       if (j.butuhLogin) { onSesiBerakhir(); return }
