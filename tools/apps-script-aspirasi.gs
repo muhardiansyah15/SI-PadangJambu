@@ -32,11 +32,16 @@ function lembar_() {
   return sh;
 }
 
+/**
+ * Kolom Peran: "pemilik" boleh mengelola pengguna lewat portal;
+ * selain itu (atau kosong) = "admin" biasa. Isi "pemilik" MANUAL di
+ * spreadsheet untuk akun Anda sendiri — itulah akar hak aksesnya.
+ */
 function lembarUser_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Username", "Password", "Nama"]);
+    sh.appendRow(["Username", "Password", "Nama", "Peran"]);
   }
   return sh;
 }
@@ -180,16 +185,18 @@ function login_(user, pass) {
     if (String(rows[i][0]).trim().toLowerCase() === user &&
         String(rows[i][1]) === pass && pass !== "") {
       var token = Utilities.getUuid();
+      var peran = String(rows[i][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin";
       // PropertiesService: tahan lama (CacheService bisa terhapus sewaktu-waktu)
       bersihkanTokenKadaluarsa_();
       PropertiesService.getScriptProperties().setProperty("tok_" + token,
         JSON.stringify({
           user: user,
           nama: String(rows[i][2] || user),
+          peran: peran,
           exp: Date.now() + TOKEN_HARI * 86400000
         }));
       cache.remove("gagal_" + user);
-      return { ok: true, token: token, nama: String(rows[i][2] || user), user: user };
+      return { ok: true, token: token, nama: String(rows[i][2] || user), user: user, peran: peran };
     }
   }
   cache.put("gagal_" + user, String(gagal + 1), 600);
@@ -210,6 +217,12 @@ function adminDariToken_(token) {
     }
     return data;
   } catch (err) { return null; }
+}
+
+/** Token sah DAN berperan pemilik — gerbang semua aksi kelola pengguna. */
+function adminPemilik_(token) {
+  var a = adminDariToken_(token);
+  return a && a.peran === "pemilik" ? a : null;
 }
 
 function bersihkanTokenKadaluarsa_() {
@@ -234,6 +247,7 @@ function bersihkanTokenKadaluarsa_() {
  * GET ?daftar=struktur: struktur pemerintahan korong (publik).
  * GET ?daftar=aspirasi&token=…: daftar aspirasi (hanya admin login,
  *   maks. 500 terbaru).
+ * GET ?daftar=user&token=…: daftar pengguna TANPA password (hanya pemilik).
  */
 function doGet(e) {
   if (e && e.parameter && e.parameter.daftar === "statistik") {
@@ -271,6 +285,21 @@ function doGet(e) {
     }
     return json_({ ok: true, data: struktur });
   }
+  if (e && e.parameter && e.parameter.daftar === "user") {
+    if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
+    if (!adminPemilik_(e.parameter.token)) return json_({ ok: false, pesan: "Khusus pemilik." });
+    var rowsU = lembarUser_().getDataRange().getValues();
+    var daftarU = [];
+    for (var u = 1; u < rowsU.length; u++) {
+      if (!rowsU[u][0]) continue;
+      daftarU.push({
+        user: String(rowsU[u][0]).trim().toLowerCase(),
+        nama: String(rowsU[u][2] || rowsU[u][0]),
+        peran: String(rowsU[u][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin"
+      });
+    }
+    return json_({ ok: true, data: daftarU });
+  }
   if (e && e.parameter && e.parameter.daftar === "aspirasi") {
     var admin = adminDariToken_(e.parameter.token);
     if (!admin) return json_({ ok: false, butuhLogin: true });
@@ -299,6 +328,10 @@ function doGet(e) {
  *   (wajib login; induk = ID atasan, kosong = puncak).
  * POST {aksi:"struktur-hapus", token, id}: hapus pengurus (wajib login;
  *   ditolak bila masih punya bawahan).
+ * POST {aksi:"user-tambah", token, user, pass, nama, peran}: buat akun
+ *   (hanya pemilik).
+ * POST {aksi:"user-hapus", token, user}: hapus akun + semua tokennya
+ *   (hanya pemilik; tidak bisa menghapus akun sendiri).
  * POST {nama, kontak, pesan}: simpan aspirasi warga (publik).
  * Rem sederhana: maks. 1 kiriman per 30 detik untuk seluruh situs
  * (cukup untuk korong kecil, menahan spam beruntun dari skrip).
@@ -394,6 +427,62 @@ function doPost(e) {
             ok = true;
             break;
           }
+        }
+      }
+      return json_({ ok: ok });
+    }
+
+    if (p.aksi === "user-tambah") {
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      if (!adminPemilik_(p.token)) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengelola pengguna." });
+      var userBaru = String(p.user || "").trim().toLowerCase().slice(0, 40).replace(/[^a-z0-9._-]/g, "");
+      var passBaru = String(p.pass || "").slice(0, 80);
+      var namaBaru = String(p.nama || "").trim().slice(0, 80);
+      var peranBaru = p.peran === "pemilik" ? "pemilik" : "admin";
+      if (!userBaru) return json_({ ok: false, pesan: "Username wajib diisi (huruf/angka/titik/strip)." });
+      if (passBaru.length < 8) return json_({ ok: false, pesan: "Password minimal 8 karakter." });
+      var shU = lembarUser_();
+      var adaU = shU.getDataRange().getValues();
+      for (var d = 1; d < adaU.length; d++) {
+        if (String(adaU[d][0]).trim().toLowerCase() === userBaru) {
+          return json_({ ok: false, pesan: "Username sudah dipakai." });
+        }
+      }
+      var lockU = LockService.getScriptLock();
+      lockU.waitLock(5000);
+      try {
+        shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru]);
+      } finally {
+        lockU.releaseLock();
+      }
+      return json_({ ok: true });
+    }
+
+    if (p.aksi === "user-hapus") {
+      var pemilikH = adminPemilik_(p.token);
+      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      if (!pemilikH) return json_({ ok: false, pesan: "Hanya pemilik yang boleh mengelola pengguna." });
+      var target = String(p.user || "").trim().toLowerCase();
+      if (!target) return json_({ ok: false });
+      if (target === pemilikH.user) return json_({ ok: false, pesan: "Tidak bisa menghapus akun sendiri." });
+      var shHu = lembarUser_();
+      var rowsHu = shHu.getDataRange().getValues();
+      for (var h = rowsHu.length - 1; h >= 1; h--) {
+        if (String(rowsHu[h][0]).trim().toLowerCase() === target) {
+          shHu.deleteRow(h + 1);
+          ok = true;
+          break;
+        }
+      }
+      if (ok) {
+        // cabut semua sesi aktif milik akun yang dihapus
+        var propsHu = PropertiesService.getScriptProperties();
+        var semuaHu = propsHu.getProperties();
+        for (var kHu in semuaHu) {
+          if (kHu.indexOf("tok_") !== 0) continue;
+          try {
+            if (JSON.parse(semuaHu[kHu]).user === target) propsHu.deleteProperty(kHu);
+          } catch (err) {}
         }
       }
       return json_({ ok: ok });

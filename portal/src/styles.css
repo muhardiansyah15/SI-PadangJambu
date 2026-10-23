@@ -129,6 +129,7 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .bar-atas .salam { font-size: 0.9rem; color: var(--abu); }
 .bar-atas .aksi { display: flex; gap: 0.5rem; }
 .sub-judul { font-family: 'Playfair Display', serif; font-size: 1.05rem; margin: 1.4rem 0 0.8rem; }
+.keterangan-kartu { font-size: 0.85rem; color: var(--abu); margin: -0.4rem 0 1rem; line-height: 1.6; }
 
 .aspirasi-item {
   border: 1px solid #e7e1d3; border-left: 4px solid var(--emas);

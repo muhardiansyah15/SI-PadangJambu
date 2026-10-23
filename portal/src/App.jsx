@@ -4,12 +4,14 @@ import Login from './Login.jsx'
 import Aspirasi from './Aspirasi.jsx'
 import Pengumuman from './Pengumuman.jsx'
 import Struktur from './Struktur.jsx'
+import Pengguna from './Pengguna.jsx'
 import Footer from './Footer.jsx'
 
 const MENU = [
   { id: 'aspirasi', label: '💬 Aspirasi' },
   { id: 'pengumuman', label: '📢 Pengumuman' },
   { id: 'struktur', label: '🏛 Struktur' },
+  { id: 'pengguna', label: '👥 Pengguna', khususPemilik: true },
 ]
 
 export default function App() {
@@ -58,7 +60,7 @@ export default function App() {
           </h1>
         </div>
         <nav className="menu-sisi">
-          {MENU.map(m => (
+          {MENU.filter(m => !m.khususPemilik || sesi.peran === 'pemilik').map(m => (
             <button
               key={m.id}
               className={'menu-item' + (tab === m.id ? ' aktif' : '')}
@@ -78,6 +80,7 @@ export default function App() {
         {tab === 'aspirasi' && <Aspirasi sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'pengumuman' && <Pengumuman sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         {tab === 'struktur' && <Struktur sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
+        {tab === 'pengguna' && sesi.peran === 'pemilik' && <Pengguna sesi={sesi} onSesiBerakhir={sesiBerakhir} />}
         <Footer />
       </main>
     </div>

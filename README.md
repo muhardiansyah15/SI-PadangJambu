@@ -58,7 +58,12 @@ Aplikasi React untuk pengelola; setelah login, menampilkan daftar aspirasi masuk
 dan form kelola pengumuman tanpa perlu membuka spreadsheet.
 
 - Akun disimpan di sheet **ADMIN** pada spreadsheet yang sama: kolom
-  `Username | Password | Nama` (satu baris per pengelola).
+  `Username | Password | Nama | Peran` (satu baris per pengelola).
+- **Peran** mengatur hak akses: `pemilik` bisa membuka menu **Pengguna**
+  (buat/hapus akun dari portal); kosong atau `admin` = kelola konten saja.
+  Bootstrap satu kali: tulis `pemilik` manual di kolom Peran untuk akun Anda
+  sendiri di spreadsheet — hak ini berakar di spreadsheet, bukan di portal,
+  dan diverifikasi server pada tiap permintaan.
 - **Pakai password karangan** — jangan password asli akun lain; password tersimpan
   sebagai teks biasa di spreadsheet (yang tetap privat).
 - Login menghasilkan token (berlaku 7 hari, tersimpan di browser); salah password

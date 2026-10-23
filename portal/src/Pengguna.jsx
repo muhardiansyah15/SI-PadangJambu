@@ -1,0 +1,131 @@
+import { useCallback, useEffect, useState } from 'react'
+import { apiGet, apiPost } from './api.js'
+
+const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin' }
+
+export default function Pengguna({ sesi, onSesiBerakhir }) {
+  const [form, setForm] = useState(FORM_KOSONG)
+  const [status, setStatus] = useState(null)
+  const [sibuk, setSibuk] = useState(false)
+  const [data, setData] = useState(null)
+  const [gagal, setGagal] = useState(false)
+
+  const ubah = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+  const muat = useCallback(async () => {
+    setData(null)
+    setGagal(false)
+    try {
+      const j = await apiGet({ daftar: 'user', token: sesi.token })
+      if (j.butuhLogin) { onSesiBerakhir(); return }
+      if (!j.ok || !Array.isArray(j.data)) throw new Error()
+      setData(j.data)
+    } catch {
+      setGagal(true)
+      setData([])
+    }
+  }, [sesi.token, onSesiBerakhir])
+
+  useEffect(() => { muat() }, [muat])
+
+  async function tambah(ev) {
+    ev.preventDefault()
+    setSibuk(true)
+    setStatus(null)
+    try {
+      const j = await apiPost({ aksi: 'user-tambah', token: sesi.token, ...form })
+      if (j.butuhLogin) { onSesiBerakhir(); return }
+      if (!j.ok) {
+        setStatus({ ok: false, teks: j.pesan || 'Gagal membuat akun.' })
+        return
+      }
+      setForm(FORM_KOSONG)
+      setStatus({ ok: true, teks: 'Akun dibuat. Sampaikan username & password-nya secara langsung. ✅' })
+      muat()
+    } catch {
+      setStatus({ ok: false, teks: 'Gagal terhubung. Periksa koneksi internet.' })
+    } finally {
+      setSibuk(false)
+    }
+  }
+
+  async function hapus(user) {
+    if (!confirm(`Hapus akun "${user}"? Semua sesi login-nya ikut dicabut.`)) return
+    try {
+      const j = await apiPost({ aksi: 'user-hapus', token: sesi.token, user })
+      if (j.butuhLogin) { onSesiBerakhir(); return }
+      if (!j.ok && j.pesan) { alert(j.pesan); return }
+      muat()
+    } catch {
+      alert('Gagal menghapus. Periksa koneksi internet.')
+    }
+  }
+
+  return (
+    <div className="kartu">
+      <h2>Kelola Pengguna</h2>
+      <p className="keterangan-kartu">
+        Akun tersimpan di sheet <b>ADMIN</b>. Gunakan password karangan — jangan
+        password asli akun lain. Hanya akun berperan <b>pemilik</b> yang bisa
+        membuka menu ini.
+      </p>
+      <form onSubmit={tambah}>
+        <div className="form-baris">
+          <div className="form-group">
+            <label className="form-label" htmlFor="uUser">Username</label>
+            <input id="uUser" name="user" className="form-input" maxLength={40} required
+              placeholder="huruf/angka/titik/strip" value={form.user} onChange={ubah} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="uPass">Password (min. 8 karakter)</label>
+            <input id="uPass" name="pass" className="form-input" maxLength={80} required
+              value={form.pass} onChange={ubah} />
+          </div>
+        </div>
+        <div className="form-baris">
+          <div className="form-group">
+            <label className="form-label" htmlFor="uNama">Nama lengkap</label>
+            <input id="uNama" name="nama" className="form-input" maxLength={80}
+              value={form.nama} onChange={ubah} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="uPeran">Peran</label>
+            <select id="uPeran" name="peran" className="form-input" value={form.peran} onChange={ubah}>
+              <option value="admin">Admin — kelola konten</option>
+              <option value="pemilik">Pemilik — konten + kelola pengguna</option>
+            </select>
+          </div>
+        </div>
+        <button className="btn" type="submit" disabled={sibuk}>
+          {sibuk ? 'Membuat…' : 'Buat Akun 👥'}
+        </button>
+        {status && <div className={'status ' + (status.ok ? 'ok' : 'gagal')}>{status.teks}</div>}
+      </form>
+
+      <div className="sub-judul">Daftar Pengguna</div>
+      {data === null && <div className="kosong">Memuat…</div>}
+      {data !== null && gagal && <div className="kosong">Gagal memuat. Coba muat ulang.</div>}
+      {data !== null && !gagal && data.length === 0 && (
+        <div className="kosong">Belum ada pengguna terdaftar.</div>
+      )}
+      {data !== null && data.map(u => (
+        <div className="aspirasi-item" key={u.user}>
+          <div className="aspirasi-meta">
+            <b>
+              <span className={'peng-tag-mini' + (u.peran === 'pemilik' ? ' penting' : '')}>
+                {u.peran}
+              </span>
+              {u.nama}
+            </b>
+            <span>@{u.user}{u.user === sesi.user ? ' (Anda)' : ''}</span>
+          </div>
+          {u.user !== sesi.user && (
+            <div className="baris-hapus">
+              <button className="btn-hapus" onClick={() => hapus(u.user)}>Hapus</button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
