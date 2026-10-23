@@ -27,7 +27,7 @@ var SHEET_SURAT = "SURAT";
 var STATUS_SAH = ["baru", "diproses", "selesai"];
 var JENIS_SURAT_SAH = ["pengantar", "domisili", "usaha", "tidak-mampu", "lainnya"];
 var SHEET_KONFIG = "KONFIG";
-var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder"];
+var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder", "pamsimas_publik"];
 var SHEET_PAM_PELANGGAN = "PAMSIMAS_PELANGGAN";
 var SHEET_PAM_KAS = "PAMSIMAS_KAS";
 
@@ -79,6 +79,69 @@ function lembarPamKas_() {
     sh.appendRow(["ID", "Waktu", "Jenis", "Pelanggan ID", "Bulan", "Uraian", "Jumlah"].concat(KOLOM_JEJAK));
   }
   return sh;
+}
+
+/**
+ * Agregat kas Pamsimas untuk website (transparansi) — TIDAK pernah memuat
+ * nama pelanggan atau status bayar per orang. Hanya keluar bila pemilik
+ * mengaktifkan kunci konfigurasi pamsimas_publik = "ya". Cache 10 menit.
+ */
+function hitungPamPublik_() {
+  var cache = CacheService.getScriptCache();
+  var simpanan = cache.get("pam_publik");
+  if (simpanan) return JSON.parse(simpanan);
+
+  var hasil = { aktif: bacaKonfig_().pamsimas_publik === "ya" };
+  if (hasil.aktif) {
+    var rowsPel = lembarPamPelanggan_().getDataRange().getValues();
+    var pelangganAktif = 0;
+    for (var a = 1; a < rowsPel.length; a++) {
+      if (rowsPel[a][1] && String(rowsPel[a][3] || "").trim() !== "") pelangganAktif++;
+    }
+    var rowsKas = lembarPamKas_().getDataRange().getValues();
+    var saldo = 0;
+    var perBulan = {};
+    var pengeluaran = [];
+    for (var i = rowsKas.length - 1; i >= 1; i--) {
+      if (!rowsKas[i][0]) continue;
+      var jenis = String(rowsKas[i][2]);
+      var jumlah = Number(rowsKas[i][6]) || 0;
+      saldo += jenis === "keluar" ? -jumlah : jumlah;
+      var bln = "";
+      if (jenis === "masuk") {
+        bln = String(rowsKas[i][4] || "");
+      } else if (jenis === "keluar" && rowsKas[i][1]) {
+        var w = new Date(rowsKas[i][1]);
+        bln = w.getFullYear() + "-" + ("0" + (w.getMonth() + 1)).slice(-2);
+        if (pengeluaran.length < 8) {
+          pengeluaran.push({
+            waktu: w.toISOString(),
+            uraian: String(rowsKas[i][5] || ""),
+            jumlah: jumlah
+          });
+        }
+      }
+      if (/^\d{4}-\d{2}$/.test(bln)) {
+        if (!perBulan[bln]) perBulan[bln] = { masuk: 0, pembayar: 0, keluar: 0 };
+        if (jenis === "masuk") { perBulan[bln].masuk += jumlah; perBulan[bln].pembayar++; }
+        else perBulan[bln].keluar += jumlah;
+      }
+    }
+    var kunci = [];
+    for (var b in perBulan) kunci.push(b);
+    kunci.sort().reverse();
+    var bulanan = [];
+    for (var k = 0; k < kunci.length && k < 6; k++) {
+      bulanan.push({ bulan: kunci[k], masuk: perBulan[kunci[k]].masuk,
+        pembayar: perBulan[kunci[k]].pembayar, keluar: perBulan[kunci[k]].keluar });
+    }
+    hasil.saldo = saldo;
+    hasil.pelangganAktif = pelangganAktif;
+    hasil.bulanan = bulanan;
+    hasil.pengeluaran = pengeluaran;
+  }
+  cache.put("pam_publik", JSON.stringify(hasil), 600);
+  return hasil;
 }
 
 function jumlahSah_(v) {
@@ -408,6 +471,11 @@ function doGet(e) {
       });
     }
     return json_({ ok: true, data: struktur });
+  }
+  if (e && e.parameter && e.parameter.daftar === "pamsimas-publik") {
+    var hp = hitungPamPublik_();
+    hp.ok = true;
+    return json_(hp);
   }
   if (e && e.parameter && e.parameter.daftar === "pamsimas") {
     if (!adminDariToken_(e.parameter.token)) return json_({ ok: false, butuhLogin: true });
@@ -965,6 +1033,9 @@ function doPost(e) {
       if (kunciK === "drive_folder" && nilaiK &&
           !/^https:\/\/drive\.google\.com\//.test(nilaiK)) {
         return json_({ ok: false, pesan: "Isi dengan tautan folder Google Drive (drive.google.com)." });
+      }
+      if (kunciK === "pamsimas_publik" && nilaiK && nilaiK !== "ya" && nilaiK !== "tidak") {
+        return json_({ ok: false, pesan: "Nilai harus 'ya' atau 'tidak'." });
       }
       if ((kunciK === "cloudinary_cloud" || kunciK === "cloudinary_preset") &&
           nilaiK && !/^[A-Za-z0-9._-]+$/.test(nilaiK)) {

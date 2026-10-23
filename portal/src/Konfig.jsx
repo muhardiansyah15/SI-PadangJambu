@@ -8,6 +8,7 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
   const [cloud, setCloud] = useState(CLOUDINARY.cloud)
   const [preset, setPreset] = useState(CLOUDINARY.preset)
   const [drive, setDrive] = useState('')
+  const [pamPublik, setPamPublik] = useState('tidak')
   const [spreadsheetUrl, setSpreadsheetUrl] = useState('')
   const [apiUrl, setApiUrl] = useState(ASPIRASI_URL)
   const [status, setStatus] = useState(null)
@@ -22,6 +23,7 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
       if (j.konfig.cloudinary_cloud) setCloud(j.konfig.cloudinary_cloud)
       if (j.konfig.cloudinary_preset) setPreset(j.konfig.cloudinary_preset)
       setDrive(j.konfig.drive_folder || '')
+      setPamPublik(j.konfig.pamsimas_publik === 'ya' ? 'ya' : 'tidak')
       setSpreadsheetUrl(j.spreadsheetUrl || '')
     } catch { /* biarkan nilai bawaan */ }
   }, [sesi.token, onSesiBerakhir])
@@ -101,6 +103,21 @@ export default function Konfig({ sesi, onSesiBerakhir }) {
           </a>
         )}
       </div>
+
+      <div className="sub-judul">💧 Transparansi Pamsimas</div>
+      <div className="form-group">
+        <label className="form-label" htmlFor="kPam">
+          Tampilkan rekap kas Pamsimas (agregat saja) di website — aktifkan setelah disepakati KPSPAMS
+        </label>
+        <select id="kPam" className="form-input" value={pamPublik} onChange={e => setPamPublik(e.target.value)}>
+          <option value="tidak">Tidak — sembunyikan dari website</option>
+          <option value="ya">Ya — tampilkan section Keuangan Pamsimas</option>
+        </select>
+      </div>
+      <button className="btn btn-kecil" disabled={sibuk}
+        onClick={() => simpan([['pamsimas_publik', pamPublik]])}>
+        Simpan Transparansi
+      </button>
 
       <div className="sub-judul">📊 Spreadsheet & Apps Script</div>
       <div className="baris-status" style={{ justifyContent: 'flex-start', marginBottom: '0.9rem' }}>

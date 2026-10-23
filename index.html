@@ -534,6 +534,21 @@
   .lightbox-ket { color: var(--krem); margin-top: 1rem; font-size: 0.95rem; text-align: center; }
 
   .mt-2 { margin-top: 2rem; }
+  /* ===== KEUANGAN PAMSIMAS ===== */
+  .pam-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; margin-top: 2.2rem; }
+  @media (max-width: 800px) { .pam-grid { grid-template-columns: 1fr; } }
+  .pam-judul { font-family: 'Playfair Display', serif; color: var(--emas-muda); font-size: 1.1rem; margin-bottom: 0.8rem; }
+  .pam-tabel { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .pam-tabel th, .pam-tabel td { padding: 0.55rem 0.7rem; text-align: left; border-bottom: 1px solid rgba(201,168,76,0.25); }
+  .pam-tabel th { color: var(--emas-muda); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; }
+  .pam-tabel td { color: rgba(248,243,232,0.9); }
+  .pam-keluar-item {
+    display: flex; justify-content: space-between; gap: 1rem;
+    padding: 0.55rem 0; border-bottom: 1px solid rgba(201,168,76,0.2);
+    font-size: 0.9rem; color: rgba(248,243,232,0.9);
+  }
+  .pam-keluar-item span:last-child { color: var(--emas-muda); white-space: nowrap; }
+
   .stat-info {
     max-width: 640px; margin: 0 auto 2rem;
     background: rgba(201,168,76,0.14); border: 1px solid var(--emas);
@@ -692,8 +707,7 @@
     <li><a href="#profil">Profil</a></li>
     <li><a href="#statistik">Statistik</a></li>
     <li><a href="#pengumuman">Pengumuman</a></li>
-    <!-- Keuangan disembunyikan sementara sampai datanya siap
-    <li><a href="#keuangan">Keuangan</a></li> -->
+    <li><a href="#keuangan" id="menuKeuangan" style="display:none">Keuangan</a></li>
     <!-- Potensi disembunyikan sementara sampai datanya terverifikasi
     <li><a href="#potensi">Potensi</a></li> -->
     <li><a href="#galeri" id="menuGaleri" style="display:none">Galeri</a></li>
@@ -886,95 +900,31 @@
 </section>
 
 <!-- KEUANGAN -->
-<!-- Keuangan disembunyikan sementara sampai datanya siap: hapus style di bawah untuk menampilkan lagi -->
+<!-- KEUANGAN PAMSIMAS: tampil hanya bila transparansi diaktifkan dari Konfigurasi portal -->
 <section class="section keuangan-section" id="keuangan" style="display:none">
   <div class="section-inner">
-    <div class="section-label">💼 Transparansi</div>
-    <h2 class="section-title">Pengelolaan <em>Keuangan Desa</em></h2>
+    <div class="section-label">💧 Transparansi</div>
+    <h2 class="section-title">Keuangan <em>Pamsimas Korong</em></h2>
     <div class="title-bar"></div>
-    <p class="keuangan-intro">Korong Padang Jambu berkomitmen pada pengelolaan keuangan yang transparan dan akuntabel. Seluruh laporan keuangan dapat diakses oleh warga sesuai ketentuan perundang-undangan.</p>
-
-    <div class="anggaran-card fade-in">
-      <div class="anggaran-header">
-        <div>
-          <div style="font-size:0.7rem;color:rgba(248,243,232,0.5);text-transform:uppercase;letter-spacing:1px;">APBDes</div>
-          <div class="anggaran-tahun">Tahun Anggaran 2025</div>
-        </div>
-        <div class="anggaran-total">
-          <div class="anggaran-total-label">Total Anggaran</div>
-          <div class="anggaran-total-num">Rp 1,2 M</div>
-        </div>
-      </div>
-      <div class="progress-list">
-        <div class="progress-item">
-          <div class="progress-label"><span>Pembangunan Infrastruktur</span><span>42%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-hijau" style="width:42%"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label"><span>Pemberdayaan Masyarakat</span><span>25%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-emas" style="width:25%"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label"><span>Bantuan Langsung Tunai (BLT)</span><span>18%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-merah" style="width:18%"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label"><span>Operasional Pemerintahan Desa</span><span>10%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-biru" style="width:10%"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label"><span>Kesehatan & Posyandu</span><span>5%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-ungu" style="width:5%"></div></div>
-        </div>
-      </div>
+    <p class="keuangan-intro">Rekapitulasi kas pengelolaan air bersih (KPSPAMS) Korong Padang Jambu,
+      diperbarui otomatis dari pencatatan bendahara. Hanya angka rekap yang ditampilkan.</p>
+    <div class="profil-fakta">
+      <div class="fakta-item"><div class="fakta-nilai" id="pamSaldo">—</div><div class="fakta-label">Saldo kas</div></div>
+      <div class="fakta-item"><div class="fakta-nilai" id="pamPelanggan">—</div><div class="fakta-label">Pelanggan aktif</div></div>
+      <div class="fakta-item"><div class="fakta-nilai" id="pamMasukBulan">—</div><div class="fakta-label" id="pamMasukLabel">Iuran bulan ini</div></div>
+      <div class="fakta-item"><div class="fakta-nilai" id="pamKeluarBulan">—</div><div class="fakta-label">Pengeluaran bulan ini</div></div>
     </div>
-
-    <div class="keuangan-grid fade-in">
-      <div class="keu-stat">
-        <div class="keu-stat-num">Rp 867 Jt</div>
-        <div class="keu-stat-label">Dana Desa 2025</div>
+    <div class="pam-grid">
+      <div>
+        <h3 class="pam-judul">Rekap 6 Bulan Terakhir</h3>
+        <table class="pam-tabel">
+          <thead><tr><th>Bulan</th><th>Iuran Masuk</th><th>Pembayar</th><th>Pengeluaran</th></tr></thead>
+          <tbody id="pamBulanan"></tbody>
+        </table>
       </div>
-      <div class="keu-stat">
-        <div class="keu-stat-num">Rp 215 Jt</div>
-        <div class="keu-stat-label">ADD (Alokasi Dana Desa)</div>
-      </div>
-      <div class="keu-stat">
-        <div class="keu-stat-num">Rp 120 Jt</div>
-        <div class="keu-stat-label">PADes & Lain-lain</div>
-      </div>
-    </div>
-
-    <div style="margin-top:2rem;">
-      <div style="font-size:0.7rem;color:rgba(248,243,232,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">📁 Dokumen Keuangan</div>
-      <div class="dokumen-list fade-in">
-        <a href="#" class="dokumen-item">
-          <div class="dokumen-icon">📄</div>
-          <div>
-            <div class="dokumen-name">APBDes 2025</div>
-            <div class="dokumen-desc">Anggaran Pendapatan & Belanja Desa</div>
-          </div>
-        </a>
-        <a href="#" class="dokumen-item">
-          <div class="dokumen-icon">📊</div>
-          <div>
-            <div class="dokumen-name">Realisasi Anggaran Kumulatif</div>
-            <div class="dokumen-desc">Update terakhir: Februari 2025</div>
-          </div>
-        </a>
-        <a href="#" class="dokumen-item">
-          <div class="dokumen-icon">📑</div>
-          <div>
-            <div class="dokumen-name">Laporan APBDes 2024</div>
-            <div class="dokumen-desc">Laporan Pertanggungjawaban Akhir Tahun</div>
-          </div>
-        </a>
-        <a href="#" class="dokumen-item">
-          <div class="dokumen-icon">📋</div>
-          <div>
-            <div class="dokumen-name">RKPDes 2025</div>
-            <div class="dokumen-desc">Rencana Kerja Pemerintah Desa</div>
-          </div>
-        </a>
+      <div>
+        <h3 class="pam-judul">Pengeluaran Terakhir</h3>
+        <div id="pamPengeluaran"></div>
       </div>
     </div>
   </div>
@@ -1360,6 +1310,37 @@
       .catch(() => {}); // gagal memuat → pengumuman statis tetap tampil
   }
 
+  // ===== KEUANGAN PAMSIMAS =====
+  // Agregat kas KPSPAMS; tampil hanya bila transparansi diaktifkan dari
+  // menu Konfigurasi portal (kunci pamsimas_publik = "ya").
+  function renderPamKeu(d) {
+    const rp = n => 'Rp' + (Number(n) || 0).toLocaleString('id-ID');
+    const fb = b => new Date(b + '-01T00:00:00').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    document.getElementById('pamSaldo').textContent = rp(d.saldo);
+    document.getElementById('pamPelanggan').textContent = d.pelangganAktif;
+    const kini = (d.bulanan || [])[0];
+    if (kini) {
+      document.getElementById('pamMasukBulan').textContent = rp(kini.masuk);
+      document.getElementById('pamMasukLabel').textContent = 'Iuran ' + fb(kini.bulan);
+      document.getElementById('pamKeluarBulan').textContent = rp(kini.keluar);
+    }
+    document.getElementById('pamBulanan').innerHTML = (d.bulanan || []).map(b => `
+      <tr><td>${esc(fb(b.bulan))}</td><td>${rp(b.masuk)}</td><td>${b.pembayar}</td><td>${rp(b.keluar)}</td></tr>`
+    ).join('') || '<tr><td colspan="4">Belum ada catatan.</td></tr>';
+    document.getElementById('pamPengeluaran').innerHTML = (d.pengeluaran || []).map(x => `
+      <div class="pam-keluar-item"><span>${esc(x.uraian)}</span><span>${rp(x.jumlah)}</span></div>`
+    ).join('') || '<div class="pam-keluar-item"><span>Belum ada pengeluaran.</span></div>';
+    document.getElementById('keuangan').style.display = '';
+    document.getElementById('menuKeuangan').style.display = '';
+  }
+
+  if (ASPIRASI_URL) {
+    fetch(ASPIRASI_URL + '?daftar=pamsimas-publik')
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.aktif) renderPamKeu(j); })
+      .catch(() => {}); // nonaktif/gagal → section tetap tersembunyi
+  }
+
   // ===== STRUKTUR PEMERINTAHAN =====
   // Diisi admin lewat portal (sheet STRUKTUR), digambar sebagai bagan pohon
   // dengan garis penghubung. Grid kartu statis = fallback selama belum ada data.
@@ -1622,7 +1603,7 @@
   }));
 
   // ===== MENU AKTIF SAAT SCROLL =====
-  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'galeri', 'surat', 'peta', 'kontak'];
+  const ids = ['home', 'profil', 'statistik', 'pengumuman', 'galeri', 'surat', 'keuangan', 'peta', 'kontak'];
   const targets = ids.map(id => ({ id, el: id === 'home' ? document.querySelector('.hero') : document.getElementById(id) }));
   function setActive() {
     const y = window.scrollY + 120;
