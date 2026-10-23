@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost, urlTransform } from './api.js'
 
-const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin' }
+const FORM_KOSONG = { user: '', pass: '', nama: '', peran: 'admin', akses: '' }
 
 export default function Pengguna({ sesi, onSesiBerakhir }) {
   const [form, setForm] = useState(FORM_KOSONG)
@@ -62,7 +62,7 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
 
   function mulaiEdit(u) {
     setEditUser(u.user)
-    setForm({ user: u.user, pass: '', nama: u.nama, peran: u.peran })
+    setForm({ user: u.user, pass: '', nama: u.nama, peran: u.peran, akses: u.akses || '' })
     setFormTampil(true)
     setStatus(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -137,6 +137,15 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
             </select>
           </div>
         </div>
+        <div className="form-group">
+          <label className="form-label">Hak akses tambahan</label>
+          <label className="cek-akses">
+            <input type="checkbox"
+              checked={form.akses.includes('pamsimas_edit')}
+              onChange={e => setForm(f => ({ ...f, akses: e.target.checked ? 'pamsimas_edit' : '' }))} />
+            {' '}💧 Boleh edit & hapus catatan kas Pamsimas
+          </label>
+        </div>
         <button className="btn" type="submit" disabled={sibuk}>
           {sibuk ? 'Menyimpan…' : editUser ? 'Simpan Perubahan ✏️' : 'Buat Akun 👥'}
         </button>
@@ -166,6 +175,9 @@ export default function Pengguna({ sesi, onSesiBerakhir }) {
               <span className={'peng-tag-mini' + (u.peran === 'pemilik' ? ' penting' : '')}>
                 {u.peran}
               </span>
+              {(u.akses || '').includes('pamsimas_edit') && u.peran !== 'pemilik' && (
+                <span className="peng-tag-mini layanan">💧 edit</span>
+              )}
               {u.nama}
             </b>
             <span>@{u.user}{u.user === sesi.user ? ' (Anda)' : ''}</span>

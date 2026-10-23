@@ -172,6 +172,16 @@ textarea.form-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .status-tag.diproses { background: var(--emas); color: var(--hijau-tua); }
 .status-tag.selesai { background: var(--hijau-muda); color: var(--hijau-tua); }
 .saring-status { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.tabel-gulir { overflow-x: auto; }
+.tabel-kas { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.tabel-kas th, .tabel-kas td { padding: 0.55rem 0.7rem; text-align: left; border-bottom: 1px solid #e7e1d3; }
+.tabel-kas th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--hijau); background: var(--krem); }
+.tabel-kas td.kosong { text-align: center; }
+.tabel-kas .sel-aksi { white-space: nowrap; }
+.rp-masuk { color: var(--hijau); font-weight: 600; white-space: nowrap; }
+.rp-keluar { color: var(--merah-accent); font-weight: 600; white-space: nowrap; }
+.ket-kecil { color: var(--abu); font-size: 0.82rem; }
+.cek-akses { font-size: 0.9rem; color: var(--hijau-tua); display: flex; align-items: center; gap: 4px; }
 .ringkas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.1rem; }
 @media (max-width: 480px) { .ringkas-grid { grid-template-columns: 1fr; } }
 .ringkas-item {

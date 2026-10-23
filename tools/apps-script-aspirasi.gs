@@ -30,6 +30,24 @@ var SHEET_KONFIG = "KONFIG";
 var KUNCI_KONFIG_SAH = ["cloudinary_cloud", "cloudinary_preset", "drive_folder", "pamsimas_publik"];
 var SHEET_PAM_PELANGGAN = "PAMSIMAS_PELANGGAN";
 var SHEET_PAM_KAS = "PAMSIMAS_KAS";
+// Hak akses tambahan per akun (kolom Akses di sheet ADMIN, dipisah koma).
+// Pemilik otomatis memiliki semuanya.
+var AKSES_SAH = ["pamsimas_edit"];
+
+function aksesSah_(v) {
+  var hasil = [];
+  String(v || "").split(",").forEach(function (a) {
+    a = a.trim();
+    if (AKSES_SAH.indexOf(a) >= 0 && hasil.indexOf(a) < 0) hasil.push(a);
+  });
+  return hasil.join(",");
+}
+
+function punyaAkses_(akun, kode) {
+  if (!akun) return false;
+  if (akun.peran === "pemilik") return true;
+  return String(akun.akses || "").split(",").indexOf(kode) >= 0;
+}
 
 function lembar_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -168,7 +186,7 @@ function lembarUser_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_USER) || ss.insertSheet(SHEET_USER);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"].concat(KOLOM_JEJAK));
+    sh.appendRow(["Username", "Password", "Nama", "Peran", "Foto"].concat(KOLOM_JEJAK).concat(["Akses"]));
   }
   return sh;
 }
@@ -355,6 +373,7 @@ function login_(user, pass) {
         String(rows[i][1]) === pass && pass !== "") {
       var token = Utilities.getUuid();
       var peran = String(rows[i][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin";
+      var akses = aksesSah_(rows[i][9]);
       // PropertiesService: tahan lama (CacheService bisa terhapus sewaktu-waktu)
       bersihkanTokenKadaluarsa_();
       PropertiesService.getScriptProperties().setProperty("tok_" + token,
@@ -362,11 +381,12 @@ function login_(user, pass) {
           user: user,
           nama: String(rows[i][2] || user),
           peran: peran,
+          akses: akses,
           exp: Date.now() + TOKEN_HARI * 86400000
         }));
       cache.remove("gagal_" + user);
       return { ok: true, token: token, nama: String(rows[i][2] || user), user: user,
-        peran: peran, foto: String(rows[i][4] || "") };
+        peran: peran, akses: akses, foto: String(rows[i][4] || "") };
     }
   }
   cache.put("gagal_" + user, String(gagal + 1), 600);
@@ -544,7 +564,8 @@ function doGet(e) {
         user: String(rowsU[u][0]).trim().toLowerCase(),
         nama: String(rowsU[u][2] || rowsU[u][0]),
         peran: String(rowsU[u][3] || "").trim().toLowerCase() === "pemilik" ? "pemilik" : "admin",
-        foto: String(rowsU[u][4] || "")
+        foto: String(rowsU[u][4] || ""),
+        akses: aksesSah_(rowsU[u][9])
       });
     }
     return json_({ ok: true, data: daftarU });
@@ -964,7 +985,8 @@ function doPost(e) {
       lockIu.waitLock(5000);
       try {
         lembarPamKas_().appendRow([Utilities.getUuid(), new Date(), "masuk",
-          idIu, "'" + bulanIu, "", jumlahIu].concat(jejak_(akunIu.user)));
+          idIu, "'" + bulanIu, teks_(String(p.keterangan || "").trim().slice(0, 200)),
+          jumlahIu].concat(jejak_(akunIu.user)));
       } finally {
         lockIu.releaseLock();
       }
@@ -1014,8 +1036,47 @@ function doPost(e) {
       return json_({ ok: true });
     }
 
+    // Edit catatan kas — butuh hak akses pamsimas_edit (atau pemilik)
+    if (p.aksi === "pam-kas-edit") {
+      var akunKd = adminDariToken_(p.token);
+      if (!akunKd) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunKd, "pamsimas_edit")) {
+        return json_({ ok: false, pesan: "Anda tidak punya akses edit Pamsimas. Minta pemilik mengaktifkannya di menu Pengguna." });
+      }
+      var shKd = lembarPamKas_();
+      var rowsKd = shKd.getDataRange().getValues();
+      var rKd = barisDariId_(rowsKd, p.id);
+      if (!rKd) return json_({ ok: false, pesan: "Catatan tidak ditemukan." });
+      var jenisKd = String(rowsKd[rKd - 1][2]);
+      var jumlahKd = jumlahSah_(p.jumlah);
+      if (!jumlahKd) return json_({ ok: false, pesan: "Jumlah tidak valid." });
+      var ketKd = String(p.keterangan || "").trim().slice(0, 200);
+      if (jenisKd === "masuk") {
+        var idPelKd = String(p.pelanggan || "") || String(rowsKd[rKd - 1][3]);
+        var blnKd = /^\d{4}-\d{2}$/.test(p.bulan) ? p.bulan : String(rowsKd[rKd - 1][4]);
+        for (var dk = 1; dk < rowsKd.length; dk++) {
+          if (dk !== rKd - 1 && String(rowsKd[dk][2]) === "masuk" &&
+              String(rowsKd[dk][3]) === idPelKd && String(rowsKd[dk][4]) === blnKd) {
+            return json_({ ok: false, pesan: "Iuran bulan itu sudah tercatat untuk pelanggan ini." });
+          }
+        }
+        shKd.getRange(rKd, 4, 1, 4).setValues([[idPelKd, "'" + blnKd, teks_(ketKd), jumlahKd]]);
+      } else if (jenisKd === "keluar") {
+        if (!ketKd) return json_({ ok: false, pesan: "Uraian pengeluaran wajib diisi." });
+        shKd.getRange(rKd, 6, 1, 2).setValues([[teks_(ketKd), jumlahKd]]);
+      } else {
+        shKd.getRange(rKd, 7).setValue(jumlahKd);
+      }
+      tulisJejak_(shKd, rKd, 10, akunKd.user);
+      return json_({ ok: true });
+    }
+
     if (p.aksi === "pam-hapus") {
-      if (!adminDariToken_(p.token)) return json_({ ok: false, butuhLogin: true });
+      var akunPh = adminDariToken_(p.token);
+      if (!akunPh) return json_({ ok: false, butuhLogin: true });
+      if (!punyaAkses_(akunPh, "pamsimas_edit")) {
+        return json_({ ok: false, pesan: "Anda tidak punya akses edit Pamsimas. Minta pemilik mengaktifkannya di menu Pengguna." });
+      }
       var shKh = lembarPamKas_();
       var rKh = barisDariId_(shKh.getDataRange().getValues(), p.id);
       if (rKh) { shKh.deleteRow(rKh); ok = true; }
@@ -1077,7 +1138,7 @@ function doPost(e) {
       lockU.waitLock(5000);
       try {
         shU.appendRow([userBaru, teks_(passBaru), teks_(namaBaru || userBaru), peranBaru, ""]
-          .concat(jejak_(pemilikT.user)));
+          .concat(jejak_(pemilikT.user)).concat([aksesSah_(p.akses)]));
       } finally {
         lockU.releaseLock();
       }
@@ -1107,11 +1168,14 @@ function doPost(e) {
         }
       }
       if (!rUe) return json_({ ok: false, pesan: "Pengguna tidak ditemukan." });
+      var aksesU = aksesSah_(p.akses);
+      var aksesLama = aksesSah_(rowsUe[rUe - 1][9]);
       shUe.getRange(rUe, 3, 1, 2).setValues([[teks_(namaU || targetE), peranU]]);
       if (passU) shUe.getRange(rUe, 2).setValue(teks_(passU));
+      shUe.getRange(rUe, 10).setValue(aksesU);
       tulisJejak_(shUe, rUe, 8, pemilikE.user);
-      // peran berubah / password di-reset → cabut sesi target (kecuali akun sendiri)
-      if (targetE !== pemilikE.user && (peranU !== peranLama || passU)) {
+      // peran/akses berubah / password di-reset → cabut sesi target (kecuali akun sendiri)
+      if (targetE !== pemilikE.user && (peranU !== peranLama || passU || aksesU !== aksesLama)) {
         var propsUe = PropertiesService.getScriptProperties();
         var semuaUe = propsUe.getProperties();
         for (var kUe in semuaUe) {
